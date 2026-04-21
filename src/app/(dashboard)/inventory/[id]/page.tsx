@@ -9,12 +9,13 @@ import { formatCurrency } from "@/lib/utils";
 
 export const metadata = { title: "Produto — ERP" };
 
-type Props = { params: { id: string } };
+type Props = { params: Promise<{ id: string }> };
 
 export default async function ProductDetailPage({ params }: Props) {
+  const { id } = await params;
   const [product, movements] = await Promise.all([
-    getProduct(params.id),
-    listMovements({ productId: params.id, pageSize: 10 }),
+    getProduct(id),
+    listMovements({ productId: id, pageSize: 10 }),
   ]);
 
   if (!product) notFound();
@@ -42,8 +43,14 @@ export default async function ProductDetailPage({ params }: Props) {
 
       {/* Métricas */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <MetricCard label="Saldo atual" value={`${Number(product.stock).toFixed(3)} ${product.unit}`} />
-        <MetricCard label="Estoque mínimo" value={`${Number(product.min_stock).toFixed(3)} ${product.unit}`} />
+        <MetricCard
+          label="Saldo atual"
+          value={`${Number(product.stock).toFixed(3)} ${product.unit}`}
+        />
+        <MetricCard
+          label="Estoque mínimo"
+          value={`${Number(product.min_stock).toFixed(3)} ${product.unit}`}
+        />
         <MetricCard label="Custo" value={formatCurrency(Number(product.cost_price))} />
         <MetricCard label="Venda" value={formatCurrency(Number(product.sale_price))} />
       </div>
