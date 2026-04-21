@@ -31,6 +31,7 @@ type Props = {
 export function ProductForm({ product, updateAction }: Props) {
   const action = updateAction ?? createProductAction;
   const [state, formAction] = useActionState(action, initial);
+  const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
     if (state.ok) toast.success(state.message ?? "Salvo com sucesso");
@@ -44,7 +45,7 @@ export function ProductForm({ product, updateAction }: Props) {
         name="sku"
         required
         defaultValue={product?.sku}
-        error={state.fieldErrors?.sku?.[0]}
+        error={fieldErrors?.sku?.[0]}
         placeholder="EX: PROD-001"
       />
       <Field
@@ -52,7 +53,7 @@ export function ProductForm({ product, updateAction }: Props) {
         name="name"
         required
         defaultValue={product?.name}
-        error={state.fieldErrors?.name?.[0]}
+        error={fieldErrors?.name?.[0]}
         placeholder="Nome do produto"
       />
 
@@ -65,8 +66,8 @@ export function ProductForm({ product, updateAction }: Props) {
           defaultValue={product?.description ?? ""}
           placeholder="Descrição opcional..."
         />
-        {state.fieldErrors?.description && (
-          <p className="text-sm text-red-600">{state.fieldErrors.description[0]}</p>
+        {fieldErrors?.description && (
+          <p className="text-sm text-red-600">{fieldErrors.description[0]}</p>
         )}
       </div>
 
@@ -92,7 +93,7 @@ export function ProductForm({ product, updateAction }: Props) {
         type="number"
         step="0.001"
         defaultValue={String(product?.min_stock ?? 0)}
-        error={state.fieldErrors?.minStock?.[0]}
+        error={fieldErrors?.minStock?.[0]}
       />
       <Field
         label="Preço de custo (R$)"
@@ -100,7 +101,7 @@ export function ProductForm({ product, updateAction }: Props) {
         type="number"
         step="0.01"
         defaultValue={String(product?.cost_price ?? 0)}
-        error={state.fieldErrors?.costPrice?.[0]}
+        error={fieldErrors?.costPrice?.[0]}
       />
       <Field
         label="Preço de venda (R$)"
@@ -108,7 +109,7 @@ export function ProductForm({ product, updateAction }: Props) {
         type="number"
         step="0.01"
         defaultValue={String(product?.sale_price ?? 0)}
-        error={state.fieldErrors?.salePrice?.[0]}
+        error={fieldErrors?.salePrice?.[0]}
       />
 
       <div className="flex justify-end gap-2 md:col-span-2">

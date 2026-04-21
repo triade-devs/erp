@@ -22,6 +22,7 @@ type ProductOption = { id: string; name: string; sku: string; stock: number };
 
 export function MovementForm({ products }: { products: ProductOption[] }) {
   const [state, formAction] = useActionState(registerMovementAction, initial);
+  const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
     if (state.ok) toast.success(state.message ?? "Movimentação registrada");
@@ -48,8 +49,8 @@ export function MovementForm({ products }: { products: ProductOption[] }) {
             ))}
           </SelectContent>
         </Select>
-        {state.fieldErrors?.productId && (
-          <p className="text-sm text-red-600">{state.fieldErrors.productId[0]}</p>
+        {fieldErrors?.productId && (
+          <p className="text-sm text-red-600">{fieldErrors.productId[0]}</p>
         )}
       </div>
 
@@ -83,11 +84,9 @@ export function MovementForm({ products }: { products: ProductOption[] }) {
           min="0.001"
           required
           placeholder="0.000"
-          aria-invalid={!!state.fieldErrors?.quantity}
+          aria-invalid={!!fieldErrors?.quantity}
         />
-        {state.fieldErrors?.quantity && (
-          <p className="text-sm text-red-600">{state.fieldErrors.quantity[0]}</p>
-        )}
+        {fieldErrors?.quantity && <p className="text-sm text-red-600">{fieldErrors.quantity[0]}</p>}
       </div>
 
       {/* Custo unitário */}

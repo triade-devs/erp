@@ -13,6 +13,7 @@ const initial = { ok: false } as const;
 
 export function SignInForm() {
   const [state, formAction] = useActionState(signInAction, initial);
+  const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   return (
     <div className="space-y-4">
@@ -27,9 +28,7 @@ export function SignInForm() {
             autoComplete="email"
             placeholder="seu@email.com"
           />
-          {state.fieldErrors?.email && (
-            <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>
-          )}
+          {fieldErrors?.email && <p className="text-sm text-red-600">{fieldErrors.email[0]}</p>}
         </div>
 
         <div className="space-y-2">
@@ -47,8 +46,8 @@ export function SignInForm() {
             autoComplete="current-password"
             placeholder="••••••••"
           />
-          {state.fieldErrors?.password && (
-            <p className="text-sm text-red-600">{state.fieldErrors.password[0]}</p>
+          {fieldErrors?.password && (
+            <p className="text-sm text-red-600">{fieldErrors.password[0]}</p>
           )}
         </div>
 
