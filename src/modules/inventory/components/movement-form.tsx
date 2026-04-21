@@ -1,7 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect } from "react";
+import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ const initial: ActionResult = { ok: false };
 type ProductOption = { id: string; name: string; sku: string; stock: number };
 
 export function MovementForm({ products }: { products: ProductOption[] }) {
-  const [state, formAction] = useFormState(registerMovementAction, initial);
+  const [state, formAction] = useActionState(registerMovementAction, initial);
 
   useEffect(() => {
     if (state.ok) toast.success(state.message ?? "Movimentação registrada");
@@ -102,7 +102,7 @@ export function MovementForm({ products }: { products: ProductOption[] }) {
         <Input id="reason" name="reason" placeholder="Opcional..." maxLength={500} />
       </div>
 
-      <div className="md:col-span-2 flex justify-end">
+      <div className="flex justify-end md:col-span-2">
         <SubmitButton />
       </div>
     </form>

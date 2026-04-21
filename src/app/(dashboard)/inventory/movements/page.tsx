@@ -4,11 +4,12 @@ import { MovementTable } from "@/modules/inventory";
 
 export const metadata = { title: "Movimentações — ERP" };
 
-type Props = { searchParams: Record<string, string> };
+type Props = { searchParams: Promise<Record<string, string>> };
 
 export default async function MovementsPage({ searchParams }: Props) {
+  const params = await searchParams;
   const [movements, products] = await Promise.all([
-    listMovements(searchParams),
+    listMovements(params),
     listProducts({ onlyActive: true, pageSize: 100 }),
   ]);
 

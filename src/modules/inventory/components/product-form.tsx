@@ -1,7 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect } from "react";
+import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ type Props = {
 
 export function ProductForm({ product, updateAction }: Props) {
   const action = updateAction ?? createProductAction;
-  const [state, formAction] = useFormState(action, initial);
+  const [state, formAction] = useActionState(action, initial);
 
   useEffect(() => {
     if (state.ok) toast.success(state.message ?? "Salvo com sucesso");
@@ -111,7 +111,7 @@ export function ProductForm({ product, updateAction }: Props) {
         error={state.fieldErrors?.salePrice?.[0]}
       />
 
-      <div className="md:col-span-2 flex justify-end gap-2">
+      <div className="flex justify-end gap-2 md:col-span-2">
         <SubmitButton isEditing={!!product} />
       </div>
     </form>
@@ -131,7 +131,16 @@ type FieldProps = {
   placeholder?: string;
 };
 
-function Field({ label, name, type = "text", required, error, step, defaultValue, placeholder }: FieldProps) {
+function Field({
+  label,
+  name,
+  type = "text",
+  required,
+  error,
+  step,
+  defaultValue,
+  placeholder,
+}: FieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>

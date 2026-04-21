@@ -5,17 +5,14 @@ import { signUpSchema } from "../schemas";
 import { env } from "@/core/config/env";
 import type { ActionResult } from "@/lib/errors";
 
-export async function signUpAction(
-  _prev: ActionResult,
-  formData: FormData,
-): Promise<ActionResult> {
+export async function signUpAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
   const { fullName, email, password } = parsed.data;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.signUp({
     email,

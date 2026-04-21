@@ -10,8 +10,12 @@ export async function listProducts(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const supabase = createClient();
-  let query = supabase.from("products").select("*", { count: "exact" }).order("name").range(from, to);
+  const supabase = await createClient();
+  let query = supabase
+    .from("products")
+    .select("*", { count: "exact" })
+    .order("name")
+    .range(from, to);
 
   if (onlyActive) query = query.eq("is_active", true);
   if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);

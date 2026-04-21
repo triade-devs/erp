@@ -6,10 +6,11 @@ import { ProductTable } from "@/modules/inventory";
 
 export const metadata = { title: "Estoque — ERP" };
 
-type Props = { searchParams: Record<string, string> };
+type Props = { searchParams: Promise<Record<string, string>> };
 
 export default async function InventoryPage({ searchParams }: Props) {
-  const { data, total, page, pageSize, totalPages } = await listProducts(searchParams);
+  const params = await searchParams;
+  const { data, total, page, pageSize, totalPages } = await listProducts(params);
 
   return (
     <section className="space-y-6">
@@ -32,7 +33,7 @@ export default async function InventoryPage({ searchParams }: Props) {
       <form className="flex gap-2">
         <Input
           name="q"
-          defaultValue={searchParams.q ?? ""}
+          defaultValue={params.q ?? ""}
           placeholder="Buscar por nome ou SKU..."
           className="max-w-sm"
         />
@@ -41,7 +42,13 @@ export default async function InventoryPage({ searchParams }: Props) {
         </Button>
       </form>
 
-      <ProductTable data={data} total={total} page={page} pageSize={pageSize} totalPages={totalPages} />
+      <ProductTable
+        data={data}
+        total={total}
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+      />
     </section>
   );
 }

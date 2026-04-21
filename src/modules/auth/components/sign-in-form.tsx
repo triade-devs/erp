@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
+import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { GoogleButton } from "./google-button";
 const initial = { ok: false } as const;
 
 export function SignInForm() {
-  const [state, formAction] = useFormState(signInAction, initial);
+  const [state, formAction] = useActionState(signInAction, initial);
 
   return (
     <form action={formAction} className="space-y-4">

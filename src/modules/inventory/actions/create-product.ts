@@ -14,7 +14,7 @@ export async function createProductAction(
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

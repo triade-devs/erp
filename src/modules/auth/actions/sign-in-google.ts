@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { env } from "@/core/config/env";
 
 export async function signInGoogleAction() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {

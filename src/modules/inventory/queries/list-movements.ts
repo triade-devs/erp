@@ -10,7 +10,7 @@ export async function listMovements(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase
     .from("stock_movements")
     .select("*", { count: "exact" })

@@ -6,16 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { signInSchema } from "../schemas";
 import type { ActionResult } from "@/lib/errors";
 
-export async function signInAction(
-  _prev: ActionResult,
-  formData: FormData,
-): Promise<ActionResult> {
+export async function signInAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = signInSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,

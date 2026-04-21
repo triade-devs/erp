@@ -10,7 +10,7 @@ export async function deleteProductAction(
   _prev: ActionResult,
   _formData: FormData,
 ): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
