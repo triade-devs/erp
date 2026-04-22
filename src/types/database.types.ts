@@ -1,3 +1,5 @@
+// TODO(S1): regenerar após aplicar as migrations do Sprint 1 ao projeto Supabase linked
+// Execute: npm run db:push && npm run db:types
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
