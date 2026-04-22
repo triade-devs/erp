@@ -5,10 +5,13 @@ import { signOutAction } from "@/modules/auth";
 import { Button } from "@/components/ui/button";
 import { MODULES_MENU } from "@/core/navigation/menu";
 import { getCurrentUser } from "@/modules/auth";
+import { CompanySwitcher, listMyCompanies, getActiveCompanyId } from "@/modules/tenancy";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  const [companies, activeCompanyId] = await Promise.all([listMyCompanies(), getActiveCompanyId()]);
 
   return (
     <div className="grid min-h-screen grid-cols-[240px_1fr]">
@@ -35,7 +38,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Main content */}
       <main className="flex flex-col">
         {/* Topbar */}
-        <header className="flex items-center justify-end border-b px-8 py-3">
+        <header className="flex items-center justify-between border-b px-8 py-3">
+          <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
           <form action={signOutAction}>
             <Button type="submit" variant="ghost" size="sm">
               Sair
