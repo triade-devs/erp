@@ -23,11 +23,7 @@ export async function listAllCompanies(): Promise<Company[]> {
     throw new AppError("Acesso negado", "ACCESS_DENIED");
   }
 
-  const { data, error } = await supabase
-    .from("companies")
-    .select("*")
-    .eq("is_active", true)
-    .order("name");
+  const { data, error } = await supabase.from("companies").select("*").order("name");
 
   if (error) throw error;
 
