@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/modules/auth";
 import { Button } from "@/components/ui/button";
 import { MODULES_MENU } from "@/core/navigation/menu";

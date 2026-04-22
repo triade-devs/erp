@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ interface CompanySwitcherProps {
 
 export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherProps) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   if (companies.length <= 1) {
     const company = companies[0];
@@ -31,22 +32,30 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
     startTransition(async () => {
       const formData = new FormData();
       formData.set("companyId", companyId);
-      await switchActiveCompanyAction({ ok: true }, formData);
+      const result = await switchActiveCompanyAction({ ok: true }, formData);
+      if (!result.ok) {
+        setError(result.message ?? "Erro ao trocar empresa");
+      } else {
+        setError(null);
+      }
     });
   }
 
   return (
-    <Select value={activeCompany?.id ?? ""} onValueChange={handleChange} disabled={isPending}>
-      <SelectTrigger className="h-8 w-[200px]">
-        <SelectValue placeholder="Selecionar empresa" />
-      </SelectTrigger>
-      <SelectContent>
-        {companies.map((company) => (
-          <SelectItem key={company.id} value={company.id}>
-            {company.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div>
+      <Select value={activeCompany?.id ?? ""} onValueChange={handleChange} disabled={isPending}>
+        <SelectTrigger aria-label="Empresa ativa" className="h-8 w-[200px]">
+          <SelectValue placeholder="Selecionar empresa" />
+        </SelectTrigger>
+        <SelectContent>
+          {companies.map((company) => (
+            <SelectItem key={company.id} value={company.id}>
+              {company.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
   );
 }
