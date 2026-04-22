@@ -13,7 +13,10 @@
     "db:types": "supabase gen types typescript --linked --schema public > src/types/database.types.ts",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
-    "test:rls": "echo 'Execute: psql $DATABASE_URL -f supabase/scripts/check-rls.sql'"
+    "test:rls": "supabase db execute --file supabase/scripts/check-rls.sql"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
