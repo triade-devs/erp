@@ -44,12 +44,30 @@ declare
   v_manager_role  uuid;
   v_operator_role uuid;
 begin
+  -- Idempotente: usa ON CONFLICT + fallback SELECT para cada role
   insert into public.roles (company_id, code, name, is_system)
-    values (p_company, 'owner',    'Owner',    true) returning id into v_owner_role;
+    values (p_company, 'owner', 'Owner', true)
+    on conflict (company_id, code) do nothing
+    returning id into v_owner_role;
+  if v_owner_role is null then
+    select id into v_owner_role from public.roles where company_id = p_company and code = 'owner';
+  end if;
+
   insert into public.roles (company_id, code, name, is_system)
-    values (p_company, 'manager',  'Gerente',  true) returning id into v_manager_role;
+    values (p_company, 'manager', 'Gerente', true)
+    on conflict (company_id, code) do nothing
+    returning id into v_manager_role;
+  if v_manager_role is null then
+    select id into v_manager_role from public.roles where company_id = p_company and code = 'manager';
+  end if;
+
   insert into public.roles (company_id, code, name, is_system)
-    values (p_company, 'operator', 'Operador', true) returning id into v_operator_role;
+    values (p_company, 'operator', 'Operador', true)
+    on conflict (company_id, code) do nothing
+    returning id into v_operator_role;
+  if v_operator_role is null then
+    select id into v_operator_role from public.roles where company_id = p_company and code = 'operator';
+  end if;
 
   -- Owner: todas as permissões dos módulos habilitados + core
   insert into public.role_permissions (role_id, permission_code)
@@ -58,25 +76,34 @@ begin
   where p.module_code = 'core'
      or p.module_code in (
        select module_code from public.company_modules where company_id = p_company
-     );
+     )
+  on conflict do nothing;
 
-  -- Manager: CRUD dos módulos habilitados (sem core:role:manage)
+  -- Manager: CRUD dos módulos habilitados (sem core — exclui core:role:manage e core:member:manage)
   insert into public.role_permissions (role_id, permission_code)
   select v_manager_role, p.code
   from public.permissions p
-  where p.module_code in (
-      select module_code from public.company_modules where company_id = p_company
+  where (
+    p.module_code in (
+      select module_code from public.company_modules
+      where company_id = p_company
+        and module_code != 'core'
     )
-     or p.code in ('core:audit:read', 'core:member:invite');
+    or p.code in ('core:audit:read', 'core:member:invite')
+  )
+  on conflict do nothing;
 
-  -- Operator: somente read + create dos módulos habilitados
+  -- Operator: somente read + create dos módulos habilitados (exclui core)
   insert into public.role_permissions (role_id, permission_code)
   select v_operator_role, p.code
   from public.permissions p
   where p.action in ('read', 'create')
     and p.module_code in (
-      select module_code from public.company_modules where company_id = p_company
-    );
+      select module_code from public.company_modules
+      where company_id = p_company
+        and module_code != 'core'
+    )
+  on conflict do nothing;
 end $$;
 
 -- ============================================================
@@ -117,9 +144,18 @@ create policy "memberships_insert" on public.memberships
   );
 
 create policy "memberships_update" on public.memberships
-  for update using (
+  for update
+  using (
     public.is_platform_admin()
     or public.has_permission(company_id, 'core:member:manage')
+  )
+  with check (
+    -- Impede escalada de is_owner: somente platform admin pode alterar esse campo
+    public.is_platform_admin()
+    or (
+      public.has_permission(company_id, 'core:member:manage')
+      and is_owner = (select m.is_owner from public.memberships m where m.id = memberships.id)
+    )
   );
 
 -- ============================================================
@@ -169,7 +205,11 @@ create policy "audit_logs_select" on public.audit_logs
   );
 
 create policy "audit_logs_insert" on public.audit_logs
-  for insert with check (true);
+  for insert with check (
+    -- Permite log sem empresa (eventos de plataforma) ou apenas para empresas do usuário
+    company_id is null
+    or company_id in (select public.user_company_ids())
+  );
 
 -- ============================================================
 -- POLICIES RLS — PLATFORM_ADMINS (leitura restrita)

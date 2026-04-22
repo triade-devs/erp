@@ -5,7 +5,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_APP_URL: z.string().url(),
-  NEXT_PUBLIC_MULTITENANCY_ENABLED: z.coerce.boolean().default(false),
+  MULTITENANCY_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true" || v === "1"),
 });
 
 export const env = envSchema.parse({
@@ -13,5 +16,5 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  NEXT_PUBLIC_MULTITENANCY_ENABLED: process.env.NEXT_PUBLIC_MULTITENANCY_ENABLED,
+  MULTITENANCY_ENABLED: process.env.MULTITENANCY_ENABLED,
 });

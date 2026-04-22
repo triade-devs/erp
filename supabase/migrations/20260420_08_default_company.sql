@@ -26,27 +26,29 @@ begin
   -- Cria roles owner/manager/operator via bootstrap
   perform public.bootstrap_company_rbac(v_company_id);
 
-  -- Cria memberships para todos os usuários existentes (como operator)
-  -- Eles poderão ter suas roles ajustadas manualmente depois
+  -- Cria memberships para todos os usuários existentes
+  -- O usuário mais antigo vira owner; os demais entram como operator
   insert into public.memberships (user_id, company_id, status, is_owner)
   select
     u.id,
     v_company_id,
     'active',
-    false
+    -- Primeiro usuário criado vira owner da default-company
+    u.created_at = (select min(created_at) from auth.users)
   from auth.users u
   where not exists (
     select 1 from public.memberships m
     where m.user_id = u.id and m.company_id = v_company_id
   );
 
-  -- Atribui role 'operator' a todos os memberships recém-criados
+  -- Atribui role 'owner' ao owner e 'operator' aos demais
   insert into public.membership_roles (membership_id, role_id)
   select
     m.id,
     r.id
   from public.memberships m
-  join public.roles r on r.company_id = v_company_id and r.code = 'operator'
+  join public.roles r on r.company_id = v_company_id
+    and r.code = case when m.is_owner then 'owner' else 'operator' end
   where m.company_id = v_company_id
     and not exists (
       select 1 from public.membership_roles mr where mr.membership_id = m.id
