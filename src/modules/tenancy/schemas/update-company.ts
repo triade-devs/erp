@@ -9,8 +9,8 @@ export const updateCompanySchema = z.object({
   document: z.string().optional(),
   is_active: z
     .string()
-    .transform((v) => v === "on" || v === "true")
-    .or(z.boolean()),
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
 });
 
 export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;

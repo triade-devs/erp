@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
+  const { data: isPlatformAdmin, error: rpcError } = await supabase.rpc("is_platform_admin");
+  if (rpcError) throw rpcError;
 
   if (!isPlatformAdmin) {
     return (

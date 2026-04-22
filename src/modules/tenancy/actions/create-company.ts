@@ -54,6 +54,9 @@ export async function createCompanyAction(
 
   const { name, slug, plan, document, modules, ownerEmail } = parsed.data;
 
+  // Nota: estas etapas não são atômicas. Em caso de falha parcial,
+  // a empresa pode existir sem módulos ou roles. Mitigação futura: stored procedure transacional.
+
   // 4. Insere a empresa
   const { data: company, error: companyError } = await supabase
     .from("companies")
