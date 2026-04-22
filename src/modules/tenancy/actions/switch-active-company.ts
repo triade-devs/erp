@@ -5,8 +5,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/errors";
 import { switchActiveCompanySchema } from "../schemas";
-
-const ACTIVE_COMPANY_COOKIE = "erp.active_company";
+import { ACTIVE_COMPANY_COOKIE } from "../constants";
 
 /**
  * Server Action para trocar a empresa ativa do usuário.
@@ -54,6 +53,7 @@ export async function switchActiveCompanyAction(
     httpOnly: true,
     sameSite: "lax",
     path: "/",
+    secure: process.env.NODE_ENV === "production",
   });
 
   revalidatePath("/");

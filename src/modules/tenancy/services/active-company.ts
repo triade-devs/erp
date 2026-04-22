@@ -2,8 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-
-const ACTIVE_COMPANY_COOKIE = "erp.active_company";
+import { ACTIVE_COMPANY_COOKIE } from "../constants";
 
 /**
  * Retorna o ID da empresa ativa para o usuário atual.

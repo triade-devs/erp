@@ -27,20 +27,21 @@ export async function resolveCompany(slug: string): Promise<Company> {
     throw new AppError("Empresa não encontrada", "COMPANY_NOT_FOUND");
   }
 
-  // Verifica se é platform admin (admins da plataforma podem acessar qualquer empresa)
-  const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
-
-  if (isPlatformAdmin) {
-    return company;
-  }
-
-  // Verifica se o usuário tem membership ativo na empresa
+  // Verifica autenticação antes de qualquer RPC
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
     throw new AppError("Não autenticado", "UNAUTHENTICATED");
+  }
+
+  // Verifica se é platform admin (admins da plataforma podem acessar qualquer empresa)
+  const { data: isPlatformAdmin, error: rpcError } = await supabase.rpc("is_platform_admin");
+  if (rpcError) throw rpcError;
+
+  if (isPlatformAdmin) {
+    return company;
   }
 
   const { data: membership, error: membershipError } = await supabase

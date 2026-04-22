@@ -29,7 +29,7 @@ export async function listMyCompanies(): Promise<Company[]> {
   const companies: Company[] = [];
   for (const row of data ?? []) {
     if (row.companies) {
-      companies.push(row.companies as Company);
+      companies.push(row.companies);
     }
   }
 
