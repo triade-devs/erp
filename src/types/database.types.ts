@@ -1,5 +1,3 @@
-// TODO(S1): regenerar após aplicar as migrations do Sprint 1 ao projeto Supabase linked
-// Execute: npm run db:push && npm run db:types
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -10,6 +8,303 @@ export type Database = {
   };
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string;
+          actor_email: string | null;
+          actor_user_id: string | null;
+          company_id: string | null;
+          created_at: string;
+          id: string;
+          ip: unknown;
+          metadata: Json;
+          permission: string | null;
+          resource_id: string | null;
+          resource_type: string | null;
+          status: string;
+          user_agent: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_email?: string | null;
+          actor_user_id?: string | null;
+          company_id?: string | null;
+          created_at?: string;
+          id?: string;
+          ip?: unknown;
+          metadata?: Json;
+          permission?: string | null;
+          resource_id?: string | null;
+          resource_type?: string | null;
+          status?: string;
+          user_agent?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_email?: string | null;
+          actor_user_id?: string | null;
+          company_id?: string | null;
+          created_at?: string;
+          id?: string;
+          ip?: unknown;
+          metadata?: Json;
+          permission?: string | null;
+          resource_id?: string | null;
+          resource_type?: string | null;
+          status?: string;
+          user_agent?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      companies: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          document: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          plan: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          document?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          plan?: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          document?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          plan?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      company_modules: {
+        Row: {
+          company_id: string;
+          enabled_at: string;
+          enabled_by: string | null;
+          module_code: string;
+        };
+        Insert: {
+          company_id: string;
+          enabled_at?: string;
+          enabled_by?: string | null;
+          module_code: string;
+        };
+        Update: {
+          company_id?: string;
+          enabled_at?: string;
+          enabled_by?: string | null;
+          module_code?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "company_modules_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "company_modules_module_code_fkey";
+            columns: ["module_code"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
+      membership_roles: {
+        Row: {
+          assigned_at: string;
+          assigned_by: string | null;
+          membership_id: string;
+          role_id: string;
+        };
+        Insert: {
+          assigned_at?: string;
+          assigned_by?: string | null;
+          membership_id: string;
+          role_id: string;
+        };
+        Update: {
+          assigned_at?: string;
+          assigned_by?: string | null;
+          membership_id?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "membership_roles_membership_id_fkey";
+            columns: ["membership_id"];
+            isOneToOne: false;
+            referencedRelation: "memberships";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "membership_roles_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "roles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      memberships: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          id: string;
+          invited_at: string | null;
+          invited_by: string | null;
+          is_owner: boolean;
+          joined_at: string | null;
+          status: Database["public"]["Enums"]["membership_status"];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          invited_at?: string | null;
+          invited_by?: string | null;
+          is_owner?: boolean;
+          joined_at?: string | null;
+          status?: Database["public"]["Enums"]["membership_status"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          invited_at?: string | null;
+          invited_by?: string | null;
+          is_owner?: boolean;
+          joined_at?: string | null;
+          status?: Database["public"]["Enums"]["membership_status"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "memberships_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      modules: {
+        Row: {
+          code: string;
+          created_at: string;
+          description: string | null;
+          icon: string | null;
+          is_active: boolean;
+          is_system: boolean;
+          name: string;
+          sort_order: number;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          description?: string | null;
+          icon?: string | null;
+          is_active?: boolean;
+          is_system?: boolean;
+          name: string;
+          sort_order?: number;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          description?: string | null;
+          icon?: string | null;
+          is_active?: boolean;
+          is_system?: boolean;
+          name?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      permissions: {
+        Row: {
+          action: string;
+          code: string;
+          created_at: string;
+          description: string | null;
+          module_code: string;
+          resource: string;
+        };
+        Insert: {
+          action: string;
+          code: string;
+          created_at?: string;
+          description?: string | null;
+          module_code: string;
+          resource: string;
+        };
+        Update: {
+          action?: string;
+          code?: string;
+          created_at?: string;
+          description?: string | null;
+          module_code?: string;
+          resource?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "permissions_module_code_fkey";
+            columns: ["module_code"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
+      platform_admins: {
+        Row: {
+          granted_at: string;
+          granted_by: string | null;
+          user_id: string;
+        };
+        Insert: {
+          granted_at?: string;
+          granted_by?: string | null;
+          user_id: string;
+        };
+        Update: {
+          granted_at?: string;
+          granted_by?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       products: {
         Row: {
           cost_price: number;
@@ -85,6 +380,80 @@ export type Database = {
         };
         Relationships: [];
       };
+      role_permissions: {
+        Row: {
+          granted_at: string;
+          permission_code: string;
+          role_id: string;
+        };
+        Insert: {
+          granted_at?: string;
+          permission_code: string;
+          role_id: string;
+        };
+        Update: {
+          granted_at?: string;
+          permission_code?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_code_fkey";
+            columns: ["permission_code"];
+            isOneToOne: false;
+            referencedRelation: "permissions";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "roles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      roles: {
+        Row: {
+          code: string;
+          company_id: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          is_system: boolean;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          company_id: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_system?: boolean;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          company_id?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_system?: boolean;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "roles_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stock_movements: {
         Row: {
           created_at: string;
@@ -131,12 +500,23 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      bootstrap_company_rbac: {
+        Args: { p_company: string };
+        Returns: undefined;
+      };
       current_user_role: {
         Args: never;
         Returns: Database["public"]["Enums"]["user_role"];
       };
+      has_permission: {
+        Args: { p_company: string; p_permission: string };
+        Returns: boolean;
+      };
+      is_platform_admin: { Args: never; Returns: boolean };
+      user_company_ids: { Args: never; Returns: string[] };
     };
     Enums: {
+      membership_status: "invited" | "active" | "suspended";
       movement_type: "in" | "out" | "adjustment";
       user_role: "admin" | "manager" | "operator";
     };
@@ -261,12 +641,10 @@ export type CompositeTypes<
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
 
-export type UserRole = Database["public"]["Enums"]["user_role"];
-export type MovementType = Database["public"]["Enums"]["movement_type"];
-
 export const Constants = {
   public: {
     Enums: {
+      membership_status: ["invited", "active", "suspended"],
       movement_type: ["in", "out", "adjustment"],
       user_role: ["admin", "manager", "operator"],
     },

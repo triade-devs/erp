@@ -1,4 +1,6 @@
-import type { UserRole } from "@/types/database.types";
+import type { Enums } from "@/types/database.types";
+
+type UserRole = Enums<"user_role">;
 
 /**
  * Verifica se o role do usuário tem permissão de escrita em produtos.

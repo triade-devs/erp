@@ -3,6 +3,8 @@ export type MenuItem = {
   href: string;
   icon?: string;
   roles?: string[];
+  requiresModule?: string;
+  requiresPermission?: string;
 };
 
 /**
