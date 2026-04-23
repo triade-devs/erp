@@ -23,7 +23,7 @@ export async function acceptInviteAction(companyId: string): Promise<ActionResul
     .eq("status", "invited")
     .maybeSingle();
 
-  if (fetchError) throw fetchError;
+  if (fetchError) return { ok: false, message: fetchError.message };
   if (!membership) {
     return { ok: false, message: "Convite não encontrado ou já aceito" };
   }
