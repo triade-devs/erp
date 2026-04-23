@@ -1,4 +1,5 @@
 // Barrel — única API pública do módulo auth
+export { acceptInviteAction } from "./actions/accept-invite";
 export { signInAction } from "./actions/sign-in";
 export { signUpAction } from "./actions/sign-up";
 export { signOutAction } from "./actions/sign-out";
