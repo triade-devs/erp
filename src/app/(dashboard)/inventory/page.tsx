@@ -50,6 +50,7 @@ export default async function InventoryPage({ searchParams }: Props) {
         page={page}
         pageSize={pageSize}
         totalPages={totalPages}
+        basePath="/inventory"
       />
     </section>
   );

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/errors";
 
 export async function deleteProductAction(
+  companySlug: string,
   id: string,
   _prev: ActionResult,
   _formData: FormData,
@@ -26,6 +27,6 @@ export async function deleteProductAction(
     return { ok: false, message: error.message };
   }
 
-  revalidatePath("/inventory");
-  redirect("/inventory");
+  revalidatePath("/", "layout");
+  redirect(`/${companySlug}/inventory`);
 }
