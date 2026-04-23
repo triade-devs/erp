@@ -1,17 +1,18 @@
 import "server-only";
+import type { ActionResult } from "@/lib/errors";
 import { requirePermission, ForbiddenError } from "./authz-service";
 
-type ActionResult = { ok: true; message?: string } | { ok: false; message?: string };
+export type ActionCtx = { companyId: string; userId: string };
 
-// HOC que envolve uma Server Action com verificação de permissão + audit logging
-export function withPermission<T extends ActionResult>(
+export function withPermission<T>(
   permission: string,
-  handler: (companyId: string, formData: FormData) => Promise<T>,
+  action: string,
+  handler: (ctx: ActionCtx, formData: FormData) => Promise<T>,
 ) {
-  return async function guarded(companyId: string, formData: FormData): Promise<T | ActionResult> {
+  return async function guarded(ctx: ActionCtx, formData: FormData): Promise<T | ActionResult> {
     try {
-      await requirePermission(companyId, permission);
-      return await handler(companyId, formData);
+      await requirePermission(ctx.companyId, permission);
+      return await handler(ctx, formData);
     } catch (e) {
       if (e instanceof ForbiddenError) {
         return {
