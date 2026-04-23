@@ -26,4 +26,7 @@ export const MODULES_MENU: MenuItem[] = [
   { label: "Auditoria", href: "/audit", requiresSlug: true, requiresPermission: "core:audit:read" },
 ];
 
-export const ADMIN_MENU: MenuItem[] = [{ label: "Empresas", href: "/admin/companies" }];
+export const ADMIN_MENU: MenuItem[] = [
+  { label: "Empresas", href: "/admin/companies" },
+  { label: "Auditoria Global", href: "/admin/audit" },
+];

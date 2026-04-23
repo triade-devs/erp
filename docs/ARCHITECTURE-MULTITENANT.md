@@ -1499,13 +1499,13 @@ src/modules/audit/
 - [x] S2 · #09–#11 · módulo `tenancy` + switcher + `/admin/companies` — **mergeado (PR #2)**
 - [x] S3 · #12–#14 · `authz` + `audit` + `<Can>` — **mergeado (PR #3)**
 - [x] S4 · #15–#18 · refactor `auth` (memberships) — **mergeado (PR #4)**
-- [x] S5 · #19–#29 · refactor `inventory` (company_id → RLS → withPermission → tests) — **PR #5 aberto, validado manualmente** · branch `feat/multitenant-s5`
-- [ ] S6 · #30–#32 · painel platform admin
+- [x] S5 · #19–#29 · refactor `inventory` (company_id → RLS → withPermission → tests) — **mergeado (PR #5)**
+- [x] S6 · #30–#32 · painel platform admin — **branch `feat/multitenant-s6`**
 - [ ] S7 · #33–#35 · gestão de membros/roles por empresa
 - [ ] S8 · #36–#38 · _contract_ — remover legado
 - [ ] S9 · #39–#42 · hardening — RLS check, isolation tests, observabilidade
 
-> **Próximo:** S6 — painel platform admin (`/admin/companies` wizard + toggle módulos + audit global)
+> **Próximo:** S7 — gestão de membros & roles por empresa (`/[companySlug]/settings/members` + roles + matriz de permissões)
 
 ### 11.15 Riscos e mitigações
 
