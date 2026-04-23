@@ -2,28 +2,36 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getProduct, updateProductAction, listMovements } from "@/modules/inventory";
+import {
+  getProduct,
+  updateProductAction,
+  deleteProductAction,
+  listMovements,
+} from "@/modules/inventory";
 import { ProductForm } from "@/modules/inventory";
 import { MovementTable } from "@/modules/inventory";
 import { formatCurrency } from "@/lib/utils";
-import { getActiveCompanyId } from "@/modules/tenancy";
+import { resolveCompany } from "@/modules/tenancy";
+import { Can } from "@/modules/authz";
+import { DeleteProductForm } from "./delete-product-form";
 
 export const metadata = { title: "Produto — ERP" };
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ companySlug: string; id: string }> };
 
 export default async function ProductDetailPage({ params }: Props) {
-  const { id } = await params;
-  const companyId = (await getActiveCompanyId()) ?? "";
+  const { companySlug, id } = await params;
+  const company = await resolveCompany(companySlug);
+
   const [product, movements] = await Promise.all([
-    getProduct(id, companyId),
-    listMovements(companyId, { productId: id, pageSize: 10 }),
+    getProduct(id, company.id),
+    listMovements(company.id, { productId: id, pageSize: 10 }),
   ]);
 
   if (!product) notFound();
 
-  // Bind parcial: injeta o ID na action de update
   const updateAction = updateProductAction.bind(null, product.id);
+  const deleteAction = deleteProductAction.bind(null, companySlug, product.id);
   const isLowStock = Number(product.stock) <= Number(product.min_stock);
 
   return (
@@ -39,7 +47,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <p className="font-mono text-sm text-muted-foreground">{product.sku}</p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/inventory">← Voltar</Link>
+          <Link href={`/${companySlug}/inventory`}>← Voltar</Link>
         </Button>
       </header>
 
@@ -58,26 +66,43 @@ export default async function ProductDetailPage({ params }: Props) {
       </div>
 
       {/* Formulário de edição */}
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="mb-4 text-lg font-semibold">Editar produto</h2>
-        <ProductForm product={product} updateAction={updateAction} />
-      </div>
+      <Can permission="inventory:product:update">
+        <div className="rounded-lg border bg-card p-6">
+          <h2 className="mb-4 text-lg font-semibold">Editar produto</h2>
+          <ProductForm product={product} updateAction={updateAction} />
+        </div>
+      </Can>
+
+      {/* Zona de perigo */}
+      <Can permission="inventory:product:delete">
+        <div className="rounded-lg border border-destructive/30 bg-card p-6">
+          <h2 className="mb-1 text-lg font-semibold text-destructive">Zona de perigo</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Desativa o produto e preserva o histórico de movimentações.
+          </p>
+          <DeleteProductForm deleteAction={deleteAction} isActive={product.is_active} />
+        </div>
+      </Can>
 
       {/* Histórico de movimentações */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Histórico de movimentações</h2>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/inventory/movements?productId=${product.id}`}>Ver todas</Link>
-          </Button>
+      <Can permission="movements:movement:read">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Histórico de movimentações</h2>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${companySlug}/inventory/movements?productId=${product.id}`}>
+                Ver todas
+              </Link>
+            </Button>
+          </div>
+          <MovementTable
+            data={movements.data}
+            total={movements.total}
+            page={movements.page}
+            totalPages={movements.totalPages}
+          />
         </div>
-        <MovementTable
-          data={movements.data}
-          total={movements.total}
-          page={movements.page}
-          totalPages={movements.totalPages}
-        />
-      </div>
+      </Can>
     </section>
   );
 }

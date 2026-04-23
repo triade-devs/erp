@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveCompanyId } from "@/modules/tenancy";
+import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { productSchema } from "../schemas";
 import type { ActionResult } from "@/lib/errors";
 
@@ -21,6 +23,17 @@ export async function updateProductAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Não autenticado" };
 
+  const companyId = await getActiveCompanyId();
+  if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
+
+  try {
+    await requirePermission(companyId, "inventory:product:update");
+  } catch (e) {
+    if (e instanceof ForbiddenError)
+      return { ok: false, message: "Acesso negado: permissão insuficiente" };
+    throw e;
+  }
+
   const { error } = await supabase
     .from("products")
     .update({
@@ -34,7 +47,8 @@ export async function updateProductAction(
       is_active: parsed.data.isActive,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("company_id", companyId);
 
   if (error) {
     if (error.code === "23505") {
@@ -43,7 +57,6 @@ export async function updateProductAction(
     return { ok: false, message: error.message };
   }
 
-  revalidatePath("/inventory");
-  revalidatePath(`/inventory/${id}`);
+  revalidatePath("/", "layout");
   return { ok: true, message: "Produto atualizado com sucesso" };
 }

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveCompanyId } from "@/modules/tenancy";
+import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { productSchema } from "../schemas";
 import type { ActionResult } from "@/lib/errors";
 
@@ -20,6 +22,17 @@ export async function createProductAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Não autenticado" };
 
+  const companyId = await getActiveCompanyId();
+  if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
+
+  try {
+    await requirePermission(companyId, "inventory:product:create");
+  } catch (e) {
+    if (e instanceof ForbiddenError)
+      return { ok: false, message: "Acesso negado: permissão insuficiente" };
+    throw e;
+  }
+
   const { error } = await supabase.from("products").insert({
     sku: parsed.data.sku.toUpperCase(),
     name: parsed.data.name,
@@ -29,6 +42,7 @@ export async function createProductAction(
     sale_price: parsed.data.salePrice,
     min_stock: parsed.data.minStock,
     is_active: parsed.data.isActive,
+    company_id: companyId,
     created_by: user.id,
   });
 
@@ -39,6 +53,6 @@ export async function createProductAction(
     return { ok: false, message: error.message };
   }
 
-  revalidatePath("/inventory");
+  revalidatePath("/", "layout");
   return { ok: true, message: "Produto cadastrado com sucesso" };
 }

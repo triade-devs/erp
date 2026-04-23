@@ -5,15 +5,25 @@ export type MenuItem = {
   roles?: string[];
   requiresModule?: string;
   requiresPermission?: string;
+  /** Se true, o layout prefixará o href com `/<companySlug>` */
+  requiresSlug?: boolean;
 };
 
-/**
- * Registro central do menu de navegação.
- * Novos módulos se registram aqui sem alterar o layout.
- */
 export const MODULES_MENU: MenuItem[] = [
   { label: "Início", href: "/" },
-  { label: "Estoque", href: "/inventory" },
-  { label: "Movimentações", href: "/inventory/movements" },
-  // Novos módulos: Orçamentos, Clientes, Financeiro, etc.
+  {
+    label: "Estoque",
+    href: "/inventory",
+    requiresSlug: true,
+    requiresPermission: "inventory:product:read",
+  },
+  {
+    label: "Movimentações",
+    href: "/inventory/movements",
+    requiresSlug: true,
+    requiresPermission: "movements:movement:read",
+  },
+  { label: "Auditoria", href: "/audit", requiresSlug: true, requiresPermission: "core:audit:read" },
 ];
+
+export const ADMIN_MENU: MenuItem[] = [{ label: "Empresas", href: "/admin/companies" }];

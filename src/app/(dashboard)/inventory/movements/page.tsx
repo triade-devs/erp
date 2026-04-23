@@ -1,6 +1,7 @@
 import { listMovements, listProducts } from "@/modules/inventory";
 import { MovementForm } from "@/modules/inventory";
 import { MovementTable } from "@/modules/inventory";
+import { getActiveCompanyId } from "@/modules/tenancy";
 
 export const metadata = { title: "Movimentações — ERP" };
 
@@ -8,9 +9,10 @@ type Props = { searchParams: Promise<Record<string, string>> };
 
 export default async function MovementsPage({ searchParams }: Props) {
   const params = await searchParams;
+  const companyId = (await getActiveCompanyId()) ?? "";
   const [movements, products] = await Promise.all([
-    listMovements(params),
-    listProducts({ onlyActive: true, pageSize: 100 }),
+    listMovements(companyId, params),
+    listProducts(companyId, { onlyActive: true, pageSize: 100 }),
   ]);
 
   const productOptions = products.data.map((p) => ({

@@ -4,6 +4,7 @@ import { listProductsSchema } from "../schemas";
 import type { PaginatedResult, Product } from "../types";
 
 export async function listProducts(
+  companyId: string,
   raw: Record<string, unknown>,
 ): Promise<PaginatedResult<Product>> {
   const { q, page, pageSize, onlyActive } = listProductsSchema.parse(raw);
@@ -14,6 +15,7 @@ export async function listProducts(
   let query = supabase
     .from("products")
     .select("*", { count: "exact" })
+    .eq("company_id", companyId)
     .order("name")
     .range(from, to);
 

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listProducts } from "@/modules/inventory";
 import { ProductTable } from "@/modules/inventory";
+import { getActiveCompanyId } from "@/modules/tenancy";
 
 export const metadata = { title: "Estoque — ERP" };
 
@@ -10,7 +11,8 @@ type Props = { searchParams: Promise<Record<string, string>> };
 
 export default async function InventoryPage({ searchParams }: Props) {
   const params = await searchParams;
-  const { data, total, page, pageSize, totalPages } = await listProducts(params);
+  const companyId = (await getActiveCompanyId()) ?? "";
+  const { data, total, page, pageSize, totalPages } = await listProducts(companyId, params);
 
   return (
     <section className="space-y-6">
@@ -48,6 +50,7 @@ export default async function InventoryPage({ searchParams }: Props) {
         page={page}
         pageSize={pageSize}
         totalPages={totalPages}
+        basePath="/inventory"
       />
     </section>
   );

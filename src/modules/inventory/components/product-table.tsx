@@ -11,9 +11,14 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import type { PaginatedResult, Product } from "../types";
 
-type Props = Pick<PaginatedResult<Product>, "data" | "page" | "pageSize" | "total" | "totalPages">;
+type Props = Pick<
+  PaginatedResult<Product>,
+  "data" | "page" | "pageSize" | "total" | "totalPages"
+> & {
+  basePath: string;
+};
 
-export function ProductTable({ data, page, totalPages, total }: Props) {
+export function ProductTable({ data, page, totalPages, total, basePath }: Props) {
   if (data.length === 0) {
     return (
       <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
@@ -39,7 +44,7 @@ export function ProductTable({ data, page, totalPages, total }: Props) {
           </TableHeader>
           <TableBody>
             {data.map((product) => (
-              <ProductRow key={product.id} product={product} />
+              <ProductRow key={product.id} product={product} basePath={basePath} />
             ))}
           </TableBody>
         </Table>
@@ -59,14 +64,14 @@ export function ProductTable({ data, page, totalPages, total }: Props) {
   );
 }
 
-function ProductRow({ product }: { product: Product }) {
+function ProductRow({ product, basePath }: { product: Product; basePath: string }) {
   const isLowStock = Number(product.stock) <= Number(product.min_stock);
 
   return (
     <TableRow>
       <TableCell className="font-mono text-xs">{product.sku}</TableCell>
       <TableCell>
-        <Link href={`/inventory/${product.id}`} className="font-medium hover:underline">
+        <Link href={`${basePath}/${product.id}`} className="font-medium hover:underline">
           {product.name}
         </Link>
         {product.description && (

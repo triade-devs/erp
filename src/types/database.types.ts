@@ -307,6 +307,7 @@ export type Database = {
       };
       products: {
         Row: {
+          company_id: string;
           cost_price: number;
           created_at: string;
           created_by: string | null;
@@ -322,6 +323,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          company_id: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
@@ -337,6 +339,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          company_id?: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
@@ -351,7 +354,15 @@ export type Database = {
           unit?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "products_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -456,6 +467,7 @@ export type Database = {
       };
       stock_movements: {
         Row: {
+          company_id: string;
           created_at: string;
           id: string;
           movement_type: Database["public"]["Enums"]["movement_type"];
@@ -466,6 +478,7 @@ export type Database = {
           unit_cost: number | null;
         };
         Insert: {
+          company_id: string;
           created_at?: string;
           id?: string;
           movement_type: Database["public"]["Enums"]["movement_type"];
@@ -476,6 +489,7 @@ export type Database = {
           unit_cost?: number | null;
         };
         Update: {
+          company_id?: string;
           created_at?: string;
           id?: string;
           movement_type?: Database["public"]["Enums"]["movement_type"];
@@ -486,6 +500,13 @@ export type Database = {
           unit_cost?: number | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "stock_movements_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "stock_movements_product_id_fkey";
             columns: ["product_id"];
