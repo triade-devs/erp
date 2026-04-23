@@ -2,15 +2,26 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { signOutAction } from "@/modules/auth";
 import { Button } from "@/components/ui/button";
-import { MODULES_MENU } from "@/core/navigation/menu";
+import { MODULES_MENU, ADMIN_MENU } from "@/core/navigation/menu";
 import { getCurrentUser } from "@/modules/auth";
 import { CompanySwitcher, listMyCompanies, getActiveCompanyId } from "@/modules/tenancy";
+import { createClient } from "@/lib/supabase/server";
+import { getEffectivePermissions } from "@/modules/authz";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [companies, activeCompanyId] = await Promise.all([listMyCompanies(), getActiveCompanyId()]);
+  const supabase = await createClient();
+  const [companies, activeCompanyId, { data: isPlatformAdmin }] = await Promise.all([
+    listMyCompanies(),
+    getActiveCompanyId(),
+    supabase.rpc("is_platform_admin"),
+  ]);
+
+  const userPerms = activeCompanyId
+    ? await getEffectivePermissions(activeCompanyId)
+    : new Set<string>();
 
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
   const companySlug = activeCompany?.slug ?? "";
@@ -25,7 +36,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
         <nav className="flex flex-col gap-1">
-          {MODULES_MENU.map((item) => {
+          {MODULES_MENU.filter((item) => {
+            if (!item.requiresPermission) return true;
+            // Platform admin tem acesso irrestrito
+            if (isPlatformAdmin) return true;
+            return userPerms.has(item.requiresPermission) || userPerms.has("*");
+          }).map((item) => {
             const href =
               item.requiresSlug && companySlug ? `/${companySlug}${item.href}` : item.href;
             return (
@@ -38,6 +54,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </Link>
             );
           })}
+
+          {isPlatformAdmin && (
+            <div className="mt-6">
+              <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Plataforma
+              </p>
+              {ADMIN_MENU.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
       </aside>
 
