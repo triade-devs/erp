@@ -14,24 +14,31 @@ export function withPermission<T>(
     try {
       await requirePermission(ctx.companyId, permission);
       const result = await handler(ctx, formData);
-      // Auditoria assíncrona — erro não propaga para o usuário
-      void audit({
-        companyId: ctx.companyId,
-        action,
-        permission,
-        status: "success",
-        metadata: { userId: ctx.userId },
-      });
+      try {
+        await audit({
+          companyId: ctx.companyId,
+          action,
+          permission,
+          status: "success",
+          metadata: { userId: ctx.userId },
+        });
+      } catch (auditErr) {
+        console.error("[audit] falha ao registrar log de sucesso:", auditErr);
+      }
       return result;
     } catch (e) {
       const status = e instanceof ForbiddenError ? "denied" : "error";
-      void audit({
-        companyId: ctx.companyId,
-        action,
-        permission,
-        status,
-        metadata: { userId: ctx.userId, error: (e as Error).message },
-      });
+      try {
+        await audit({
+          companyId: ctx.companyId,
+          action,
+          permission,
+          status,
+          metadata: { userId: ctx.userId },
+        });
+      } catch (auditErr) {
+        console.error("[audit] falha ao registrar log de erro:", auditErr);
+      }
       if (e instanceof ForbiddenError) {
         return {
           ok: false,

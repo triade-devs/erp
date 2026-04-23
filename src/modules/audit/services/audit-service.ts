@@ -20,7 +20,7 @@ export async function audit(e: AuditEntry): Promise<void> {
   } = await supabase.auth.getUser();
   const h = await headers();
 
-  await supabase.from("audit_logs").insert({
+  const { error: insertError } = await supabase.from("audit_logs").insert({
     company_id: e.companyId ?? null,
     actor_user_id: user?.id ?? null,
     actor_email: user?.email ?? null,
@@ -33,4 +33,5 @@ export async function audit(e: AuditEntry): Promise<void> {
     user_agent: h.get("user-agent") ?? null,
     metadata: (e.metadata ?? {}) as Json,
   });
+  if (insertError) console.error("[audit] falha ao inserir log:", insertError.message);
 }
