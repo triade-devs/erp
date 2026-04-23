@@ -4,7 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     environment: "node",
-    globals: true,
+    // globals removido — os testes usam imports explícitos do "vitest"
   },
   resolve: {
     alias: {

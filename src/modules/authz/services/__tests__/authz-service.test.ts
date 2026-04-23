@@ -25,6 +25,8 @@ type MembershipData = {
   }>;
 } | null;
 
+// mock deliberadamente incompleto — o SupabaseClient é demasiado complexo para tipagem exata em testes;
+// usamos `as never` para silenciar o TypeScript sem perder a verificação dos campos que realmente testamos.
 function makeSupabaseMock({
   userId = "user-123",
   userNull = false,
@@ -115,6 +117,14 @@ describe("getEffectivePermissions", () => {
 
     const perms = await getEffectivePermissions("company-1");
     expect(perms.size).toBe(0);
+  });
+
+  it("propaga erro do Supabase ao buscar membership", async () => {
+    const dbError = new Error("db error");
+    const mock = makeSupabaseMock({ isPlatformAdmin: false, membershipError: dbError });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    await expect(getEffectivePermissions("company-1")).rejects.toThrow("db error");
   });
 });
 
