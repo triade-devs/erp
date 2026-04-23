@@ -4,6 +4,7 @@ import { listMovementsSchema } from "../schemas";
 import type { PaginatedResult, StockMovement } from "../types";
 
 export async function listMovements(
+  companyId: string,
   raw: Record<string, unknown>,
 ): Promise<PaginatedResult<StockMovement>> {
   const { productId, page, pageSize } = listMovementsSchema.parse(raw);
@@ -14,6 +15,7 @@ export async function listMovements(
   let query = supabase
     .from("stock_movements")
     .select("*", { count: "exact" })
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .range(from, to);
 

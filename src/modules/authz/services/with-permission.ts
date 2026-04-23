@@ -27,6 +27,16 @@ export function withPermission<T>(
       }
       return result;
     } catch (e) {
+      // Re-throw Next.js internal errors (redirect, notFound) sem auditar como erro
+      if (
+        e instanceof Error &&
+        "digest" in e &&
+        typeof (e as { digest: unknown }).digest === "string" &&
+        ((e as { digest: string }).digest.startsWith("NEXT_REDIRECT") ||
+          (e as { digest: string }).digest.startsWith("NEXT_NOT_FOUND"))
+      ) {
+        throw e;
+      }
       const status = e instanceof ForbiddenError ? "denied" : "error";
       try {
         await audit({

@@ -3,39 +3,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listProducts } from "@/modules/inventory";
 import { ProductTable } from "@/modules/inventory";
-import { getActiveCompanyId } from "@/modules/tenancy";
+import { resolveCompany } from "@/modules/tenancy";
 
 export const metadata = { title: "Estoque — ERP" };
 
-type Props = { searchParams: Promise<Record<string, string>> };
+type Props = {
+  params: Promise<{ companySlug: string }>;
+  searchParams: Promise<Record<string, string>>;
+};
 
-export default async function InventoryPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const companyId = (await getActiveCompanyId()) ?? "";
-  const { data, total, page, pageSize, totalPages } = await listProducts(companyId, params);
+export default async function InventoryPage({ params, searchParams }: Props) {
+  const { companySlug } = await params;
+  const company = await resolveCompany(companySlug);
+  const rawParams = await searchParams;
+  const { data, total, page, pageSize, totalPages } = await listProducts(company.id, rawParams);
 
   return (
     <section className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Estoque</h1>
+          <h1 className="text-2xl font-semibold">Estoque — {company.name}</h1>
           <p className="text-sm text-muted-foreground">{total} produtos cadastrados</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href="/inventory/movements">Movimentações</Link>
+            <Link href={`/${companySlug}/inventory/movements`}>Movimentações</Link>
           </Button>
           <Button asChild>
-            <Link href="/inventory/new">+ Novo produto</Link>
+            <Link href={`/${companySlug}/inventory/new`}>+ Novo produto</Link>
           </Button>
         </div>
       </header>
 
-      {/* Busca */}
       <form className="flex gap-2">
         <Input
           name="q"
-          defaultValue={params.q ?? ""}
+          defaultValue={rawParams.q ?? ""}
           placeholder="Buscar por nome ou SKU..."
           className="max-w-sm"
         />

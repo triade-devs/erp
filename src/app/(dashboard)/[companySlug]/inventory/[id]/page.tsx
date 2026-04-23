@@ -6,18 +6,19 @@ import { getProduct, updateProductAction, listMovements } from "@/modules/invent
 import { ProductForm } from "@/modules/inventory";
 import { MovementTable } from "@/modules/inventory";
 import { formatCurrency } from "@/lib/utils";
-import { getActiveCompanyId } from "@/modules/tenancy";
+import { resolveCompany } from "@/modules/tenancy";
 
 export const metadata = { title: "Produto — ERP" };
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ companySlug: string; id: string }> };
 
 export default async function ProductDetailPage({ params }: Props) {
-  const { id } = await params;
-  const companyId = (await getActiveCompanyId()) ?? "";
+  const { companySlug, id } = await params;
+  const company = await resolveCompany(companySlug);
+
   const [product, movements] = await Promise.all([
-    getProduct(id, companyId),
-    listMovements(companyId, { productId: id, pageSize: 10 }),
+    getProduct(id, company.id),
+    listMovements(company.id, { productId: id, pageSize: 10 }),
   ]);
 
   if (!product) notFound();
@@ -39,7 +40,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <p className="font-mono text-sm text-muted-foreground">{product.sku}</p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/inventory">← Voltar</Link>
+          <Link href={`/${companySlug}/inventory`}>← Voltar</Link>
         </Button>
       </header>
 
@@ -68,7 +69,9 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Histórico de movimentações</h2>
           <Button asChild variant="outline" size="sm">
-            <Link href={`/inventory/movements?productId=${product.id}`}>Ver todas</Link>
+            <Link href={`/${companySlug}/inventory/movements?productId=${product.id}`}>
+              Ver todas
+            </Link>
           </Button>
         </div>
         <MovementTable

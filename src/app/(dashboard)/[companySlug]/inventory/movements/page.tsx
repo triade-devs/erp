@@ -1,18 +1,23 @@
 import { listMovements, listProducts } from "@/modules/inventory";
 import { MovementForm } from "@/modules/inventory";
 import { MovementTable } from "@/modules/inventory";
-import { getActiveCompanyId } from "@/modules/tenancy";
+import { resolveCompany } from "@/modules/tenancy";
 
 export const metadata = { title: "Movimentações — ERP" };
 
-type Props = { searchParams: Promise<Record<string, string>> };
+type Props = {
+  params: Promise<{ companySlug: string }>;
+  searchParams: Promise<Record<string, string>>;
+};
 
-export default async function MovementsPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const companyId = (await getActiveCompanyId()) ?? "";
+export default async function MovementsPage({ params, searchParams }: Props) {
+  const { companySlug } = await params;
+  const company = await resolveCompany(companySlug);
+  const rawParams = await searchParams;
+
   const [movements, products] = await Promise.all([
-    listMovements(companyId, params),
-    listProducts(companyId, { onlyActive: true, pageSize: 100 }),
+    listMovements(company.id, rawParams),
+    listProducts(company.id, { onlyActive: true, pageSize: 100 }),
   ]);
 
   const productOptions = products.data.map((p) => ({
@@ -25,7 +30,7 @@ export default async function MovementsPage({ searchParams }: Props) {
   return (
     <section className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold">Movimentações de Estoque</h1>
+        <h1 className="text-2xl font-semibold">Movimentações de Estoque — {company.name}</h1>
         <p className="text-sm text-muted-foreground">Registre entradas, saídas e ajustes</p>
       </header>
 

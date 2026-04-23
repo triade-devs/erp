@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveCompanyId } from "@/modules/tenancy";
 import { movementSchema } from "../schemas";
 import { validateMovement } from "../services/stock-service";
 import type { ActionResult } from "@/lib/errors";
@@ -20,6 +21,9 @@ export async function registerMovementAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Não autenticado" };
+
+  const companyId = await getActiveCompanyId();
+  if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
 
   // Pré-validação de saldo (melhora UX — banco valida novamente via trigger)
   const { data: product, error: pErr } = await supabase
@@ -44,6 +48,7 @@ export async function registerMovementAction(
     quantity: parsed.data.quantity,
     unit_cost: parsed.data.unitCost ?? null,
     reason: parsed.data.reason ?? null,
+    company_id: companyId,
     performed_by: user.id,
   });
 

@@ -12,6 +12,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const [companies, activeCompanyId] = await Promise.all([listMyCompanies(), getActiveCompanyId()]);
 
+  const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
+  const companySlug = activeCompany?.slug ?? "";
+
   return (
     <div className="grid min-h-screen grid-cols-[240px_1fr]">
       {/* Sidebar */}
@@ -22,15 +25,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
         <nav className="flex flex-col gap-1">
-          {MODULES_MENU.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {MODULES_MENU.map((item) => {
+            const href =
+              item.requiresSlug && companySlug ? `/${companySlug}${item.href}` : item.href;
+            return (
+              <Link
+                key={item.href}
+                href={href}
+                className="rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
