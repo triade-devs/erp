@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
 import { updateCompanySchema } from "../schemas/update-company";
+import { audit } from "@/modules/audit";
 
 /**
  * Server Action para atualizar dados de uma empresa (apenas administradores de plataforma).
@@ -53,12 +54,11 @@ export async function updateCompanyAction(
   if (error) return { ok: false, message: error.message };
 
   // 5. Registra audit log
-  await supabase.from("audit_logs").insert({
+  await audit({
+    companyId: id,
     action: "company.update",
-    actor_user_id: user?.id ?? null,
-    actor_email: user?.email ?? null,
-    resource_type: "company",
-    resource_id: id,
+    resourceType: "company",
+    resourceId: id,
     status: "success",
     metadata: { name, plan, is_active },
   });

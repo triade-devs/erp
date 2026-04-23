@@ -6,6 +6,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { AppError, type ActionResult } from "@/lib/errors";
 import { env } from "@/core/config/env";
 import { createCompanySchema } from "../schemas/create-company";
+import { audit } from "@/modules/audit";
 
 /**
  * Server Action para criar uma nova empresa (apenas administradores de plataforma).
@@ -149,15 +150,13 @@ export async function createCompanyAction(
   }
 
   // 8. Registra audit log
-  await supabase.from("audit_logs").insert({
+  await audit({
+    companyId: company.id,
     action: "company.create",
-    actor_user_id: user.id,
-    actor_email: user.email ?? null,
-    company_id: null,
-    resource_type: "company",
-    resource_id: companyId,
+    resourceType: "company",
+    resourceId: company.id,
     status: "success",
-    metadata: { name, slug, plan },
+    metadata: { ownerEmail },
   });
 
   revalidatePath("/admin/companies");
