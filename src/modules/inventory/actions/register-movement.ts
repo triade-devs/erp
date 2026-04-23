@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveCompanyId } from "@/modules/tenancy";
+import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { movementSchema } from "../schemas";
 import { validateMovement } from "../services/stock-service";
 import type { ActionResult } from "@/lib/errors";
@@ -24,6 +25,14 @@ export async function registerMovementAction(
 
   const companyId = await getActiveCompanyId();
   if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
+
+  try {
+    await requirePermission(companyId, "movements:movement:create");
+  } catch (e) {
+    if (e instanceof ForbiddenError)
+      return { ok: false, message: "Acesso negado: permissão insuficiente" };
+    throw e;
+  }
 
   // Pré-validação de saldo (melhora UX — banco valida novamente via trigger)
   const { data: product, error: pErr } = await supabase
@@ -60,7 +69,6 @@ export async function registerMovementAction(
     return { ok: false, message: error.message };
   }
 
-  revalidatePath("/inventory");
-  revalidatePath("/inventory/movements");
+  revalidatePath("/", "layout");
   return { ok: true, message: "Movimentação registrada com sucesso" };
 }

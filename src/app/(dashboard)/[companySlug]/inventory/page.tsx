@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { listProducts } from "@/modules/inventory";
 import { ProductTable } from "@/modules/inventory";
 import { resolveCompany } from "@/modules/tenancy";
+import { Can } from "@/modules/authz";
 
 export const metadata = { title: "Estoque — ERP" };
 
@@ -26,12 +27,16 @@ export default async function InventoryPage({ params, searchParams }: Props) {
           <p className="text-sm text-muted-foreground">{total} produtos cadastrados</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${companySlug}/inventory/movements`}>Movimentações</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/${companySlug}/inventory/new`}>+ Novo produto</Link>
-          </Button>
+          <Can permission="movements:movement:read">
+            <Button asChild variant="outline">
+              <Link href={`/${companySlug}/inventory/movements`}>Movimentações</Link>
+            </Button>
+          </Can>
+          <Can permission="inventory:product:create">
+            <Button asChild>
+              <Link href={`/${companySlug}/inventory/new`}>+ Novo produto</Link>
+            </Button>
+          </Can>
         </div>
       </header>
 

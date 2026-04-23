@@ -307,7 +307,7 @@ export type Database = {
       };
       products: {
         Row: {
-          company_id: string | null;
+          company_id: string;
           cost_price: number;
           created_at: string;
           created_by: string | null;
@@ -323,7 +323,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
-          company_id?: string | null;
+          company_id: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
@@ -339,7 +339,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
-          company_id?: string | null;
+          company_id?: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
@@ -467,7 +467,7 @@ export type Database = {
       };
       stock_movements: {
         Row: {
-          company_id: string | null;
+          company_id: string;
           created_at: string;
           id: string;
           movement_type: Database["public"]["Enums"]["movement_type"];
@@ -478,7 +478,7 @@ export type Database = {
           unit_cost: number | null;
         };
         Insert: {
-          company_id?: string | null;
+          company_id: string;
           created_at?: string;
           id?: string;
           movement_type: Database["public"]["Enums"]["movement_type"];
@@ -489,7 +489,7 @@ export type Database = {
           unit_cost?: number | null;
         };
         Update: {
-          company_id?: string | null;
+          company_id?: string;
           created_at?: string;
           id?: string;
           movement_type?: Database["public"]["Enums"]["movement_type"];
