@@ -16,6 +16,9 @@ export async function getEffectivePermissions(companyId: string): Promise<Set<st
   } = await supabase.auth.getUser();
   if (!user) return new Set();
 
+  const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
+  if (isPlatformAdmin) return new Set(["*"]);
+
   const { data, error } = await supabase
     .from("memberships")
     .select(
@@ -52,7 +55,7 @@ export async function getEffectivePermissions(companyId: string): Promise<Set<st
 
 export async function hasPermission(companyId: string, code: string): Promise<boolean> {
   const perms = await getEffectivePermissions(companyId);
-  return perms.has(code);
+  return perms.has("*") || perms.has(code);
 }
 
 export async function requirePermission(companyId: string, code: string): Promise<void> {

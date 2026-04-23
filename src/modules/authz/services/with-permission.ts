@@ -6,7 +6,7 @@ export type ActionCtx = { companyId: string; userId: string };
 
 export function withPermission<T>(
   permission: string,
-  action: string,
+  _action: string,
   handler: (ctx: ActionCtx, formData: FormData) => Promise<T>,
 ) {
   return async function guarded(ctx: ActionCtx, formData: FormData): Promise<T | ActionResult> {
