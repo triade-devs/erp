@@ -18,6 +18,7 @@ export async function updateCompanyAction(
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Não autenticado" };
 
   // 2. Verifica permissão de plataforma
   const { data: isPlatformAdmin, error: rpcError } = await supabase.rpc("is_platform_admin");
