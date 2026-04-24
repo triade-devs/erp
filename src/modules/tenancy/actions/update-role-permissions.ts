@@ -61,6 +61,7 @@ export async function updateRolePermissionsAction(
   const desiredSet = new Set(filteredRequested);
 
   const toAdd = filteredRequested.filter((code) => !currentSet.has(code));
+  // Só remove perms de módulos habilitados — módulos desabilitados são preservados.
   const toRemove = [...currentSet].filter((code) => !desiredSet.has(code) && validSet.has(code));
 
   if (toRemove.length > 0) {
@@ -88,7 +89,7 @@ export async function updateRolePermissionsAction(
     resourceType: "role",
     resourceId: roleId,
     status: "success",
-    metadata: { added: toAdd.length, removed: toRemove.length },
+    metadata: { added: toAdd, removed: toRemove },
   });
 
   revalidatePath("/", "layout");

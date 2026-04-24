@@ -43,7 +43,10 @@ export function PermissionMatrix({ matrix, isSystem, action }: Props) {
           <h3 className="text-sm font-semibold">{mod.moduleName}</h3>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {mod.permissions.map((perm) => (
-              <label key={perm.code} className="flex cursor-pointer select-none items-start gap-2">
+              <label
+                key={perm.code}
+                className={`flex select-none items-start gap-2 ${isSystem ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+              >
                 <input
                   type="checkbox"
                   name="permission_code"
