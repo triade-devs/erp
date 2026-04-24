@@ -4,6 +4,13 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { inviteMemberAction } from "@/modules/tenancy";
 import type { CompanyRole } from "@/modules/tenancy";
 
@@ -41,18 +48,15 @@ export function InviteMemberDialog({ companyId, roles }: Props) {
     });
   }
 
-  if (!open) {
-    return (
-      <Button onClick={() => setOpen(true)} size="sm">
-        + Convidar membro
-      </Button>
-    );
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
-        <h3 className="mb-4 text-lg font-semibold">Convidar membro</h3>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">+ Convidar membro</Button>
+      </DialogTrigger>
+      <DialogContent className="w-full max-w-md">
+        <DialogHeader>
+          <DialogTitle>Convidar membro</DialogTitle>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -111,7 +115,7 @@ export function InviteMemberDialog({ companyId, roles }: Props) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

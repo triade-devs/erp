@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UpdateMemberRolesForm } from "./update-member-roles-form";
 
+function statusLabel(status: string): string {
+  if (status === "active") return "Ativo";
+  if (status === "invited") return "Convidado";
+  if (status === "suspended") return "Suspenso";
+  return status;
+}
+
 export const metadata = { title: "Editar Membro — ERP" };
 
 type Props = {
@@ -66,7 +73,7 @@ export default async function MemberEditPage({ params }: Props) {
                     : "destructive"
               }
             >
-              {member.status}
+              {statusLabel(member.status)}
             </Badge>
             {member.isOwner && <Badge variant="outline">owner</Badge>}
           </div>

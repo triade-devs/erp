@@ -5,13 +5,6 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { updateCompanySettingsAction } from "@/modules/tenancy";
 import type { ActionResult } from "@/lib/errors";
 import type { Tables } from "@/types/database.types";
@@ -27,13 +20,12 @@ export function CompanySettingsForm({
   company: Company;
   readOnly: boolean;
 }) {
-  const [state, formAction] = useActionState(updateCompanySettingsAction, initial);
+  const boundAction = updateCompanySettingsAction.bind(null, company.id);
+  const [state, formAction] = useActionState(boundAction, initial);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   return (
     <form action={formAction} className="space-y-6">
-      <input type="hidden" name="id" value={company.id} />
-
       {!state.ok && state.message && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {state.message}
@@ -68,20 +60,9 @@ export function CompanySettingsForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="plan">
-            Plano <span className="text-red-500">*</span>
-          </Label>
-          <Select name="plan" defaultValue={company.plan} disabled={readOnly}>
-            <SelectTrigger id="plan">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="starter">Starter</SelectItem>
-              <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="enterprise">Enterprise</SelectItem>
-            </SelectContent>
-          </Select>
-          {fieldErrors?.plan && <p className="text-sm text-red-600">{fieldErrors.plan[0]}</p>}
+          <Label htmlFor="plan">Plano</Label>
+          <Input id="plan" value={company.plan} disabled readOnly />
+          <p className="text-xs text-muted-foreground">O plano é gerenciado pela plataforma.</p>
         </div>
 
         <div className="space-y-2">

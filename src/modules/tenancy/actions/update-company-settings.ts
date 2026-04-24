@@ -8,6 +8,7 @@ import { updateCompanySchema } from "../schemas/update-company";
 import { audit } from "@/modules/audit";
 
 export async function updateCompanySettingsAction(
+  companyId: string,
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -28,10 +29,10 @@ export async function updateCompanySettingsAction(
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { id, name, plan, document, is_active } = parsed.data;
+  const { name, document } = parsed.data;
 
   try {
-    await requirePermission(id, "core:company:update");
+    await requirePermission(companyId, "core:company:update");
   } catch {
     return { ok: false, message: "Sem permissão para atualizar dados da empresa" };
   }
@@ -40,22 +41,20 @@ export async function updateCompanySettingsAction(
     .from("companies")
     .update({
       name,
-      plan,
       document: document ?? null,
-      is_active,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", companyId);
 
   if (error) return { ok: false, message: error.message };
 
   await audit({
-    companyId: id,
+    companyId,
     action: "company.update",
     resourceType: "company",
-    resourceId: id,
+    resourceId: companyId,
     status: "success",
-    metadata: { name, plan, is_active },
+    metadata: { name },
   });
 
   revalidatePath(`/[companySlug]/settings/general`, "page");

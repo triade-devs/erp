@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient as createAnonClient } from "@/lib/supabase/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { type ActionResult } from "@/lib/errors";
 import { requirePermission } from "@/modules/authz";
 import { audit } from "@/modules/audit";
@@ -30,10 +30,7 @@ export async function inviteMemberAction(
     return { ok: false, message: "Sem permissão para convidar membros" };
   }
 
-  const adminClient = createServiceClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.SUPABASE_SERVICE_ROLE_KEY,
-  );
+  const adminClient = createServiceClient();
 
   const { data: invitedUser, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
-import { updateCompanySchema } from "../schemas/update-company";
+import { updateCompanyAdminSchema as updateCompanySchema } from "../schemas/update-company-admin";
 import { audit } from "@/modules/audit";
 
 /**

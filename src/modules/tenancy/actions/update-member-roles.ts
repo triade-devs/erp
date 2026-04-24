@@ -34,6 +34,17 @@ export async function updateMemberRolesAction(
   if (fetchError) return { ok: false, message: fetchError.message };
   if (!membership) return { ok: false, message: "Membro não encontrado" };
 
+  if (roleIds.length > 0) {
+    const { data: validRoles } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("company_id", companyId)
+      .in("id", roleIds);
+    if (!validRoles || validRoles.length !== roleIds.length) {
+      return { ok: false, message: "Uma ou mais roles são inválidas" };
+    }
+  }
+
   const { error: deleteError } = await supabase
     .from("membership_roles")
     .delete()
