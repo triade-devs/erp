@@ -6,3 +6,8 @@ export const switchActiveCompanySchema = z.object({
 });
 
 export type SwitchActiveCompanyInput = z.infer<typeof switchActiveCompanySchema>;
+
+export { createRoleSchema } from "./create-role";
+export type { CreateRoleInput } from "./create-role";
+export { updateRoleSchema } from "./update-role";
+export type { UpdateRoleInput } from "./update-role";

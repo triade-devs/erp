@@ -24,6 +24,7 @@
 ## 1. Visão Geral e Princípios Arquiteturais
 
 ### 1.1 Objetivo
+
 Entregar um ERP web, escalável e modular, com MVP focado em três domínios: **Auth**, **Produtos** e **Movimentações de Estoque**. A base deve permitir que novos módulos (Orçamentos, Clientes, Financeiro, etc.) sejam anexados sem tocar no _core_.
 
 ### 1.2 Princípios
@@ -186,6 +187,7 @@ pnpm dlx shadcn@latest add button input label form card table \
 ### 3.2 Variáveis de Ambiente
 
 **`.env.local.example`**
+
 ```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
@@ -197,6 +199,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 **`src/core/config/env.ts`** — validação com Zod na inicialização:
+
 ```ts
 import { z } from "zod";
 
@@ -218,6 +221,7 @@ export const env = envSchema.parse({
 ### 3.3 Clients Supabase (SSR)
 
 **`src/lib/supabase/server.ts`**
+
 ```ts
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -233,10 +237,14 @@ export function createClient() {
       cookies: {
         get: (name) => cookieStore.get(name)?.value,
         set: (name, value, options: CookieOptions) => {
-          try { cookieStore.set({ name, value, ...options }); } catch {}
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {}
         },
         remove: (name, options: CookieOptions) => {
-          try { cookieStore.set({ name, value: "", ...options }); } catch {}
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {}
         },
       },
     },
@@ -245,19 +253,18 @@ export function createClient() {
 ```
 
 **`src/lib/supabase/client.ts`**
+
 ```ts
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/database.types";
 import { env } from "@/core/config/env";
 
 export const createClient = () =>
-  createBrowserClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
+  createBrowserClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 ```
 
 **`src/middleware.ts`** — refresh de sessão + guard de rotas protegidas:
+
 ```ts
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -284,7 +291,9 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_ROUTES.some((p) => pathname.startsWith(p));
 
@@ -333,12 +342,14 @@ pnpm supabase start            # Postgres local
 ### 4.2 Migrations
 
 **`supabase/migrations/20260420_00_init.sql`**
+
 ```sql
 create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
 ```
 
 **`supabase/migrations/20260420_01_profiles.sql`**
+
 ```sql
 create type public.user_role as enum ('admin', 'manager', 'operator');
 
@@ -370,6 +381,7 @@ for each row execute function public.handle_new_user();
 ```
 
 **`supabase/migrations/20260420_02_products.sql`**
+
 ```sql
 create table public.products (
   id           uuid primary key default gen_random_uuid(),
@@ -392,6 +404,7 @@ create index idx_products_name on public.products using gin (to_tsvector('portug
 ```
 
 **`supabase/migrations/20260420_03_stock_movements.sql`**
+
 ```sql
 create type public.movement_type as enum ('in', 'out', 'adjustment');
 
@@ -434,6 +447,7 @@ for each row execute function public.apply_stock_movement();
 ```
 
 **`supabase/migrations/20260420_04_rls_policies.sql`**
+
 ```sql
 -- Helper: role do usuário logado
 create or replace function public.current_user_role()
@@ -478,6 +492,7 @@ pnpm supabase gen types typescript \
 ```
 
 Adicionar script ao `package.json`:
+
 ```json
 {
   "scripts": {
@@ -502,26 +517,29 @@ export const signInSchema = z.object({
   password: z.string().min(8, "Mínimo 8 caracteres"),
 });
 
-export const signUpSchema = z.object({
-  fullName: z.string().min(3, "Informe seu nome"),
-  email: z.string().email(),
-  password: z.string().min(8),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  path: ["confirmPassword"],
-  message: "As senhas não coincidem",
-});
+export const signUpSchema = z
+  .object({
+    fullName: z.string().min(3, "Informe seu nome"),
+    email: z.string().email(),
+    password: z.string().min(8),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "As senhas não coincidem",
+  });
 
 export const recoverSchema = z.object({ email: z.string().email() });
 
-export type SignInInput   = z.infer<typeof signInSchema>;
-export type SignUpInput   = z.infer<typeof signUpSchema>;
-export type RecoverInput  = z.infer<typeof recoverSchema>;
+export type SignInInput = z.infer<typeof signInSchema>;
+export type SignUpInput = z.infer<typeof signUpSchema>;
+export type RecoverInput = z.infer<typeof recoverSchema>;
 ```
 
 ### 5.2 Server Actions
 
 **`src/modules/auth/actions/sign-in.ts`**
+
 ```ts
 "use server";
 import { redirect } from "next/navigation";
@@ -530,10 +548,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signInSchema } from "../schemas";
 import type { ActionResult } from "@/lib/errors";
 
-export async function signInAction(
-  _prev: ActionResult,
-  formData: FormData,
-): Promise<ActionResult> {
+export async function signInAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = signInSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
@@ -548,6 +563,7 @@ export async function signInAction(
 ```
 
 **`src/modules/auth/actions/sign-up.ts`**
+
 ```ts
 "use server";
 import { createClient } from "@/lib/supabase/server";
@@ -555,10 +571,7 @@ import { signUpSchema } from "../schemas";
 import { env } from "@/core/config/env";
 import type { ActionResult } from "@/lib/errors";
 
-export async function signUpAction(
-  _prev: ActionResult,
-  formData: FormData,
-): Promise<ActionResult> {
+export async function signUpAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
@@ -579,6 +592,7 @@ export async function signUpAction(
 ```
 
 **`src/modules/auth/actions/sign-in-google.ts`**
+
 ```ts
 "use server";
 import { redirect } from "next/navigation";
@@ -597,6 +611,7 @@ export async function signInGoogleAction() {
 ```
 
 **`src/modules/auth/actions/recover-password.ts`**
+
 ```ts
 "use server";
 import { createClient } from "@/lib/supabase/server";
@@ -622,6 +637,7 @@ export async function recoverPasswordAction(
 ```
 
 **`src/modules/auth/actions/sign-out.ts`**
+
 ```ts
 "use server";
 import { redirect } from "next/navigation";
@@ -639,6 +655,7 @@ export async function signOutAction() {
 ### 5.3 Route Handler — Callback OAuth
 
 **`src/app/api/auth/callback/route.ts`**
+
 ```ts
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -660,6 +677,7 @@ export async function GET(request: NextRequest) {
 ### 5.4 UI — Formulário de Login
 
 **`src/modules/auth/components/sign-in-form.tsx`**
+
 ```tsx
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
@@ -678,12 +696,22 @@ export function SignInForm() {
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="email" />
-        {state.fieldErrors?.email && <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>}
+        {state.fieldErrors?.email && (
+          <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
-        <Input id="password" name="password" type="password" required autoComplete="current-password" />
-        {state.fieldErrors?.password && <p className="text-sm text-red-600">{state.fieldErrors.password[0]}</p>}
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          required
+          autoComplete="current-password"
+        />
+        {state.fieldErrors?.password && (
+          <p className="text-sm text-red-600">{state.fieldErrors.password[0]}</p>
+        )}
       </div>
       {state.message && !state.ok && <p className="text-sm text-red-600">{state.message}</p>}
       <SubmitButton />
@@ -697,7 +725,11 @@ export function SignInForm() {
 
 function SubmitButton() {
   const { pending } = useFormStatus();
-  return <Button type="submit" className="w-full" disabled={pending}>{pending ? "Entrando..." : "Entrar"}</Button>;
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? "Entrando..." : "Entrar"}
+    </Button>
+  );
 }
 ```
 
@@ -718,7 +750,11 @@ function SubmitButton() {
 import { z } from "zod";
 
 export const productSchema = z.object({
-  sku: z.string().min(1).max(32).regex(/^[A-Z0-9\-]+$/i, "SKU alfanumérico"),
+  sku: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Z0-9\-]+$/i, "SKU alfanumérico"),
   name: z.string().min(2).max(120),
   description: z.string().max(2000).optional().nullable(),
   unit: z.enum(["UN", "KG", "L", "CX", "M"]),
@@ -743,18 +779,21 @@ export const listProductsSchema = z.object({
   onlyActive: z.coerce.boolean().default(true),
 });
 
-export type ProductInput  = z.infer<typeof productSchema>;
+export type ProductInput = z.infer<typeof productSchema>;
 export type MovementInput = z.infer<typeof movementSchema>;
 ```
 
 ### 6.2 Service (regra de negócio pura)
 
 **`src/modules/inventory/services/stock-service.ts`**
+
 ```ts
 import type { MovementInput } from "../schemas";
 
 export class InsufficientStockError extends Error {
-  constructor(productId: string) { super(`Estoque insuficiente: ${productId}`); }
+  constructor(productId: string) {
+    super(`Estoque insuficiente: ${productId}`);
+  }
 }
 
 /** Valida localmente antes de chamar o banco (UX). Banco tem a verdade via trigger. */
@@ -768,6 +807,7 @@ export function validateMovement(input: MovementInput, currentStock: number): vo
 ### 6.3 Server Actions
 
 **`src/modules/inventory/actions/create-product.ts`**
+
 ```ts
 "use server";
 import { revalidatePath } from "next/cache";
@@ -784,7 +824,9 @@ export async function createProductAction(
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Não autenticado" };
 
   const { error } = await supabase.from("products").insert({
@@ -806,6 +848,7 @@ export async function createProductAction(
 ```
 
 **`src/modules/inventory/actions/register-movement.ts`**
+
 ```ts
 "use server";
 import { revalidatePath } from "next/cache";
@@ -823,15 +866,23 @@ export async function registerMovementAction(
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Não autenticado" };
 
   // Pré-validação (UX)
   const { data: product, error: pErr } = await supabase
-    .from("products").select("stock").eq("id", parsed.data.productId).single();
+    .from("products")
+    .select("stock")
+    .eq("id", parsed.data.productId)
+    .single();
   if (pErr || !product) return { ok: false, message: "Produto não encontrado" };
-  try { validateMovement(parsed.data, Number(product.stock)); }
-  catch (e) { return { ok: false, message: (e as Error).message }; }
+  try {
+    validateMovement(parsed.data, Number(product.stock));
+  } catch (e) {
+    return { ok: false, message: (e as Error).message };
+  }
 
   const { error } = await supabase.from("stock_movements").insert({
     product_id: parsed.data.productId,
@@ -852,6 +903,7 @@ export async function registerMovementAction(
 ### 6.4 Queries (leitura)
 
 **`src/modules/inventory/queries/list-products.ts`**
+
 ```ts
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
@@ -860,11 +912,14 @@ import { listProductsSchema } from "../schemas";
 export async function listProducts(raw: Record<string, unknown>) {
   const { q, page, pageSize, onlyActive } = listProductsSchema.parse(raw);
   const from = (page - 1) * pageSize;
-  const to   = from + pageSize - 1;
+  const to = from + pageSize - 1;
 
   const supabase = createClient();
-  let query = supabase.from("products").select("*", { count: "exact" })
-    .order("name").range(from, to);
+  let query = supabase
+    .from("products")
+    .select("*", { count: "exact" })
+    .order("name")
+    .range(from, to);
   if (onlyActive) query = query.eq("is_active", true);
   if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);
 
@@ -880,11 +935,16 @@ export async function listProducts(raw: Record<string, unknown>) {
 export type FieldErrors = Record<string, string[] | undefined>;
 
 export type ActionResult =
-  | { ok: true;  message?: string }
+  | { ok: true; message?: string }
   | { ok: false; message?: string; fieldErrors?: FieldErrors };
 
 export class AppError extends Error {
-  constructor(message: string, public code: string = "APP_ERROR") { super(message); }
+  constructor(
+    message: string,
+    public code: string = "APP_ERROR",
+  ) {
+    super(message);
+  }
 }
 ```
 
@@ -895,6 +955,7 @@ export class AppError extends Error {
 ### 7.1 Listagem de Produtos (Server Component)
 
 **`src/app/(dashboard)/inventory/page.tsx`**
+
 ```tsx
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -913,8 +974,12 @@ export default async function InventoryPage({ searchParams }: Props) {
           <p className="text-sm text-muted-foreground">{total} produtos cadastrados</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline"><Link href="/inventory/movements">Movimentações</Link></Button>
-          <Button asChild><Link href="/inventory/new">+ Novo produto</Link></Button>
+          <Button asChild variant="outline">
+            <Link href="/inventory/movements">Movimentações</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/inventory/new">+ Novo produto</Link>
+          </Button>
         </div>
       </header>
       <ProductTable items={data} page={page} pageSize={pageSize} total={total} />
@@ -926,9 +991,17 @@ export default async function InventoryPage({ searchParams }: Props) {
 ### 7.2 Tabela de Produtos
 
 **`src/modules/inventory/components/product-table.tsx`**
+
 ```tsx
 import Link from "next/link";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Database } from "@/types/database.types";
 
@@ -954,15 +1027,21 @@ export function ProductTable({ items }: Props) {
           <TableRow key={p.id}>
             <TableCell className="font-mono text-xs">{p.sku}</TableCell>
             <TableCell>
-              <Link href={`/inventory/${p.id}`} className="hover:underline">{p.name}</Link>
+              <Link href={`/inventory/${p.id}`} className="hover:underline">
+                {p.name}
+              </Link>
             </TableCell>
-            <TableCell className="text-right">{Number(p.stock).toFixed(3)} {p.unit}</TableCell>
+            <TableCell className="text-right">
+              {Number(p.stock).toFixed(3)} {p.unit}
+            </TableCell>
             <TableCell className="text-right">R$ {Number(p.cost_price).toFixed(2)}</TableCell>
             <TableCell className="text-right">R$ {Number(p.sale_price).toFixed(2)}</TableCell>
             <TableCell>
-              {Number(p.stock) <= Number(p.min_stock)
-                ? <Badge variant="destructive">Baixo</Badge>
-                : <Badge variant="secondary">OK</Badge>}
+              {Number(p.stock) <= Number(p.min_stock) ? (
+                <Badge variant="destructive">Baixo</Badge>
+              ) : (
+                <Badge variant="secondary">OK</Badge>
+              )}
             </TableCell>
           </TableRow>
         ))}
@@ -975,13 +1054,20 @@ export function ProductTable({ items }: Props) {
 ### 7.3 Formulário de Produto (client)
 
 **`src/modules/inventory/components/product-form.tsx`**
+
 ```tsx
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createProductAction } from "../actions/create-product";
 
@@ -993,39 +1079,66 @@ export function ProductForm() {
     <form action={action} className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <Field label="SKU" name="sku" error={state.fieldErrors?.sku?.[0]} required />
       <Field label="Nome" name="name" error={state.fieldErrors?.name?.[0]} required />
-      <div className="md:col-span-2 space-y-2">
+      <div className="space-y-2 md:col-span-2">
         <Label htmlFor="description">Descrição</Label>
         <Textarea id="description" name="description" rows={3} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="unit">Unidade</Label>
         <Select name="unit" defaultValue="UN">
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            {["UN", "KG", "L", "CX", "M"].map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+            {["UN", "KG", "L", "CX", "M"].map((u) => (
+              <SelectItem key={u} value={u}>
+                {u}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
       <Field label="Custo" name="costPrice" type="number" step="0.01" />
       <Field label="Venda" name="salePrice" type="number" step="0.01" />
       <Field label="Estoque mínimo" name="minStock" type="number" step="0.001" />
-      <div className="md:col-span-2 flex justify-end">
+      <div className="flex justify-end md:col-span-2">
         <Submit />
       </div>
       {state.message && (
-        <p className={`md:col-span-2 text-sm ${state.ok ? "text-emerald-600" : "text-red-600"}`}>{state.message}</p>
+        <p className={`text-sm md:col-span-2 ${state.ok ? "text-emerald-600" : "text-red-600"}`}>
+          {state.message}
+        </p>
       )}
     </form>
   );
 }
 
-function Field({ label, name, type = "text", required, error, step }: {
-  label: string; name: string; type?: string; required?: boolean; error?: string; step?: string;
+function Field({
+  label,
+  name,
+  type = "text",
+  required,
+  error,
+  step,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  required?: boolean;
+  error?: string;
+  step?: string;
 }) {
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} name={name} type={type} step={step} required={required} aria-invalid={!!error} />
+      <Input
+        id={name}
+        name={name}
+        type={type}
+        step={step}
+        required={required}
+        aria-invalid={!!error}
+      />
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
@@ -1033,20 +1146,31 @@ function Field({ label, name, type = "text", required, error, step }: {
 
 function Submit() {
   const { pending } = useFormStatus();
-  return <Button type="submit" disabled={pending}>{pending ? "Salvando..." : "Salvar"}</Button>;
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Salvando..." : "Salvar"}
+    </Button>
+  );
 }
 ```
 
 ### 7.4 Registro de Movimentação
 
 **`src/modules/inventory/components/movement-form.tsx`**
+
 ```tsx
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { registerMovementAction } from "../actions/register-movement";
 
 const initial = { ok: false } as const;
@@ -1060,16 +1184,24 @@ export function MovementForm({ products }: { products: Product[] }) {
       <div className="space-y-2 md:col-span-2">
         <Label>Produto</Label>
         <Select name="productId">
-          <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione..." />
+          </SelectTrigger>
           <SelectContent>
-            {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.sku} — {p.name}</SelectItem>)}
+            {products.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.sku} — {p.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
         <Label>Tipo</Label>
         <Select name="type" defaultValue="in">
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="in">Entrada</SelectItem>
             <SelectItem value="out">Saída</SelectItem>
@@ -1085,11 +1217,13 @@ export function MovementForm({ products }: { products: Product[] }) {
         <Label htmlFor="reason">Motivo (opcional)</Label>
         <Input id="reason" name="reason" />
       </div>
-      <div className="md:col-span-2 flex justify-end">
+      <div className="flex justify-end md:col-span-2">
         <Submit />
       </div>
       {state.message && (
-        <p className={`md:col-span-2 text-sm ${state.ok ? "text-emerald-600" : "text-red-600"}`}>{state.message}</p>
+        <p className={`text-sm md:col-span-2 ${state.ok ? "text-emerald-600" : "text-red-600"}`}>
+          {state.message}
+        </p>
       )}
     </form>
   );
@@ -1097,13 +1231,18 @@ export function MovementForm({ products }: { products: Product[] }) {
 
 function Submit() {
   const { pending } = useFormStatus();
-  return <Button type="submit" disabled={pending}>{pending ? "Registrando..." : "Registrar"}</Button>;
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Registrando..." : "Registrar"}
+    </Button>
+  );
 }
 ```
 
 ### 7.5 Shell do Dashboard
 
 **`src/app/(dashboard)/layout.tsx`**
+
 ```tsx
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -1114,7 +1253,9 @@ import { MODULES_MENU } from "@/core/navigation/menu";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   return (
@@ -1123,7 +1264,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <h2 className="mb-6 text-lg font-semibold">ERP</h2>
         <nav className="flex flex-col gap-1">
           {MODULES_MENU.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded px-3 py-2 text-sm hover:bg-accent">
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded px-3 py-2 text-sm hover:bg-accent"
+            >
               {item.label}
             </Link>
           ))}
@@ -1131,7 +1276,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
       <main className="p-8">
         <div className="mb-4 flex justify-end">
-          <form action={signOutAction}><Button variant="ghost" size="sm">Sair</Button></form>
+          <form action={signOutAction}>
+            <Button variant="ghost" size="sm">
+              Sair
+            </Button>
+          </form>
         </div>
         {children}
       </main>
@@ -1141,13 +1290,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
 ```
 
 **`src/core/navigation/menu.ts`** — registro central para o sistema "plug and play":
+
 ```ts
 export type MenuItem = { label: string; href: string; icon?: string; roles?: string[] };
 
 export const MODULES_MENU: MenuItem[] = [
-  { label: "Início",         href: "/" },
-  { label: "Estoque",        href: "/inventory" },
-  { label: "Movimentações",  href: "/inventory/movements" },
+  { label: "Início", href: "/" },
+  { label: "Estoque", href: "/inventory" },
+  { label: "Movimentações", href: "/inventory/movements" },
   // Novos módulos se registram aqui sem alterar o layout.
 ];
 ```
@@ -1157,15 +1307,18 @@ export const MODULES_MENU: MenuItem[] = [
 ## 8. Convenções e Padrões de Projeto
 
 ### 8.1 Commits e branches
+
 - **Conventional Commits** (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`).
 - Branches: `main` (produção) · `develop` (staging) · `feature/<modulo>-<descricao>`.
 
 ### 8.2 Qualidade de código
+
 - `tsconfig.json` com `"strict": true`, `"noUncheckedIndexedAccess": true`.
 - ESLint `next/core-web-vitals` + regra customizada que **impede `import` de arquivos internos de outro módulo** (forçar uso do `index.ts`).
 - Prettier + `prettier-plugin-tailwindcss`.
 
 ### 8.3 Padrões de Design (code level)
+
 - **Barrel pattern** por módulo (`index.ts` como única porta de entrada).
 - **Service/Repository** dentro de cada módulo separa regra de negócio de acesso a dados.
 - **Dependency injection** leve via parâmetros (nada de globais).
@@ -1174,15 +1327,66 @@ export const MODULES_MENU: MenuItem[] = [
 - **Composição > herança** nos componentes (Shadcn já segue esse padrão).
 
 ### 8.4 Erros
+
 - Nunca lançar `Error` cru nas actions — sempre retornar `ActionResult` tipado.
 - Nível de transporte (Supabase) → mapear para mensagens humanas em português.
 
-### 8.5 Testes (sugerido)
-- **Vitest** + **@testing-library/react** para componentes.
-- **Playwright** para e2e dos fluxos críticos (login, cadastro, criar produto, registrar movimento).
-- Testes de `services/` são obrigatórios (lógica pura).
+### 8.5 Testes (obrigatório em toda feature)
+
+> **Política do projeto:** toda PR que altera comportamento **precisa vir com testes automatizados**. PRs sem testes são bloqueados no review. A estratégia completa (pirâmide, ferramentas, gates, Definition of Done) está detalhada em [`ARCHITECTURE-MULTITENANT.md` §12](./ARCHITECTURE-MULTITENANT.md#12-estratégia-de-testes-obrigatória-em-toda-feature) e se aplica ao MVP desde a Fase 1.
+
+**Stack de testes**
+
+- **Vitest** — testes unitários (services, schemas, helpers).
+- **@testing-library/react** — componentes (render + interação).
+- **Vitest + @supabase local** — Server Actions de ponta a ponta (com RLS real).
+- **pgTAP** (`supabase test db`) — triggers e policies RLS direto no Postgres.
+- **Playwright** — e2e dos fluxos críticos (login, cadastro, criar produto, registrar movimento).
+
+**Matriz mínima por feature**
+
+| Cenário                                            | Tipo             |    Obrigatório    |
+| :------------------------------------------------- | :--------------- | :---------------: |
+| Input válido → sucesso                             | integration      |        ✅         |
+| Input inválido → `fieldErrors` do Zod              | unit/integration |        ✅         |
+| Usuário não autenticado → negado                   | integration      |        ✅         |
+| Regra de negócio específica (ex: estoque negativo) | unit no service  |        ✅         |
+| Trigger/policy do banco                            | pgTAP            | ✅ (se aplicável) |
+
+**Scripts**
+
+```bash
+pnpm test           # vitest run
+pnpm test:watch     # vitest em modo watch
+pnpm test:rls       # supabase test db (pgTAP)
+pnpm test:e2e       # playwright
+pnpm test:coverage  # relatório HTML + gate 80%
+pnpm test:ci        # suite completa (roda no GitHub Actions)
+```
+
+**Gates de cobertura**
+
+- Total: **80%** de linhas.
+- `modules/**/services/**`: **95%**.
+- `modules/**/actions/**`: **85%**.
+- pgTAP: 100% dos arquivos passam.
+- Playwright: 100% dos cenários críticos.
+
+**Setup na Fase 1**
+
+A configuração do runner de testes faz parte do Sprint Zero — não é opcional:
+
+```bash
+pnpm add -D vitest @vitejs/plugin-react jsdom \
+  @testing-library/react @testing-library/user-event @testing-library/jest-dom \
+  @playwright/test @vitest/coverage-v8
+pnpm exec playwright install --with-deps
+```
+
+Adicionar `vitest.config.ts` com `projects` separados (`unit` e `integration`), e `playwright.config.ts` com fixtures de personas (Owner/Manager/Operator) a serem reutilizadas nos e2e.
 
 ### 8.6 Observabilidade
+
 - Vercel Analytics + Speed Insights.
 - `console.error` → `@sentry/nextjs` (pós-MVP).
 - Logs estruturados em Server Actions com `request_id` (UUID por request).
@@ -1192,6 +1396,7 @@ export const MODULES_MENU: MenuItem[] = [
 ## 9. Checklist Geral do MVP
 
 ### Fase 1 — Setup
+
 - [ ] `pnpm create next-app` executado com App Router + TS + Tailwind
 - [ ] Supabase SDK (`@supabase/supabase-js`, `@supabase/ssr`) instalado
 - [ ] Shadcn/UI inicializado e componentes base adicionados
@@ -1200,32 +1405,56 @@ export const MODULES_MENU: MenuItem[] = [
 - [ ] Clients Supabase (`server.ts`, `client.ts`) + `middleware.ts` protegendo rotas
 - [ ] Husky + lint-staged + Prettier configurados
 - [ ] Projeto conectado ao Git e à Vercel
+- [ ] **Runner de testes instalado:** Vitest + Testing Library + Playwright + @vitest/coverage-v8
+- [ ] **`vitest.config.ts` com projects `unit` e `integration`**
+- [ ] **`playwright.config.ts` com fixtures de personas (owner/manager/operator)**
+- [ ] **Pipeline CI (GitHub Actions) executa `test:ci` em todo PR**
+- [ ] **Teste "hello world" rodando em cada camada (unit / integration / e2e) para validar setup**
 
 ### Fase 2 — Banco
+
 - [ ] Projeto Supabase criado e linkado (`supabase link`)
 - [ ] Migrations criadas: `profiles`, `products`, `stock_movements`, RLS
 - [ ] Trigger `handle_new_user` funcionando
 - [ ] Trigger `apply_stock_movement` atualizando saldo
 - [ ] RLS habilitado e policies testadas (admin/manager/operator)
 - [ ] `src/types/database.types.ts` gerado via `pnpm db:types`
+- [ ] **pgTAP: `01_triggers.test.sql` cobre `apply_stock_movement` (entrada, saída, saída negativa → erro)**
+- [ ] **pgTAP: `02_triggers.test.sql` cobre `handle_new_user` (cria profile ao inserir auth.user)**
+- [ ] **pgTAP: `03_rls.test.sql` cobre policies de products e movements**
+- [ ] **`pnpm test:rls` passa no CI**
 
 ### Fase 3 — Auth
+
 - [ ] Server Actions: `signIn`, `signUp`, `signOut`, `recoverPassword`, `signInGoogle`
 - [ ] Google OAuth habilitado no Supabase (client/secret configurados)
 - [ ] Callback `/api/auth/callback` trocando code por sessão
 - [ ] Páginas `/login`, `/register`, `/recover` com formulários validados
 - [ ] Redirect para `/login` quando não autenticado (middleware)
 - [ ] `getCurrentUser()` exposto via `src/modules/auth/index.ts`
+- [ ] **Unit: `schemas/index.test.ts` cobre `signInSchema`, `signUpSchema`, `recoverSchema` (happy + edge cases)**
+- [ ] **Integration: `sign-in.test.ts` — credenciais válidas, inválidas, email não-confirmado**
+- [ ] **Integration: `sign-up.test.ts` — cria user + profile via trigger; rejeita senhas fracas**
+- [ ] **Integration: `recover-password.test.ts` — envia email mesmo para email inexistente (antienum)**
+- [ ] **Component: `sign-in-form.test.tsx` — exibe `fieldErrors`, desabilita submit durante pending**
+- [ ] **E2E: `auth.e2e.ts` — fluxo completo login → dashboard → logout**
 
 ### Fase 4 — Estoque (Backend)
+
 - [ ] Schemas Zod para `product` e `movement`
 - [ ] Actions: `createProduct`, `updateProduct`, `deleteProduct`, `registerMovement`
 - [ ] Queries: `listProducts` (paginado + busca), `getProduct`, `listMovements`
 - [ ] `stock-service.ts` com regras puras + testes unitários
 - [ ] `revalidatePath` em todas as mutações
 - [ ] Erros tratados e retornados como `ActionResult`
+- [ ] **Unit: `stock-service.test.ts` — `validateMovement` em todos os 4 cenários (in, out ok, out > stock, adjustment)**
+- [ ] **Integration: `create-product.test.ts` — sucesso, SKU duplicado, validação Zod, não-autenticado**
+- [ ] **Integration: `register-movement.test.ts` — entrada atualiza stock, saída insuficiente → erro, ajuste sobrescreve**
+- [ ] **Integration: `list-products.test.ts` — paginação, busca por nome/SKU, filtro `onlyActive`**
+- [ ] **Cobertura ≥ 95% em `services/`, ≥ 85% em `actions/`**
 
 ### Fase 5 — Estoque (Frontend)
+
 - [ ] Página `/inventory` (listagem paginada + busca)
 - [ ] Página `/inventory/new` (form de criação)
 - [ ] Página `/inventory/[id]` (detalhe + edição)
@@ -1234,28 +1463,37 @@ export const MODULES_MENU: MenuItem[] = [
 - [ ] Badge de "estoque baixo" quando `stock <= min_stock`
 - [ ] Toasts (Sonner) em sucesso/erro das actions
 - [ ] Layout `(dashboard)` com sidebar consumindo `MODULES_MENU`
+- [ ] **Component: `product-form.test.tsx` — validação, erros, estado pending**
+- [ ] **Component: `product-table.test.tsx` — render, badge "Baixo" quando aplicável, link para detalhe**
+- [ ] **Component: `movement-form.test.tsx` — seleção de produto, tipo, quantidade, submit**
+- [ ] **E2E: `inventory.e2e.ts` — criar produto → registrar entrada → ver saldo atualizado → registrar saída**
+- [ ] **E2E: `inventory-negative.e2e.ts` — tentar saída > estoque e confirmar mensagem de erro**
 
 ### Qualidade
+
 - [ ] `pnpm lint` sem erros
 - [ ] `pnpm typecheck` sem erros
 - [ ] Build Vercel (`pnpm build`) passando
-- [ ] Testes de serviços rodando no CI
-- [ ] README com passo-a-passo de setup local
+- [ ] **`pnpm test:ci` verde — unit + integration + pgTAP + e2e**
+- [ ] **Cobertura total ≥ 80% (gate no CI)**
+- [ ] **Nenhum teste `skip` ou `only` no main**
+- [ ] **Tempo total da suíte de testes ≤ 5 min em CI**
+- [ ] README com passo-a-passo de setup local **+ como rodar os testes**
 
 ---
 
 ## 10. Roadmap Pós-MVP
 
-| Ordem | Módulo | Notas |
-| :---: | :--- | :--- |
-| 1 | **Orçamentos** | `src/modules/quotes` — reaproveita `products` + `profiles`. |
-| 2 | **Clientes (CRM light)** | `src/modules/customers` — PF/PJ, contatos, endereços. |
-| 3 | **Fornecedores** | `src/modules/suppliers` — integra com movimentos de entrada. |
-| 4 | **Financeiro básico** | Contas a pagar/receber, conciliação manual. |
-| 5 | **Relatórios** | Curva ABC, giro de estoque, DRE gerencial. |
-| 6 | **Auditoria** | `audit_logs` + middleware para registrar actions. |
-| 7 | **Multi-tenant (Orgs)** | Coluna `org_id` em todas as tabelas + RLS por org. |
-| 8 | **Mobile (PWA)** | Leitura de código de barras para movimentações. |
+| Ordem | Módulo                   | Notas                                                        |
+| :---: | :----------------------- | :----------------------------------------------------------- |
+|   1   | **Orçamentos**           | `src/modules/quotes` — reaproveita `products` + `profiles`.  |
+|   2   | **Clientes (CRM light)** | `src/modules/customers` — PF/PJ, contatos, endereços.        |
+|   3   | **Fornecedores**         | `src/modules/suppliers` — integra com movimentos de entrada. |
+|   4   | **Financeiro básico**    | Contas a pagar/receber, conciliação manual.                  |
+|   5   | **Relatórios**           | Curva ABC, giro de estoque, DRE gerencial.                   |
+|   6   | **Auditoria**            | `audit_logs` + middleware para registrar actions.            |
+|   7   | **Multi-tenant (Orgs)**  | Coluna `org_id` em todas as tabelas + RLS por org.           |
+|   8   | **Mobile (PWA)**         | Leitura de código de barras para movimentações.              |
 
 Cada novo módulo segue o mesmo _blueprint_: migration própria → RLS → schemas → actions → queries → componentes → registro em `MODULES_MENU`. **Nenhum core é modificado.**
 
