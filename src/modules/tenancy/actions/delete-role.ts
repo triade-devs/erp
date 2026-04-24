@@ -52,6 +52,6 @@ export async function deleteRoleAction(companyId: string, roleId: string): Promi
     status: "success",
   });
 
-  revalidatePath("/[companySlug]/settings/roles", "page");
+  revalidatePath("/", "layout");
   return { ok: true, message: "Role excluída" };
 }

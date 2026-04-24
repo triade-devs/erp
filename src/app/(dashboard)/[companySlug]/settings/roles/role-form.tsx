@@ -12,7 +12,7 @@ type Props = {
   action: (_prev: ActionResult, formData: FormData) => Promise<ActionResult>;
   backHref: string;
   submitLabel: string;
-  defaultValues?: { name?: string; description?: string; roleId?: string };
+  defaultValues?: { name?: string; description?: string };
 };
 
 const initialState: ActionResult = { ok: false };
@@ -31,8 +31,6 @@ export function RoleForm({ action, backHref, submitLabel, defaultValues }: Props
 
   return (
     <form action={formAction} className="space-y-6">
-      {defaultValues?.roleId && <input type="hidden" name="roleId" value={defaultValues.roleId} />}
-
       <div className="space-y-2">
         <Label htmlFor="name">Nome</Label>
         <Input

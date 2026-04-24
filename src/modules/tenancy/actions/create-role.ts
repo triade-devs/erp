@@ -35,7 +35,7 @@ export async function createRoleAction(
   if (!parsed.success) {
     return {
       ok: false,
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
 
@@ -71,6 +71,6 @@ export async function createRoleAction(
     status: "success",
   });
 
-  revalidatePath("/[companySlug]/settings/roles", "page");
+  revalidatePath("/", "layout");
   return { ok: true, message: `Role "${name}" criada com sucesso` };
 }

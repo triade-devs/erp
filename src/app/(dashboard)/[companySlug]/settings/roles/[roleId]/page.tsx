@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { resolveCompany, updateRoleAction } from "@/modules/tenancy";
+import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,13 @@ export default async function EditRolePage({ params }: Props) {
     company = await resolveCompany(companySlug);
   } catch (e) {
     if (e instanceof AppError) notFound();
+    throw e;
+  }
+
+  try {
+    await requirePermission(company.id, "core:role:manage");
+  } catch (e) {
+    if (e instanceof ForbiddenError) redirect(`/${companySlug}/settings/roles`);
     throw e;
   }
 
@@ -74,7 +82,7 @@ export default async function EditRolePage({ params }: Props) {
     );
   }
 
-  const action = updateRoleAction.bind(null, company.id);
+  const action = updateRoleAction.bind(null, company.id, role.id);
 
   return (
     <section className="max-w-lg space-y-6">
@@ -93,7 +101,6 @@ export default async function EditRolePage({ params }: Props) {
         backHref={backHref}
         submitLabel="Salvar alterações"
         defaultValues={{
-          roleId: role.id,
           name: role.name,
           description: role.description ?? undefined,
         }}

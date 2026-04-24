@@ -9,6 +9,7 @@ import { updateRoleSchema } from "../schemas/update-role";
 
 export async function updateRoleAction(
   companyId: string,
+  roleId: string,
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -19,7 +20,6 @@ export async function updateRoleAction(
   }
 
   const parsed = updateRoleSchema.safeParse({
-    roleId: formData.get("roleId"),
     name: formData.get("name"),
     description: formData.get("description") || undefined,
   });
@@ -27,11 +27,11 @@ export async function updateRoleAction(
   if (!parsed.success) {
     return {
       ok: false,
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
 
-  const { roleId, name, description } = parsed.data;
+  const { name, description } = parsed.data;
 
   const supabase = await createClient();
 
@@ -61,6 +61,6 @@ export async function updateRoleAction(
     status: "success",
   });
 
-  revalidatePath("/[companySlug]/settings/roles", "page");
+  revalidatePath("/", "layout");
   return { ok: true, message: "Role atualizada" };
 }
