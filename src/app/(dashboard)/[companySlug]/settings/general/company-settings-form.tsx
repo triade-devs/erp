@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updateCompanySettingsAction } from "@/modules/tenancy";
+import { updateCompanySettingsAction } from "@/modules/tenancy/client";
 import type { ActionResult } from "@/lib/errors";
 import type { Tables } from "@/types/database.types";
 

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { updateMemberRolesAction } from "@/modules/tenancy";
+import { updateMemberRolesAction } from "@/modules/tenancy/client";
 import type { CompanyRole } from "@/modules/tenancy";
 
 type Props = {

@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteRoleAction } from "@/modules/tenancy";
+import { deleteRoleAction } from "@/modules/tenancy/client";
 
 type Props = {
   companyId: string;

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { updateMemberStatusAction } from "@/modules/tenancy";
+import { updateMemberStatusAction } from "@/modules/tenancy/client";
 
 type Props = {
   companyId: string;
