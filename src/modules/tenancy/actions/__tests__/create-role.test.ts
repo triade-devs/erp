@@ -122,6 +122,7 @@ describe("createRoleAction", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.fieldErrors).toBeDefined();
+      expect(result.fieldErrors?.name).toBeDefined();
     }
   });
 

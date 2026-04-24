@@ -91,22 +91,15 @@ function makeSupabaseMock({
   // role_permissions upsert: .upsert([...]) — terminal
   const rpUpsert = vi.fn().mockResolvedValue({ data: null, error: upsertError });
 
-  // Controla quantas vezes role_permissions foi chamado para distinguir select vs delete/upsert
-  let rpCallCount = 0;
-
   const mockClient = {
     from: vi.fn().mockImplementation((table: string) => {
       if (table === "roles") {
         return { select: rolesSelect };
       }
       if (table === "role_permissions") {
-        rpCallCount++;
-        // 1ª chamada: select (dentro do Promise.all)
-        if (rpCallCount === 1) {
-          return { select: rpSelectFn };
-        }
-        // Chamadas subsequentes: delete ou upsert
-        return { delete: rpDeleteFn, upsert: rpUpsert };
+        // Todos os métodos expostos simultaneamente — produção chama select 1x (Promise.all),
+        // delete e upsert apenas nos branches condicionais; não há conflito.
+        return { select: rpSelectFn, delete: rpDeleteFn, upsert: rpUpsert };
       }
       if (table === "company_modules") {
         return { select: cmSelectFn };
@@ -125,8 +118,10 @@ function makeSupabaseMock({
       };
     }),
     // expostos para inspeção
+    rpSelectFn,
     rpDeleteIn,
     rpDeleteEq,
+    rpDeleteFn,
     rpUpsert,
     permsIn,
   };

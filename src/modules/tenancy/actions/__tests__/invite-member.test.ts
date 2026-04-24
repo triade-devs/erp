@@ -136,7 +136,6 @@ function makeServiceMock({
         inviteUserByEmail,
       },
     },
-    inviteUserByEmail,
   };
 }
 
@@ -149,22 +148,22 @@ describe("inviteMemberAction", () => {
     // Arrange: sobrescreve o módulo env temporariamente com chave ausente
     const { env } = await import("@/core/config/env");
     const originalKey = env.SUPABASE_SERVICE_ROLE_KEY;
-    (env as Record<string, unknown>).SUPABASE_SERVICE_ROLE_KEY = "";
+    try {
+      (env as Record<string, unknown>).SUPABASE_SERVICE_ROLE_KEY = undefined;
+      const mock = makeAnonMock();
+      vi.mocked(createClient).mockResolvedValue(mock as never);
 
-    const anonMock = makeAnonMock();
-    vi.mocked(createClient).mockResolvedValue(anonMock as never);
+      // Act
+      const result = await inviteMemberAction("company-1", "teste@empresa.com", ["role-1"]);
 
-    // Act
-    const result = await inviteMemberAction("company-1", "test@example.com", []);
-
-    // Assert
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.message).toContain("Service role");
+      // Assert
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.message).toContain("Service role");
+      }
+    } finally {
+      (env as Record<string, unknown>).SUPABASE_SERVICE_ROLE_KEY = originalKey;
     }
-
-    // Restaura
-    (env as Record<string, unknown>).SUPABASE_SERVICE_ROLE_KEY = originalKey;
   });
 
   it("retorna { ok: false } quando requirePermission lança ForbiddenError", async () => {
@@ -268,5 +267,39 @@ describe("inviteMemberAction", () => {
     // Assert
     expect(result.ok).toBe(true);
     expect(anonMock.membershipRolesInsert).not.toHaveBeenCalled();
+  });
+
+  it("retorna { ok: false } quando membro já possui convite pendente", async () => {
+    // Arrange
+    const anonMock = makeAnonMock({ existingMembership: { id: "mem-1", status: "invited" } });
+    const serviceMock = makeServiceMock({ invitedUserId: "invited-user-789" });
+    vi.mocked(createClient).mockResolvedValue(anonMock as never);
+    vi.mocked(createServiceClient).mockReturnValue(serviceMock as never);
+
+    // Act
+    const result = await inviteMemberAction("company-1", "convite@empresa.com", ["role-1"]);
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("convite");
+    }
+  });
+
+  it("retorna { ok: false } quando usuário não está autenticado", async () => {
+    // Arrange
+    const anonMock = makeAnonMock({ userNull: true });
+    const serviceMock = makeServiceMock();
+    vi.mocked(createClient).mockResolvedValue(anonMock as never);
+    vi.mocked(createServiceClient).mockReturnValue(serviceMock as never);
+
+    // Act
+    const result = await inviteMemberAction("company-1", "teste@empresa.com", ["role-1"]);
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("autenticad");
+    }
   });
 });

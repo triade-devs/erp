@@ -183,7 +183,7 @@ describe("deleteRoleAction", () => {
     // Assert
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.message).toContain("excluída");
+      expect(result.message).toBe("Role excluída");
     }
     // Verifica que delete foi chamado
     expect(mock.rolesDeleteFn).toHaveBeenCalled();
