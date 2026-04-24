@@ -6,6 +6,7 @@ export type CompanyRole = {
   id: string;
   code: string;
   name: string;
+  description: string | null;
   isSystem: boolean;
 };
 
@@ -14,7 +15,7 @@ export async function listCompanyRoles(companyId: string): Promise<CompanyRole[]
 
   const { data, error } = await supabase
     .from("roles")
-    .select("id, code, name, is_system")
+    .select("id, code, name, description, is_system")
     .eq("company_id", companyId)
     .order("is_system", { ascending: false })
     .order("name");
@@ -25,6 +26,7 @@ export async function listCompanyRoles(companyId: string): Promise<CompanyRole[]
     id: r.id,
     code: r.code,
     name: r.name,
+    description: r.description ?? null,
     isSystem: r.is_system,
   }));
 }
