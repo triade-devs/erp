@@ -1,12 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { resolveCompany, updateRoleAction } from "@/modules/tenancy";
+import {
+  resolveCompany,
+  updateRoleAction,
+  listRolePermissionMatrix,
+  updateRolePermissionsAction,
+} from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RoleForm } from "../role-form";
+import { PermissionMatrix } from "./permission-matrix";
 
 export const metadata = { title: "Editar Role — ERP" };
 
@@ -45,6 +51,9 @@ export default async function EditRolePage({ params }: Props) {
 
   const backHref = `/${companySlug}/settings/roles`;
 
+  const matrix = await listRolePermissionMatrix(company.id, role.id);
+  const permAction = updateRolePermissionsAction.bind(null, company.id, role.id);
+
   if (role.is_system) {
     return (
       <section className="max-w-lg space-y-6">
@@ -75,8 +84,15 @@ export default async function EditRolePage({ params }: Props) {
           Role de sistema — não editável
         </p>
 
-        <div className="rounded-md border border-dashed p-4">
-          <p className="text-sm text-muted-foreground">Matriz de permissões — em breve (PR #35)</p>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Matriz de permissões</h3>
+          <PermissionMatrix
+            matrix={matrix}
+            roleId={role.id}
+            companyId={company.id}
+            isSystem={role.is_system}
+            action={permAction}
+          />
         </div>
       </section>
     );
@@ -106,8 +122,15 @@ export default async function EditRolePage({ params }: Props) {
         }}
       />
 
-      <div className="rounded-md border border-dashed p-4">
-        <p className="text-sm text-muted-foreground">Matriz de permissões — em breve (PR #35)</p>
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold">Matriz de permissões</h3>
+        <PermissionMatrix
+          matrix={matrix}
+          roleId={role.id}
+          companyId={company.id}
+          isSystem={role.is_system}
+          action={permAction}
+        />
       </div>
     </section>
   );

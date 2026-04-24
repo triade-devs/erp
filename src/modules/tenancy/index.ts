@@ -12,6 +12,7 @@ export { updateCompanySettingsAction } from "./actions/update-company-settings";
 export { createRoleAction } from "./actions/create-role";
 export { updateRoleAction } from "./actions/update-role";
 export { deleteRoleAction } from "./actions/delete-role";
+export { updateRolePermissionsAction } from "./actions/update-role-permissions";
 
 // Queries
 export { listMyCompanies } from "./queries/list-my-companies";
@@ -21,6 +22,8 @@ export { listModules } from "./queries/list-modules";
 export { listCompanyModules } from "./queries/list-company-modules";
 export { listCompanyMembers } from "./queries/list-company-members";
 export { listCompanyRoles } from "./queries/list-company-roles";
+export { listRolePermissionMatrix } from "./queries/list-role-permission-matrix";
+export type { ModulePermissions, PermissionRow } from "./queries/list-role-permission-matrix";
 
 // Services
 export { getActiveCompanyId } from "./services/active-company";
