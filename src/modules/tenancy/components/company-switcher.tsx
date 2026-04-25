@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ interface CompanySwitcherProps {
 export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   if (companies.length <= 1) {
     const company = companies[0];
@@ -29,6 +31,7 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
 
   function handleChange(companyId: string) {
+    const targetCompany = companies.find((c) => c.id === companyId);
     startTransition(async () => {
       const formData = new FormData();
       formData.set("companyId", companyId);
@@ -37,6 +40,9 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
         setError(result.message ?? "Erro ao trocar empresa");
       } else {
         setError(null);
+        if (targetCompany?.slug) {
+          router.push(`/${targetCompany.slug}/inventory`);
+        }
       }
     });
   }
