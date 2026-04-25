@@ -40,6 +40,9 @@ begin
     ('op_alfa',  v_op_alfa),
     ('op_beta',  v_op_beta),
     ('mgr_alfa', v_mgr_alfa);
+
+  -- throws_ok no teste 6 avalia format() como 'authenticated' — precisa ler test_users
+  grant select on test_users to authenticated;
 end $$;
 
 -- Produto na empresa A com movimentação (usado nos testes 1, 2, 3, 5)
@@ -188,6 +191,8 @@ select throws_ok(
     tests.company_id('empresa-beta'),
     (select user_id from test_users where role = 'op_alfa')
   ),
+  '42501',
+  NULL,
   'Teste 6: operador de alfa não pode inserir movimentação em produto de beta (RLS WITH CHECK rejeita)'
 );
 

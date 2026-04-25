@@ -137,6 +137,10 @@ begin
   perform set_config('request.jwt.claims', '{}', false);
 end $$;
 
+-- authenticated precisa chamar helpers (ex: tests.company_id) dentro dos testes RLS
+grant usage on schema tests to authenticated;
+grant execute on all functions in schema tests to authenticated;
+
 -- TAP obrigatório: pg_prove exige que todo .sql emita TAP output
 select plan(1);
 select ok(true, 'test helpers carregados com sucesso');
