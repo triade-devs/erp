@@ -5,7 +5,12 @@ import { ACTIVE_COMPANY_SLUG_COOKIE } from "@/core/config/cookies";
 const PUBLIC_ROUTES = ["/login", "/register", "/recover", "/api/auth/callback", "/accept-invite"];
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({ request });
+  // Generate or forward x-request-id for observability
+  const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-request-id", requestId);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,11 +46,15 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    redirectResponse.headers.set("x-request-id", requestId);
+    return redirectResponse;
   }
 
   if (user && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const redirectResponse = NextResponse.redirect(new URL("/", request.url));
+    redirectResponse.headers.set("x-request-id", requestId);
+    return redirectResponse;
   }
 
   // 2. Redireciona rotas legadas /inventory/* para /<companySlug>/inventory/*
@@ -56,9 +65,12 @@ export async function middleware(request: NextRequest) {
     const destination = slug ? `/${slug}/inventory${rest}` : "/";
     const url = request.nextUrl.clone();
     url.pathname = destination;
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    redirectResponse.headers.set("x-request-id", requestId);
+    return redirectResponse;
   }
 
+  response.headers.set("x-request-id", requestId);
   return response;
 }
 
