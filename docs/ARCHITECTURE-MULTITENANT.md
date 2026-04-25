@@ -1500,9 +1500,9 @@ src/modules/audit/
 - [x] S3 · #12–#14 · `authz` + `audit` + `<Can>` — **mergeado (PR #3)**
 - [x] S4 · #15–#18 · refactor `auth` (memberships) — **mergeado (PR #4)**
 - [x] S5 · #19–#29 · refactor `inventory` (company_id → RLS → withPermission → tests) — **mergeado (PR #5)**
-- [x] S6 · #30–#32 · painel platform admin — **branch `feat/multitenant-s6`**
-- [x] S7 · #33–#35 · gestão de membros/roles por empresa — **branch `feat/multitenant-s7`**
-- [x] S8 · #36–#38 · _contract_ — remover legado — **branch `feat/multitenant-s8`**
+- [x] S6 · #30–#32 · painel platform admin — **mergeado (direto em main)**
+- [x] S7 · #33–#35 · gestão de membros/roles por empresa — **mergeado (PR #6)**
+- [x] S8 · #36–#38 · _contract_ — remover legado — **mergeado (PR #7)**
 - [ ] S9 · #39–#42 · hardening — RLS check, isolation tests, observabilidade
 
 > **Próximo:** S9 — hardening (testes de isolamento RLS, check-rls no CI, observabilidade)
