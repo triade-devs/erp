@@ -370,7 +370,6 @@ export type Database = {
           created_at: string;
           full_name: string;
           id: string;
-          role: Database["public"]["Enums"]["user_role"];
           updated_at: string;
         };
         Insert: {
@@ -378,7 +377,6 @@ export type Database = {
           created_at?: string;
           full_name: string;
           id: string;
-          role?: Database["public"]["Enums"]["user_role"];
           updated_at?: string;
         };
         Update: {
@@ -386,7 +384,6 @@ export type Database = {
           created_at?: string;
           full_name?: string;
           id?: string;
-          role?: Database["public"]["Enums"]["user_role"];
           updated_at?: string;
         };
         Relationships: [];
@@ -525,10 +522,6 @@ export type Database = {
         Args: { p_company: string };
         Returns: undefined;
       };
-      current_user_role: {
-        Args: never;
-        Returns: Database["public"]["Enums"]["user_role"];
-      };
       has_permission: {
         Args: { p_company: string; p_permission: string };
         Returns: boolean;
@@ -539,7 +532,6 @@ export type Database = {
     Enums: {
       membership_status: "invited" | "active" | "suspended";
       movement_type: "in" | "out" | "adjustment";
-      user_role: "admin" | "manager" | "operator";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -667,7 +659,6 @@ export const Constants = {
     Enums: {
       membership_status: ["invited", "active", "suspended"],
       movement_type: ["in", "out", "adjustment"],
-      user_role: ["admin", "manager", "operator"],
     },
   },
 } as const;
