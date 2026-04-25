@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatCurrency } from "@/lib/utils";
+import { ReactivateProductButton } from "./reactivate-product-button";
 import type { PaginatedResult, Product } from "../types";
 
 type Props = Pick<
@@ -20,6 +21,7 @@ type Props = Pick<
   basePath: string;
   searchQuery?: string;
   createHref?: string;
+  showInactive?: boolean;
 };
 
 export function ProductTable({
@@ -30,6 +32,7 @@ export function ProductTable({
   basePath,
   searchQuery,
   createHref,
+  showInactive,
 }: Props) {
   if (data.length === 0) {
     return (
@@ -61,11 +64,17 @@ export function ProductTable({
               <TableHead className="text-right">Custo</TableHead>
               <TableHead className="text-right">Venda</TableHead>
               <TableHead>Status</TableHead>
+              {showInactive && <TableHead />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((product) => (
-              <ProductRow key={product.id} product={product} basePath={basePath} />
+              <ProductRow
+                key={product.id}
+                product={product}
+                basePath={basePath}
+                showActions={showInactive}
+              />
             ))}
           </TableBody>
         </Table>
@@ -82,6 +91,7 @@ export function ProductTable({
             const params = new URLSearchParams();
             params.set("page", String(p));
             if (searchQuery) params.set("q", searchQuery);
+            if (showInactive) params.set("inactive", "true");
             return `${basePath}?${params.toString()}`;
           }}
         />
@@ -90,11 +100,19 @@ export function ProductTable({
   );
 }
 
-function ProductRow({ product, basePath }: { product: Product; basePath: string }) {
+function ProductRow({
+  product,
+  basePath,
+  showActions,
+}: {
+  product: Product;
+  basePath: string;
+  showActions?: boolean;
+}) {
   const isLowStock = Number(product.stock) <= Number(product.min_stock);
 
   return (
-    <TableRow>
+    <TableRow className={!product.is_active ? "opacity-60" : undefined}>
       <TableCell className="font-mono text-xs">{product.sku}</TableCell>
       <TableCell>
         <Link href={`${basePath}/${product.id}`} className="font-medium hover:underline">
@@ -109,21 +127,26 @@ function ProductRow({ product, basePath }: { product: Product; basePath: string 
       </TableCell>
       <TableCell>{product.unit}</TableCell>
       <TableCell className="text-right">
-        <span className={isLowStock ? "font-semibold text-red-600" : ""}>
+        <span className={isLowStock && product.is_active ? "font-semibold text-red-600" : ""}>
           {Number(product.stock).toFixed(3)}
         </span>
       </TableCell>
       <TableCell className="text-right">{formatCurrency(Number(product.cost_price))}</TableCell>
       <TableCell className="text-right">{formatCurrency(Number(product.sale_price))}</TableCell>
       <TableCell>
-        {isLowStock ? (
-          <Badge variant="destructive">Estoque baixo</Badge>
-        ) : product.is_active ? (
-          <Badge variant="secondary">Ativo</Badge>
-        ) : (
+        {!product.is_active ? (
           <Badge variant="outline">Inativo</Badge>
+        ) : isLowStock ? (
+          <Badge variant="destructive">Estoque baixo</Badge>
+        ) : (
+          <Badge variant="secondary">Ativo</Badge>
         )}
       </TableCell>
+      {showActions && (
+        <TableCell>
+          {!product.is_active && <ReactivateProductButton productId={product.id} />}
+        </TableCell>
+      )}
     </TableRow>
   );
 }

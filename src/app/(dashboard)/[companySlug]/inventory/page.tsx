@@ -17,7 +17,12 @@ export default async function InventoryPage({ params, searchParams }: Props) {
   const { companySlug } = await params;
   const company = await resolveCompany(companySlug);
   const rawParams = await searchParams;
-  const { data, total, page, pageSize, totalPages } = await listProducts(company.id, rawParams);
+  const showInactive = rawParams.inactive === "true";
+  const queryParams = { ...rawParams, onlyActive: showInactive ? "false" : "true" };
+  const { data, total, page, pageSize, totalPages } = await listProducts(company.id, queryParams);
+
+  const basePath = `/${companySlug}/inventory`;
+  const toggleHref = showInactive ? basePath : `${basePath}?inactive=true`;
 
   return (
     <section className="space-y-6">
@@ -40,17 +45,23 @@ export default async function InventoryPage({ params, searchParams }: Props) {
         </div>
       </header>
 
-      <form className="flex gap-2">
-        <Input
-          name="q"
-          defaultValue={rawParams.q ?? ""}
-          placeholder="Buscar por nome ou SKU..."
-          className="max-w-sm"
-        />
-        <Button type="submit" variant="secondary">
-          Buscar
+      <div className="flex flex-wrap items-center gap-2">
+        <form className="flex gap-2">
+          {showInactive && <input type="hidden" name="inactive" value="true" />}
+          <Input
+            name="q"
+            defaultValue={rawParams.q ?? ""}
+            placeholder="Buscar por nome ou SKU..."
+            className="max-w-sm"
+          />
+          <Button type="submit" variant="secondary">
+            Buscar
+          </Button>
+        </form>
+        <Button asChild variant={showInactive ? "default" : "outline"} size="sm">
+          <Link href={toggleHref}>{showInactive ? "Ocultar inativos" : "Mostrar inativos"}</Link>
         </Button>
-      </form>
+      </div>
 
       <ProductTable
         data={data}
@@ -58,9 +69,10 @@ export default async function InventoryPage({ params, searchParams }: Props) {
         page={page}
         pageSize={pageSize}
         totalPages={totalPages}
-        basePath={`/${companySlug}/inventory`}
+        basePath={basePath}
         searchQuery={rawParams.q}
         createHref={`/${companySlug}/inventory/new`}
+        showInactive={showInactive}
       />
     </section>
   );

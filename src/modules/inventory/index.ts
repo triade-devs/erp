@@ -2,6 +2,7 @@
 export { createProductAction } from "./actions/create-product";
 export { updateProductAction } from "./actions/update-product";
 export { deleteProductAction } from "./actions/delete-product";
+export { reactivateProductAction } from "./actions/reactivate-product";
 export { registerMovementAction } from "./actions/register-movement";
 
 export { listProducts } from "./queries/list-products";
