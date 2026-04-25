@@ -1,6 +1,9 @@
 -- ============================================================
--- Helpers reutilizáveis para suíte pgTAP
--- Carregado antes dos testes (ordem alfabética garante isso)
+-- Setup de helpers pgTAP — deve rodar ANTES dos arquivos de teste.
+-- Nomeado 00_* para garantir ordem alfabética antes de 03_*.
+-- SEM begin/rollback: schema e funções são auto-committed e
+-- persistem para os arquivos de teste subsequentes na mesma sessão
+-- do supabase test db.
 -- ============================================================
 
 create schema if not exists tests;
@@ -22,7 +25,6 @@ begin
   insert into public.companies (id, name, slug)
   values (v_id, p_slug, p_slug);
 
-  -- Habilita os módulos necessários para os testes
   insert into public.company_modules (company_id, module_code) values
     (v_id, 'inventory'),
     (v_id, 'movements');
@@ -34,7 +36,7 @@ end $$;
 
 -- ------------------------------------------------------------
 -- tests.company_id
--- Retorna UUID da empresa pelo slug.
+-- Retorna UUID da empresa pelo slug (levanta exceção se não existe).
 -- ------------------------------------------------------------
 create or replace function tests.company_id(p_slug text)
 returns uuid
@@ -53,9 +55,7 @@ end $$;
 
 -- ------------------------------------------------------------
 -- tests.create_user_in
--- Cria um usuário em auth.users (possível como postgres/superuser
--- no ambiente local do Supabase) com membership ativo na empresa
--- e role especificada.
+-- Cria usuário em auth.users + membership ativo + role na empresa.
 -- ------------------------------------------------------------
 create or replace function tests.create_user_in(
   p_email     text,
@@ -73,7 +73,6 @@ declare
   v_role_id       uuid;
   v_membership_id uuid;
 begin
-  -- Insere em auth.users — o role postgres tem acesso no ambiente local
   -- 'x' é intencionalmente inválido como bcrypt — estes usuários nunca fazem login real
   insert into auth.users (
     id, email, encrypted_password,
@@ -109,10 +108,8 @@ end $$;
 
 -- ------------------------------------------------------------
 -- tests.authenticate_as
--- Simula um usuário autenticado via JWT claims.
--- Usa set_config com is_local=false para escopo de transação
--- (não de bloco), garantindo que queries fora do DO block
--- também enxerguem a mudança de role e as claims.
+-- Simula usuário autenticado via set_config (escopo de transação,
+-- não de bloco DO — persiste fora do DO block).
 -- ------------------------------------------------------------
 create or replace function tests.authenticate_as(p_user_id uuid)
 returns void
@@ -129,7 +126,7 @@ end $$;
 
 -- ------------------------------------------------------------
 -- tests.reset_role
--- Volta para o role postgres (superuser) após simular usuário.
+-- Volta para role postgres após simular usuário.
 -- ------------------------------------------------------------
 create or replace function tests.reset_role()
 returns void
@@ -139,3 +136,8 @@ begin
   perform set_config('role', 'postgres', false);
   perform set_config('request.jwt.claims', '{}', false);
 end $$;
+
+-- TAP obrigatório: pg_prove exige que todo .sql emita TAP output
+select plan(1);
+select ok(true, 'test helpers carregados com sucesso');
+select * from finish();
