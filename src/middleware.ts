@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { ACTIVE_COMPANY_SLUG_COOKIE } from "@/core/config/cookies";
 
 const PUBLIC_ROUTES = ["/login", "/register", "/recover", "/api/auth/callback", "/accept-invite"];
 
@@ -32,6 +33,17 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Redireciona rotas legadas /inventory/* para /<companySlug>/inventory/*
+  if (pathname.startsWith("/inventory")) {
+    const slug = request.cookies.get(ACTIVE_COMPANY_SLUG_COOKIE)?.value;
+    const rest = pathname.slice("/inventory".length); // ex: "/new", "/[id]", ""
+    const destination = slug ? `/${slug}/inventory${rest}` : "/";
+    const url = request.nextUrl.clone();
+    url.pathname = destination;
+    return NextResponse.redirect(url);
+  }
+
   const isPublic = PUBLIC_ROUTES.some((p) => pathname.startsWith(p));
 
   if (!user && !isPublic) {
