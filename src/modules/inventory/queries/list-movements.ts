@@ -1,12 +1,12 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { listMovementsSchema } from "../schemas";
-import type { PaginatedResult, StockMovement } from "../types";
+import type { MovementWithProduct, PaginatedResult } from "../types";
 
 export async function listMovements(
   companyId: string,
   raw: Record<string, unknown>,
-): Promise<PaginatedResult<StockMovement>> {
+): Promise<PaginatedResult<MovementWithProduct>> {
   const { productId, page, pageSize } = listMovementsSchema.parse(raw);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -14,7 +14,7 @@ export async function listMovements(
   const supabase = await createClient();
   let query = supabase
     .from("stock_movements")
-    .select("*", { count: "exact" })
+    .select("*, products(name, sku)", { count: "exact" })
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -26,7 +26,7 @@ export async function listMovements(
 
   const total = count ?? 0;
   return {
-    data: data ?? [],
+    data: (data ?? []) as MovementWithProduct[],
     total,
     page,
     pageSize,

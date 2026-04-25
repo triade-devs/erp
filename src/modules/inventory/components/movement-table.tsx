@@ -9,23 +9,23 @@ import {
 } from "@/components/ui/table";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { PaginatedResult, StockMovement } from "../types";
+import type { MovementWithProduct, PaginatedResult } from "../types";
 
-type Props = Pick<PaginatedResult<StockMovement>, "data" | "page" | "total" | "totalPages"> & {
+type Props = Pick<
+  PaginatedResult<MovementWithProduct>,
+  "data" | "page" | "total" | "totalPages"
+> & {
   basePath?: string;
   productId?: string;
 };
 
-const MOVEMENT_LABELS: Record<StockMovement["movement_type"], string> = {
+const MOVEMENT_LABELS: Record<string, string> = {
   in: "Entrada",
   out: "Saída",
   adjustment: "Ajuste",
 };
 
-const MOVEMENT_VARIANTS: Record<
-  StockMovement["movement_type"],
-  "default" | "destructive" | "secondary" | "outline"
-> = {
+const MOVEMENT_VARIANTS: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
   in: "default",
   out: "destructive",
   adjustment: "secondary",
@@ -47,6 +47,7 @@ export function MovementTable({ data, page, totalPages, total, basePath = "", pr
           <TableHeader>
             <TableRow>
               <TableHead>Data</TableHead>
+              {!productId && <TableHead>Produto</TableHead>}
               <TableHead>Tipo</TableHead>
               <TableHead className="text-right">Quantidade</TableHead>
               <TableHead className="text-right">Custo unit.</TableHead>
@@ -57,9 +58,17 @@ export function MovementTable({ data, page, totalPages, total, basePath = "", pr
             {data.map((movement) => (
               <TableRow key={movement.id}>
                 <TableCell className="text-sm">{formatDate(movement.created_at)}</TableCell>
+                {!productId && (
+                  <TableCell>
+                    <div className="font-medium">{movement.products?.name ?? "—"}</div>
+                    <div className="font-mono text-xs text-muted-foreground">
+                      {movement.products?.sku}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell>
-                  <Badge variant={MOVEMENT_VARIANTS[movement.movement_type]}>
-                    {MOVEMENT_LABELS[movement.movement_type]}
+                  <Badge variant={MOVEMENT_VARIANTS[movement.movement_type] ?? "secondary"}>
+                    {MOVEMENT_LABELS[movement.movement_type] ?? movement.movement_type}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono">

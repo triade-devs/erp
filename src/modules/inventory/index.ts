@@ -13,7 +13,11 @@ export { ProductForm } from "./components/product-form";
 export { MovementForm } from "./components/movement-form";
 export { MovementTable } from "./components/movement-table";
 
-export { validateMovement, calculateNewStock, InsufficientStockError } from "./services/stock-service";
+export {
+  validateMovement,
+  calculateNewStock,
+  InsufficientStockError,
+} from "./services/stock-service";
 
 export type {
   Product,
@@ -21,6 +25,7 @@ export type {
   ProductUpdate,
   StockMovement,
   StockMovementInsert,
+  MovementWithProduct,
   MovementType,
   PaginatedResult,
 } from "./types";

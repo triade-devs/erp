@@ -7,6 +7,10 @@ export type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 export type StockMovement = Database["public"]["Tables"]["stock_movements"]["Row"];
 export type StockMovementInsert = Database["public"]["Tables"]["stock_movements"]["Insert"];
 
+export type MovementWithProduct = StockMovement & {
+  products: { name: string; sku: string } | null;
+};
+
 export type MovementType = Database["public"]["Enums"]["movement_type"];
 
 export interface PaginatedResult<T> {
