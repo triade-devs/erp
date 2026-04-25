@@ -18,7 +18,7 @@ export default async function InventoryPage({ params, searchParams }: Props) {
   const company = await resolveCompany(companySlug);
   const rawParams = await searchParams;
   const showInactive = rawParams.inactive === "true";
-  const queryParams = { ...rawParams, onlyActive: showInactive ? "false" : "true" };
+  const queryParams = { ...rawParams, onlyActive: !showInactive };
   const { data, total, page, pageSize, totalPages } = await listProducts(company.id, queryParams);
 
   const basePath = `/${companySlug}/inventory`;
