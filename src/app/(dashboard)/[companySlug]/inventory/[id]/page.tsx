@@ -100,6 +100,8 @@ export default async function ProductDetailPage({ params }: Props) {
             total={movements.total}
             page={movements.page}
             totalPages={movements.totalPages}
+            basePath={`/${companySlug}/inventory/movements`}
+            productId={product.id}
           />
         </div>
       </Can>

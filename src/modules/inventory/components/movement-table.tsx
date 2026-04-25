@@ -7,10 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { PaginatedResult, StockMovement } from "../types";
 
-type Props = Pick<PaginatedResult<StockMovement>, "data" | "page" | "total" | "totalPages">;
+type Props = Pick<PaginatedResult<StockMovement>, "data" | "page" | "total" | "totalPages"> & {
+  basePath?: string;
+  productId?: string;
+};
 
 const MOVEMENT_LABELS: Record<StockMovement["movement_type"], string> = {
   in: "Entrada",
@@ -27,7 +31,7 @@ const MOVEMENT_VARIANTS: Record<
   adjustment: "secondary",
 };
 
-export function MovementTable({ data, page, totalPages, total }: Props) {
+export function MovementTable({ data, page, totalPages, total, basePath = "", productId }: Props) {
   if (data.length === 0) {
     return (
       <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
@@ -77,11 +81,16 @@ export function MovementTable({ data, page, totalPages, total }: Props) {
         <span>
           {total} movimentaç{total !== 1 ? "ões" : "ão"}
         </span>
-        {totalPages > 1 && (
-          <span>
-            Página {page} de {totalPages}
-          </span>
-        )}
+        <PaginationNav
+          page={page}
+          totalPages={totalPages}
+          buildHref={(p) => {
+            const params = new URLSearchParams();
+            params.set("page", String(p));
+            if (productId) params.set("productId", productId);
+            return `${basePath}?${params.toString()}`;
+          }}
+        />
       </div>
     </div>
   );

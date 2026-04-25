@@ -59,6 +59,8 @@ export default async function InventoryPage({ params, searchParams }: Props) {
         pageSize={pageSize}
         totalPages={totalPages}
         basePath={`/${companySlug}/inventory`}
+        searchQuery={rawParams.q}
+        createHref={`/${companySlug}/inventory/new`}
       />
     </section>
   );

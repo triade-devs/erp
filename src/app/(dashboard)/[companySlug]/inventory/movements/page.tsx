@@ -57,6 +57,7 @@ export default async function MovementsPage({ params, searchParams }: Props) {
           total={movements.total}
           page={movements.page}
           totalPages={movements.totalPages}
+          basePath={`/${companySlug}/inventory/movements`}
         />
       </div>
     </section>
