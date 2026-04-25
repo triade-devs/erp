@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatCurrency } from "@/lib/utils";
+import { reactivateProductAction } from "../actions/reactivate-product";
 import { ReactivateProductButton } from "./reactivate-product-button";
 import type { PaginatedResult, Product } from "../types";
 
@@ -144,7 +145,12 @@ function ProductRow({
       </TableCell>
       {showActions && (
         <TableCell>
-          {!product.is_active && <ReactivateProductButton productId={product.id} />}
+          {!product.is_active && (
+            <ReactivateProductButton
+              productId={product.id}
+              onReactivate={reactivateProductAction}
+            />
+          )}
         </TableCell>
       )}
     </TableRow>

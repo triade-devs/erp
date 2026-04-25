@@ -2,9 +2,14 @@
 
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { reactivateProductAction } from "@/modules/inventory";
+import type { ActionResult } from "@/lib/errors";
 
-export function ReactivateProductButton({ productId }: { productId: string }) {
+type Props = {
+  productId: string;
+  onReactivate: (id: string) => Promise<ActionResult>;
+};
+
+export function ReactivateProductButton({ productId, onReactivate }: Props) {
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -14,7 +19,7 @@ export function ReactivateProductButton({ productId }: { productId: string }) {
       disabled={isPending}
       onClick={() =>
         startTransition(async () => {
-          await reactivateProductAction(productId);
+          await onReactivate(productId);
         })
       }
     >
