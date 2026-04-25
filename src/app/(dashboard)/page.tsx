@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { listProducts } from "@/modules/inventory";
-import { getActiveCompanyId } from "@/modules/tenancy";
+import { getActiveCompanyId, getActiveCompanySlug } from "@/modules/tenancy";
 
 export const metadata = { title: "Dashboard — ERP" };
 
 export default async function DashboardPage() {
-  const companyId = (await getActiveCompanyId()) ?? "";
-  const { data, total } = await listProducts(companyId, { onlyActive: true, pageSize: 5 });
+  const [companyId, companySlug] = await Promise.all([getActiveCompanyId(), getActiveCompanySlug()]);
+  const { data, total } = await listProducts(companyId ?? "", { onlyActive: true, pageSize: 5 });
   const lowStockCount = data.filter((p) => Number(p.stock) <= Number(p.min_stock)).length;
+
+  const inventoryHref = companySlug ? `/${companySlug}/inventory` : "/";
+  const movementsHref = companySlug ? `/${companySlug}/inventory/movements` : "/";
 
   return (
     <div className="space-y-8">
@@ -26,10 +29,10 @@ export default async function DashboardPage() {
       {/* Atalhos */}
       <div className="flex gap-3">
         <Button asChild>
-          <Link href="/inventory">Ver estoque</Link>
+          <Link href={inventoryHref}>Ver estoque</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/inventory/movements">Registrar movimentação</Link>
+          <Link href={movementsHref}>Registrar movimentação</Link>
         </Button>
       </div>
     </div>
