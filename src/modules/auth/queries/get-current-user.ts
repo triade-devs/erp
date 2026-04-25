@@ -26,7 +26,7 @@ export async function getCurrentUser() {
 
   if (error || !user) return null;
 
-  // Busca perfil complementar (mantém profiles.role intocado para rollback)
+  // Busca perfil complementar do usuário
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
   // Busca memberships com empresa e roles

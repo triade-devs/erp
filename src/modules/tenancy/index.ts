@@ -15,6 +15,7 @@ export { deleteRoleAction } from "./actions/delete-role";
 export { updateRolePermissionsAction } from "./actions/update-role-permissions";
 
 // Queries
+export { getActiveCompanySlug } from "./queries/get-active-company-slug";
 export { listMyCompanies } from "./queries/list-my-companies";
 export { resolveCompany } from "./queries/resolve-company";
 export { listAllCompanies } from "./queries/list-all-companies";

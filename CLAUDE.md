@@ -50,7 +50,7 @@ modules/<domain>/
 ### Two-layer authorization
 
 1. **Middleware** (`src/middleware.ts`) refreshes the Supabase session on every request and gates routes via `PUBLIC_ROUTES` allowlist. Authenticated users hitting `/login` or `/register` get redirected to `/`.
-2. **RLS in Postgres** (`supabase/migrations/20260420_04_rls_policies.sql`) is the authoritative permission layer. The helper `public.current_user_role()` reads from `profiles` and is used by policies — products writes are gated to `admin`/`manager`. Mirror role checks in TS via `modules/auth/services/profile-service.ts` (`canWriteProducts`, `isAdmin`) for UI/UX, but never rely on them for security.
+2. **RLS in Postgres** is the authoritative permission layer. Policies use helpers like `is_platform_admin()` and `has_permission()` from the `authz` module (see `supabase/migrations/20260423_15_products_rls.sql` and `20260423_16_movements_rls.sql`). In TS, Server Actions call `requirePermission()` from `src/modules/authz/` to enforce permission checks; UI/UX role checks use the user's memberships via `getCurrentUser()` — but never rely on TS checks alone for security.
 
 ### Two Supabase clients
 
