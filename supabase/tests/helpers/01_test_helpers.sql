@@ -38,12 +38,18 @@ end $$;
 -- ------------------------------------------------------------
 create or replace function tests.company_id(p_slug text)
 returns uuid
-language sql
+language plpgsql
 security definer
 set search_path = public
 as $$
-  select id from public.companies where slug = p_slug
-$$;
+declare v_id uuid;
+begin
+  select id into v_id from public.companies where slug = p_slug;
+  if v_id is null then
+    raise exception 'Empresa com slug "%" não encontrada', p_slug;
+  end if;
+  return v_id;
+end $$;
 
 -- ------------------------------------------------------------
 -- tests.create_user_in
@@ -68,6 +74,7 @@ declare
   v_membership_id uuid;
 begin
   -- Insere em auth.users — o role postgres tem acesso no ambiente local
+  -- 'x' é intencionalmente inválido como bcrypt — estes usuários nunca fazem login real
   insert into auth.users (
     id, email, encrypted_password,
     email_confirmed_at, created_at, updated_at,
@@ -103,17 +110,20 @@ end $$;
 -- ------------------------------------------------------------
 -- tests.authenticate_as
 -- Simula um usuário autenticado via JWT claims.
--- Deve ser chamada dentro de uma transação com SET LOCAL.
+-- Usa set_config com is_local=false para escopo de transação
+-- (não de bloco), garantindo que queries fora do DO block
+-- também enxerguem a mudança de role e as claims.
 -- ------------------------------------------------------------
 create or replace function tests.authenticate_as(p_user_id uuid)
 returns void
 language plpgsql
 as $$
 begin
-  set local role authenticated;
-  execute format(
-    $fmt$set local "request.jwt.claims" = '{"sub": "%s", "role": "authenticated"}'$fmt$,
-    p_user_id
+  perform set_config('role', 'authenticated', false);
+  perform set_config(
+    'request.jwt.claims',
+    format('{"sub": "%s", "role": "authenticated"}', p_user_id),
+    false
   );
 end $$;
 
@@ -126,5 +136,6 @@ returns void
 language plpgsql
 as $$
 begin
-  set local role postgres;
+  perform set_config('role', 'postgres', false);
+  perform set_config('request.jwt.claims', '{}', false);
 end $$;
