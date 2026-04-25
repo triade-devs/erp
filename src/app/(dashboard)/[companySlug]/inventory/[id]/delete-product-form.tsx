@@ -1,10 +1,20 @@
 "use client";
 
-import { useActionState } from "react";
-import { useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useFormStatus } from "react-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { ActionResult } from "@/lib/errors";
 
 const initial: ActionResult = { ok: false };
@@ -16,6 +26,7 @@ type Props = {
 
 export function DeleteProductForm({ deleteAction, isActive }: Props) {
   const [state, formAction] = useActionState(deleteAction, initial);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!state.ok && state.message) toast.error(state.message);
@@ -26,9 +37,34 @@ export function DeleteProductForm({ deleteAction, isActive }: Props) {
   }
 
   return (
-    <form action={formAction}>
-      <SubmitButton />
-    </form>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button type="button" variant="destructive">
+          Desativar produto
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Desativar produto?</AlertDialogTitle>
+          <AlertDialogDescription>
+            O produto será marcado como inativo. O histórico de movimentações é preservado. Esta
+            ação pode ser revertida reativando o produto.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => formRef.current?.requestSubmit()}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Confirmar desativação
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+      <form ref={formRef} action={formAction} className="hidden">
+        <SubmitButton />
+      </form>
+    </AlertDialog>
   );
 }
 
