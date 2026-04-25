@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,15 +22,19 @@ type ProductOption = { id: string; name: string; sku: string; stock: number };
 
 export function MovementForm({ products }: { products: ProductOption[] }) {
   const [state, formAction] = useActionState(registerMovementAction, initial);
+  const [formKey, setFormKey] = useState(0);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
-    if (state.ok) toast.success(state.message ?? "Movimentação registrada");
+    if (state.ok) {
+      toast.success(state.message ?? "Movimentação registrada");
+      setFormKey((k) => k + 1);
+    }
     if (!state.ok && state.message) toast.error(state.message);
   }, [state]);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <form key={formKey} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {/* Produto */}
       <div className="space-y-2 md:col-span-2">
         <Label htmlFor="productId">

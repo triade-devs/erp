@@ -2,6 +2,7 @@
 export { createProductAction } from "./actions/create-product";
 export { updateProductAction } from "./actions/update-product";
 export { deleteProductAction } from "./actions/delete-product";
+export { reactivateProductAction } from "./actions/reactivate-product";
 export { registerMovementAction } from "./actions/register-movement";
 
 export { listProducts } from "./queries/list-products";
@@ -13,7 +14,11 @@ export { ProductForm } from "./components/product-form";
 export { MovementForm } from "./components/movement-form";
 export { MovementTable } from "./components/movement-table";
 
-export { validateMovement, calculateNewStock, InsufficientStockError } from "./services/stock-service";
+export {
+  validateMovement,
+  calculateNewStock,
+  InsufficientStockError,
+} from "./services/stock-service";
 
 export type {
   Product,
@@ -21,6 +26,7 @@ export type {
   ProductUpdate,
   StockMovement,
   StockMovementInsert,
+  MovementWithProduct,
   MovementType,
   PaginatedResult,
 } from "./types";
