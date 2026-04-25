@@ -32,7 +32,16 @@ alter table public.profiles drop column if exists role;
 -- ─── 5. Dropar o enum user_role (não é mais usado em lugar algum) ─────────────
 drop type if exists public.user_role;
 
--- ─── 6. Recriar trigger handle_new_user sem o campo role ─────────────────────
+-- ─── 6. Recriar profiles_update_own sem alteração semântica ─────────────────
+-- Policy não usava current_user_role(), mas é recriada aqui para documentar
+-- que foi revisada neste PR e mantida intencionalmente.
+drop policy if exists "profiles_update_own" on public.profiles;
+create policy "profiles_update_own"
+  on public.profiles for update
+  using (id = auth.uid())
+  with check (id = auth.uid());
+
+-- ─── 7. Recriar trigger handle_new_user sem o campo role ─────────────────────
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public
 as $$
