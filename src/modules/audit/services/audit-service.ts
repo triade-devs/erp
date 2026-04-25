@@ -20,6 +20,8 @@ export async function audit(e: AuditEntry): Promise<void> {
   } = await supabase.auth.getUser();
   const h = await headers();
 
+  const requestId = h.get("x-request-id");
+
   const { error: insertError } = await supabase.from("audit_logs").insert({
     company_id: e.companyId ?? null,
     actor_user_id: user?.id ?? null,
@@ -31,7 +33,10 @@ export async function audit(e: AuditEntry): Promise<void> {
     status: e.status ?? "success",
     ip: (h.get("x-forwarded-for")?.split(",")[0] ?? "").trim() || null,
     user_agent: h.get("user-agent") ?? null,
-    metadata: (e.metadata ?? {}) as Json,
+    metadata: {
+      ...(e.metadata ?? {}),
+      ...(requestId ? { request_id: requestId } : {}),
+    } as Json,
   });
   if (insertError) console.error("[audit] falha ao inserir log:", insertError.message);
 }
