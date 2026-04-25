@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: ["**"]
   pull_request:
     branches: [main]
 
@@ -11,17 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Credenciais padrão do supabase start — não são segredos
       NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-      # Chave anon padrão do supabase start (não é segredo — é o default bem conhecido)
       NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRFA0NiK7urfjjDvC2x8FS3urzFkW1sejme0YyEYEQ0
+      DATABASE_URL: postgresql://postgres:postgres@localhost:54322/postgres
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Instalar dependências
         run: npm ci
@@ -30,22 +31,25 @@ jobs:
         with:
           version: latest
 
+      # supabase start aplica todas as migrations automaticamente e bloqueia até pronto
       - name: Iniciar Supabase local
         run: supabase start
 
-      - name: Verificar RLS (check-rls obrigatório)
+      # Usa psql diretamente — parsing confiável via -t -A (tuplas, sem alinhamento)
+      - name: Verificar RLS obrigatório
         run: |
-          count=$(supabase db execute --sql \
-            "SELECT count(*)::text FROM pg_tables WHERE schemaname='public' AND rowsecurity=false;" \
-            | tail -n1 | tr -d ' ')
-          if [ -z "$count" ] || [ "$count" -gt "0" ]; then
-            echo "ERRO: $count tabela(s) pública(s) sem RLS habilitado." >&2
-            supabase db execute --sql \
-              "SELECT tablename FROM pg_tables WHERE schemaname='public' AND rowsecurity=false ORDER BY tablename;" >&2
+          tables=$(psql "$DATABASE_URL" -t -A \
+            -c "SELECT string_agg(tablename, ', ' ORDER BY tablename)
+                FROM pg_tables
+                WHERE schemaname='public' AND rowsecurity=false;")
+          if [ -n "$tables" ]; then
+            echo "ERRO: tabelas sem RLS habilitado: $tables" >&2
+            echo "Habilite RLS em todas as tabelas de tenant antes de continuar." >&2
             exit 1
           fi
           echo "check-rls: todas as tabelas têm RLS habilitado ✓"
 
+      # supabase test db executa os arquivos .sql em supabase/tests/ via pgTAP
       - name: Executar testes pgTAP de isolamento
         run: npm run test:rls
 
