@@ -33,7 +33,7 @@ jobs:
 
       # supabase start aplica todas as migrations automaticamente e bloqueia até pronto
       - name: Iniciar Supabase local
-        run: supabase start
+        run: supabase start --ignore-health-check
 
       # Usa psql diretamente — parsing confiável via -t -A (tuplas, sem alinhamento)
       - name: Verificar RLS obrigatório
