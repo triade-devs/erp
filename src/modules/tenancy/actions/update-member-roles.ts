@@ -45,23 +45,15 @@ export async function updateMemberRolesAction(
     }
   }
 
-  const { error: deleteError } = await supabase
-    .from("membership_roles")
-    .delete()
-    .eq("membership_id", membershipId);
+  // RPC SECURITY DEFINER: evita o deadlock de RLS onde DELETE remove os roles
+  // do próprio usuário e o INSERT subsequente falha porque has_permission() = false.
+  const { error: rpcError } = await supabase.rpc("set_member_roles", {
+    p_company_id: companyId,
+    p_membership_id: membershipId,
+    p_role_ids: roleIds,
+  });
 
-  if (deleteError) return { ok: false, message: deleteError.message };
-
-  if (roleIds.length > 0) {
-    const { error: insertError } = await supabase.from("membership_roles").insert(
-      roleIds.map((roleId) => ({
-        membership_id: membershipId,
-        role_id: roleId,
-        assigned_by: user.id,
-      })),
-    );
-    if (insertError) return { ok: false, message: insertError.message };
-  }
+  if (rpcError) return { ok: false, message: rpcError.message };
 
   await audit({
     companyId,
