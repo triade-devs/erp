@@ -36,18 +36,6 @@ export default async function ArtigoPage({ params }: Props) {
   const article = await getArticleBySlug(company.id, slug);
   if (!article) notFound();
 
-  // Rascunhos só visíveis para quem tem permissão de escrita
-  if (article.status !== "published") {
-    let canWrite = false;
-    try {
-      await requirePermission(company.id, "kb:article:write");
-      canWrite = true;
-    } catch {
-      // sem permissão de escrita
-    }
-    if (!canWrite) notFound();
-  }
-
   let canWrite = false;
   try {
     await requirePermission(company.id, "kb:article:write");
@@ -55,6 +43,9 @@ export default async function ArtigoPage({ params }: Props) {
   } catch {
     // sem permissão de escrita
   }
+
+  // Rascunhos só visíveis para quem tem permissão de escrita
+  if (article.status !== "published" && !canWrite) notFound();
 
   return (
     <section className="space-y-6">
