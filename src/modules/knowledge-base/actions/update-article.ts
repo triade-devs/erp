@@ -53,7 +53,7 @@ export async function updateArticleAction(
 
   const { content_json, ...rest } = parsed.data;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("kb_articles")
     .update({
       ...rest,
@@ -62,9 +62,11 @@ export async function updateArticleAction(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    .select("id")
+    .single();
 
-  if (error) return { ok: false, message: error.message };
+  if (error || !data) return { ok: false, message: "Artigo não encontrado" };
 
   revalidatePath("/", "layout");
   return { ok: true, message: "Artigo atualizado com sucesso" };

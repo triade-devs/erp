@@ -40,25 +40,27 @@ export async function publishArticleAction(
   const updatePayload =
     action === "publish"
       ? {
-          status: "published" as const,
+          status: "published",
           published_at: new Date().toISOString(),
           updated_by: user.id,
           updated_at: new Date().toISOString(),
         }
       : {
-          status: "draft" as const,
+          status: "draft",
           published_at: null,
           updated_by: user.id,
           updated_at: new Date().toISOString(),
         };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("kb_articles")
     .update(updatePayload)
     .eq("id", id)
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    .select("id")
+    .single();
 
-  if (error) return { ok: false, message: error.message };
+  if (error || !data) return { ok: false, message: "Artigo não encontrado" };
 
   revalidatePath("/", "layout");
   return { ok: true, message: action === "publish" ? "Artigo publicado" : "Artigo despublicado" };

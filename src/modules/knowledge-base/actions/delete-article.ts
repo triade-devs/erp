@@ -32,13 +32,15 @@ export async function deleteArticleAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Não autenticado" };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("kb_articles")
     .delete()
     .eq("id", id)
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    .select("id")
+    .single();
 
-  if (error) return { ok: false, message: error.message };
+  if (error || !data) return { ok: false, message: "Artigo não encontrado" };
 
   revalidatePath("/", "layout");
   return { ok: true, message: "Artigo excluído" };
