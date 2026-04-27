@@ -10,9 +10,7 @@ export const productSchema = z.object({
   description: z.string().max(2000, "Máximo 2000 caracteres").optional().nullable(),
   unit: z.enum(["UN", "KG", "L", "CX", "M"], { required_error: "Selecione a unidade" }),
   costPrice: z.coerce.number({ invalid_type_error: "Valor inválido" }).nonnegative("Deve ser >= 0"),
-  salePrice: z.coerce
-    .number({ invalid_type_error: "Valor inválido" })
-    .nonnegative("Deve ser >= 0"),
+  salePrice: z.coerce.number({ invalid_type_error: "Valor inválido" }).nonnegative("Deve ser >= 0"),
   minStock: z.coerce
     .number({ invalid_type_error: "Valor inválido" })
     .nonnegative("Deve ser >= 0")

@@ -1,10 +1,7 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   root: true,
-  extends: [
-    "next/core-web-vitals",
-    "prettier",
-  ],
+  extends: ["next/core-web-vitals", "prettier"],
   rules: {
     // Impede import de internos de outro módulo sem passar pelo barrel index.ts
     "no-restricted-imports": [
@@ -12,7 +9,15 @@ module.exports = {
       {
         patterns: [
           {
-            group: ["@/modules/*/actions/*", "@/modules/*/components/*", "@/modules/*/queries/*", "@/modules/*/schemas/*", "@/modules/*/services/*", "@/modules/*/hooks/*", "@/modules/*/types/*"],
+            group: [
+              "@/modules/*/actions/*",
+              "@/modules/*/components/*",
+              "@/modules/*/queries/*",
+              "@/modules/*/schemas/*",
+              "@/modules/*/services/*",
+              "@/modules/*/hooks/*",
+              "@/modules/*/types/*",
+            ],
             message: "Importe apenas pelo barrel: @/modules/<modulo> (index.ts)",
           },
         ],

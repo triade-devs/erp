@@ -571,7 +571,7 @@ export type Database = {
         Insert: {
           granted_at?: string;
           granted_by?: string | null;
-          user_id?: string;
+          user_id: string;
         };
         Update: {
           granted_at?: string;
@@ -802,6 +802,14 @@ export type Database = {
         Returns: boolean;
       };
       is_platform_admin: { Args: never; Returns: boolean };
+      set_member_roles: {
+        Args: {
+          p_company_id: string;
+          p_membership_id: string;
+          p_role_ids: string[];
+        };
+        Returns: undefined;
+      };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
       user_company_ids: { Args: never; Returns: string[] };

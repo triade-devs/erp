@@ -24,11 +24,13 @@ npm install   # ou: pnpm install
 ```
 
 > **Nota:** após instalar, adicione os componentes Shadcn/UI:
+>
 > ```bash
 > npx shadcn@latest add button input label form card table \
 >   dialog dropdown-menu toast sonner separator badge skeleton \
 >   select textarea alert sheet
 > ```
+>
 > Os arquivos já estão parcialmente presentes em `src/components/ui/` — o comando do Shadcn irá completá-los com as dependências Radix corretas.
 
 ### 3. Configure as variáveis de ambiente
@@ -88,16 +90,16 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ## Scripts disponíveis
 
-| Script | Descrição |
-|---|---|
-| `npm run dev` | Inicia em desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run lint` | Lint com ESLint |
-| `npm run format` | Formata com Prettier |
+| Script              | Descrição                       |
+| ------------------- | ------------------------------- |
+| `npm run dev`       | Inicia em desenvolvimento       |
+| `npm run build`     | Build de produção               |
+| `npm run lint`      | Lint com ESLint                 |
+| `npm run format`    | Formata com Prettier            |
 | `npm run typecheck` | Verificação de tipos TypeScript |
-| `npm run db:types` | Regenera `database.types.ts` |
-| `npm run db:push` | Aplica migrations ao Supabase |
-| `npm run db:reset` | Reseta o banco local |
+| `npm run db:types`  | Regenera `database.types.ts`    |
+| `npm run db:push`   | Aplica migrations ao Supabase   |
+| `npm run db:reset`  | Reseta o banco local            |
 
 ---
 
@@ -124,6 +126,7 @@ src/
 ```
 
 Cada módulo segue o padrão:
+
 ```
 modules/<dominio>/
 ├── actions/    # Server Actions (mutations)
