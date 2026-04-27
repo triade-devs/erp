@@ -58,9 +58,9 @@ Clique em **"Próximo"** para continuar.
 
 Marque os módulos que o cliente deseja usar:
 
-| Módulo | Descrição |
-|--------|-----------|
-| **inventory** | Gestão de produtos, SKUs, preços, estoques |
+| Módulo        | Descrição                                         |
+| ------------- | ------------------------------------------------- |
+| **inventory** | Gestão de produtos, SKUs, preços, estoques        |
 | **movements** | Registro de entradas, saídas e ajustes de estoque |
 
 Cada módulo habilitado criará entradas em `company_modules` e as roles padrão receberão as permissões correspondentes. Você pode adicionar mais módulos depois se necessário.
@@ -86,6 +86,7 @@ Você verá uma mensagem de sucesso:
 ```
 
 Neste momento, o sistema:
+
 - Criou a empresa em `companies`
 - Habilitou os módulos escolhidos em `company_modules`
 - Executou `bootstrap_company_rbac('company-id')` no banco, criando as três roles padrão: **owner**, **manager**, **operator**
@@ -116,11 +117,11 @@ order by r.code;
 
 **Resultado esperado:** Deve retornar 3 linhas:
 
-| code | name | permission_count |
-|------|------|------------------|
-| owner | Owner | 2+ |
-| manager | Manager | 2+ |
-| operator | Operator | 1+ |
+| code     | name     | permission_count |
+| -------- | -------- | ---------------- |
+| owner    | Owner    | 2+               |
+| manager  | Manager  | 2+               |
+| operator | Operator | 1+               |
 
 Para ver as permissões de cada role:
 
@@ -172,6 +173,7 @@ O Owner é redirecionado para `/accept-invite?c=<companyId>&token=<token>` onde:
 ### 3.3 Membership ativada
 
 Após confirmar, o sistema:
+
 - Atualiza a membership de status `invited` → `active`
 - Owner pode agora fazer login e acessar a empresa
 - Vê `/[companySlug]/` (ex: `/acme/`) como home do dashboard
@@ -212,6 +214,7 @@ Home
 ### 4.3 Owner consegue criar um teste?
 
 Para módulo **inventory**:
+
 1. Vá para `Estoque → Produtos`
 2. Clique em `Novo Produto`
 3. Preencha: nome, SKU, preço
@@ -250,10 +253,12 @@ O provisioning está completo quando:
 4. Para reenviar o convite:
    - Vá para Supabase Dashboard → **SQL Editor**
    - Execute: (exemplo para Supabase Auth resend — varie conforme sua integração)
+
    ```sql
    -- Marcar membership como re-invitável (se houver coluna)
    -- Ou simplesmente criar uma nova membership se a anterior expirou
    ```
+
    - Ou: delete a membership antiga e crie uma nova via painel
 
 ### Owner aceita convite mas não consegue fazer login
@@ -266,13 +271,16 @@ O provisioning está completo quando:
    - O usuário existe?
    - Status é `Confirmed`?
 2. Verifique a membership em **SQL Editor**:
+
    ```sql
    select id, user_id, company_id, status, joined_at
    from public.memberships
    where user_id = 'user-id' and company_id = 'company-id';
    ```
+
    - Status deve ser `active`
    - `joined_at` deve ter um timestamp recente
+
 3. Se status é `invited`:
    - O handler de aceitação de convite pode ter falhado
    - Verifique os logs da aplicação (Vercel → Deployments → Logs)
@@ -287,13 +295,17 @@ O provisioning está completo quando:
 **Passos de debug:**
 
 1. Verifique se os módulos foram habilitados:
+
    ```sql
    select module_code, enabled_at
    from public.company_modules
    where company_id = 'company-id';
    ```
+
    - Deve retornar 2+ linhas (ou conforme configurado)
+
 2. Verifique se a role do Owner tem permissões:
+
    ```sql
    select r.code, count(rp.permission_code) as permission_count
    from public.roles r
@@ -301,8 +313,11 @@ O provisioning está completo quando:
    where r.company_id = 'company-id' and r.code = 'owner'
    group by r.code;
    ```
+
    - Deve retornar `permission_count` > 0
+
 3. Verifique se a membership tem uma role atribuída:
+
    ```sql
    select mr.membership_id, mr.role_id, r.code
    from public.membership_roles mr
@@ -310,6 +325,7 @@ O provisioning está completo quando:
    join public.memberships m on m.id = mr.membership_id
    where m.user_id = 'owner-user-id' and m.company_id = 'company-id';
    ```
+
    - Deve retornar pelo menos 1 linha com `code = 'owner'`
 
 ### Bootstrap das roles não ocorreu (criação falhou)
@@ -328,9 +344,11 @@ O provisioning está completo quando:
    - Logs do Supabase (Dashboard → Logs)
 3. Para recuperar:
    - Execute manualmente no SQL Editor:
+
    ```sql
    select public.bootstrap_company_rbac('company-id');
    ```
+
    - Se retorna sucesso: roles foram criadas, tudo ok
    - Se retorna erro: há um problema no schema do banco (entre em contato com o dev)
 
@@ -354,6 +372,7 @@ O provisioning está completo quando:
 ### Queries úteis para verificação
 
 **Listar todas as empresas criadas:**
+
 ```sql
 select id, name, slug, plan, is_active, created_at
 from public.companies
@@ -362,6 +381,7 @@ limit 20;
 ```
 
 **Listar membros de uma empresa:**
+
 ```sql
 select m.id, m.user_id, p.full_name, m.status, m.joined_at
 from public.memberships m
@@ -371,6 +391,7 @@ order by m.created_at;
 ```
 
 **Listar permissões de um usuário em uma empresa:**
+
 ```sql
 select distinct rp.permission_code
 from public.memberships m
@@ -384,6 +405,7 @@ order by rp.permission_code;
 ### Estatísticas do sistema
 
 **Contar empresas por plano:**
+
 ```sql
 select plan, count(*) as total
 from public.companies
@@ -393,6 +415,7 @@ order by plan;
 ```
 
 **Contar membros ativos por empresa:**
+
 ```sql
 select c.name, count(m.id) as active_members
 from public.companies c
@@ -404,27 +427,30 @@ order by c.created_at desc;
 
 ### Tabela de Roles Padrão
 
-| Role | Código | Descrição |
-|------|--------|-----------|
-| **Owner** | `owner` | Acesso total a todos os módulos habilitados + permissões de plataforma (convidar membros, auditar) |
-| **Manager** | `manager` | Acesso CRUD nos recursos dos módulos + leitura de auditoria + permissão para convidar membros |
-| **Operator** | `operator` | Acesso leitura + criação nos recursos dos módulos (sem edição/exclusão de terceiros) |
+| Role         | Código     | Descrição                                                                                          |
+| ------------ | ---------- | -------------------------------------------------------------------------------------------------- |
+| **Owner**    | `owner`    | Acesso total a todos os módulos habilitados + permissões de plataforma (convidar membros, auditar) |
+| **Manager**  | `manager`  | Acesso CRUD nos recursos dos módulos + leitura de auditoria + permissão para convidar membros      |
+| **Operator** | `operator` | Acesso leitura + criação nos recursos dos módulos (sem edição/exclusão de terceiros)               |
 
 ### Permissões Padrão por Módulo
 
 Após `bootstrap_company_rbac()`, cada role recebe permissões conforme o módulo:
 
 **Módulo: inventory**
+
 - `inventory:product:create` — criar produtos
 - `inventory:product:read` — listar/visualizar produtos
 - `inventory:product:update` — editar produtos
 - `inventory:product:delete` — deletar produtos
 
 **Módulo: movements**
+
 - `movements:movement:create` — registrar movimentação
 - `movements:movement:read` — listar movimentações
 
 **Permissões de core (todos os roles)**
+
 - `core:audit:read` — acessar log de auditoria
 - `core:member:invite` — convidar membros (owner + manager)
 
