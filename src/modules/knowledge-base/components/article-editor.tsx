@@ -50,6 +50,7 @@ export function ArticleEditor({ companySlug: _companySlug, article, categories }
   const contentMdRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [StarterKit, Markdown],
     content: (article?.content_json ?? "") as Content,
     editorProps: {
