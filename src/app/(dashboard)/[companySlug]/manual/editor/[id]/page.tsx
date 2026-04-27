@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { resolveCompany } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
-import { listArticles, listCategories, ArticleEditor } from "@/modules/knowledge-base";
-import { PublishForm } from "./publish-form";
+import { listArticles, listCategories, ArticleEditor, PublishForm } from "@/modules/knowledge-base";
 
 type Props = {
   params: Promise<{ companySlug: string; id: string }>;

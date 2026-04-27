@@ -25,6 +25,7 @@ export { ArticleList } from "./components/article-list";
 export { ArticleViewer } from "./components/article-viewer";
 export { ArticleEditor } from "./components/article-editor";
 export { CategoryTree } from "./components/category-tree";
+export { PublishForm } from "./components/publish-form";
 
 // Schemas
 export { createArticleSchema, updateArticleSchema } from "./schemas/article";

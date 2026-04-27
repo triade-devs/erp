@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { createArticleAction, updateArticleAction } from "@/modules/knowledge-base";
+import { createArticleAction } from "../actions/create-article";
+import { updateArticleAction } from "../actions/update-article";
 import type { ActionResult } from "@/lib/errors";
-import type { ArticleWithCategory, KbCategory } from "@/modules/knowledge-base";
+import type { ArticleWithCategory, KbCategory } from "../types";
 
 type Props = {
   companySlug: string;
