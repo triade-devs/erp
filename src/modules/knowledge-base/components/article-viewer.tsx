@@ -66,10 +66,11 @@ export function ArticleViewer({ article }: Props) {
       <hr className="border-border" />
 
       {article.content_md ? (
-        <div
-          className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: article.content_md }}
-        />
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+            {article.content_md}
+          </pre>
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">Este artigo não possui conteúdo.</p>
       )}
