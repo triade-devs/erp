@@ -797,6 +797,7 @@ export type Database = {
         Args: { p_company: string };
         Returns: undefined;
       };
+      get_user_id_by_email: { Args: { p_email: string }; Returns: string };
       has_permission: {
         Args: { p_company: string; p_permission: string };
         Returns: boolean;

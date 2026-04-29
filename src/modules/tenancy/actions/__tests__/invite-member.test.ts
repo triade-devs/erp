@@ -118,10 +118,19 @@ function makeAnonMock({
   return mockClient;
 }
 
+type ServiceMockOptions = {
+  inviteError?: { message: string } | null;
+  invitedUserId?: string;
+  rpcExistingUserId?: string | null;
+  rpcError?: { message: string } | null;
+};
+
 function makeServiceMock({
   inviteError = null,
   invitedUserId = "invited-user-id",
-}: { inviteError?: { message: string } | null; invitedUserId?: string } = {}) {
+  rpcExistingUserId = "existing-user-id",
+  rpcError = null,
+}: ServiceMockOptions = {}) {
   const inviteUserByEmail = vi
     .fn()
     .mockResolvedValue(
@@ -130,12 +139,15 @@ function makeServiceMock({
         : { data: { user: { id: invitedUserId } }, error: null },
     );
 
+  const rpc = vi
+    .fn()
+    .mockResolvedValue(
+      rpcError ? { data: null, error: rpcError } : { data: rpcExistingUserId, error: null },
+    );
+
   return {
-    auth: {
-      admin: {
-        inviteUserByEmail,
-      },
-    },
+    auth: { admin: { inviteUserByEmail } },
+    rpc,
   };
 }
 
@@ -300,6 +312,72 @@ describe("inviteMemberAction", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toContain("autenticad");
+    }
+  });
+
+  it("retorna { ok: true } quando usuário já existe no Supabase Auth (email já registrado)", async () => {
+    // Arrange
+    const anonMock = makeAnonMock({ existingMembership: null, membershipId: "mem-existing" });
+    const serviceMock = makeServiceMock({
+      inviteError: { message: "A user with this email address has already been registered" },
+      rpcExistingUserId: "existing-auth-user-id",
+    });
+    vi.mocked(createClient).mockResolvedValue(anonMock as never);
+    vi.mocked(createServiceClient).mockReturnValue(serviceMock as never);
+
+    // Act
+    const result = await inviteMemberAction("company-1", "existing@empresa.com", ["role-1"]);
+
+    // Assert
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.message).toContain("existing@empresa.com");
+      expect(result.message).not.toContain("Convite");
+    }
+    expect(anonMock.membershipsInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "active" }),
+    );
+  });
+
+  it("retorna { ok: false } quando RPC falha ao buscar usuário existente", async () => {
+    // Arrange
+    const anonMock = makeAnonMock();
+    const serviceMock = makeServiceMock({
+      inviteError: { message: "A user with this email address has already been registered" },
+      rpcError: { message: "função não encontrada" },
+    });
+    vi.mocked(createClient).mockResolvedValue(anonMock as never);
+    vi.mocked(createServiceClient).mockReturnValue(serviceMock as never);
+
+    // Act
+    const result = await inviteMemberAction("company-1", "existing@empresa.com", []);
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("localizar");
+    }
+  });
+
+  it("retorna { ok: false } quando usuário existente já é membro desta empresa", async () => {
+    // Arrange
+    const anonMock = makeAnonMock({
+      existingMembership: { id: "mem-1", status: "active" },
+    });
+    const serviceMock = makeServiceMock({
+      inviteError: { message: "A user with this email address has already been registered" },
+      rpcExistingUserId: "existing-auth-user-id",
+    });
+    vi.mocked(createClient).mockResolvedValue(anonMock as never);
+    vi.mocked(createServiceClient).mockReturnValue(serviceMock as never);
+
+    // Act
+    const result = await inviteMemberAction("company-1", "existing@empresa.com", []);
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("membro");
     }
   });
 });

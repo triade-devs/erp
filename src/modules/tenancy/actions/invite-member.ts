@@ -32,14 +32,31 @@ export async function inviteMemberAction(
 
   const adminClient = createServiceClient();
 
-  const { data: invitedUser, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,
     { redirectTo: `${env.NEXT_PUBLIC_APP_URL}/accept-invite` },
   );
 
-  if (inviteError) return { ok: false, message: inviteError.message };
+  let invitedUserId: string;
+  let isExistingAuthUser = false;
 
-  const invitedUserId = invitedUser.user.id;
+  if (inviteError) {
+    if (!inviteError.message.includes("already been registered")) {
+      return { ok: false, message: inviteError.message };
+    }
+    // Usuário já tem conta no Supabase — busca o ID via RPC segura
+    const { data: existingUserId, error: lookupError } = await adminClient.rpc(
+      "get_user_id_by_email",
+      { p_email: email },
+    );
+    if (lookupError || !existingUserId) {
+      return { ok: false, message: "Não foi possível localizar o usuário existente" };
+    }
+    invitedUserId = existingUserId as string;
+    isExistingAuthUser = true;
+  } else {
+    invitedUserId = inviteData.user.id;
+  }
 
   const { data: existingMembership } = await supabase
     .from("memberships")
@@ -60,9 +77,10 @@ export async function inviteMemberAction(
     .insert({
       company_id: companyId,
       user_id: invitedUserId,
-      status: "invited",
+      status: isExistingAuthUser ? "active" : "invited",
       invited_by: user.id,
       invited_at: new Date().toISOString(),
+      ...(isExistingAuthUser ? { joined_at: new Date().toISOString() } : {}),
     })
     .select("id")
     .single();
@@ -90,5 +108,8 @@ export async function inviteMemberAction(
   });
 
   revalidatePath(`/[companySlug]/settings/members`, "page");
-  return { ok: true, message: `Convite enviado para ${email}` };
+  const message = isExistingAuthUser
+    ? `${email} adicionado como membro`
+    : `Convite enviado para ${email}`;
+  return { ok: true, message };
 }
