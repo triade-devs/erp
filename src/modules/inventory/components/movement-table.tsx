@@ -8,8 +8,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaginationNav } from "@/components/ui/pagination-nav";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { MovementWithProduct, PaginatedResult } from "../types";
+
+type SortDir = "asc" | "desc";
 
 type Props = Pick<
   PaginatedResult<MovementWithProduct>,
@@ -17,6 +20,8 @@ type Props = Pick<
 > & {
   basePath?: string;
   productId?: string;
+  sortBy: string;
+  sortDir: SortDir;
 };
 
 const MOVEMENT_LABELS: Record<string, string> = {
@@ -31,7 +36,16 @@ const MOVEMENT_VARIANTS: Record<string, "default" | "destructive" | "secondary" 
   adjustment: "secondary",
 };
 
-export function MovementTable({ data, page, totalPages, total, basePath = "", productId }: Props) {
+export function MovementTable({
+  data,
+  page,
+  totalPages,
+  total,
+  basePath = "",
+  productId,
+  sortBy,
+  sortDir,
+}: Props) {
   if (data.length === 0) {
     return (
       <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
@@ -40,16 +54,27 @@ export function MovementTable({ data, page, totalPages, total, basePath = "", pr
     );
   }
 
+  const buildSortHref = (col: string, dir: SortDir) => {
+    const params = new URLSearchParams();
+    params.set("sortBy", col);
+    params.set("sortDir", dir);
+    params.set("page", "1");
+    if (productId) params.set("productId", productId);
+    return `${basePath}?${params.toString()}`;
+  };
+
+  const sortProps = { currentSort: sortBy, currentDir: sortDir, buildHref: buildSortHref };
+
   return (
     <div className="space-y-3">
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data</TableHead>
+              <SortableHeader column="created_at" label="Data" defaultDir="desc" {...sortProps} />
               {!productId && <TableHead>Produto</TableHead>}
-              <TableHead>Tipo</TableHead>
-              <TableHead className="text-right">Quantidade</TableHead>
+              <SortableHeader column="movement_type" label="Tipo" {...sortProps} />
+              <SortableHeader column="quantity" label="Quantidade" {...sortProps} align="right" />
               <TableHead className="text-right">Custo unit.</TableHead>
               <TableHead>Motivo</TableHead>
             </TableRow>
@@ -96,6 +121,8 @@ export function MovementTable({ data, page, totalPages, total, basePath = "", pr
           buildHref={(p) => {
             const params = new URLSearchParams();
             params.set("page", String(p));
+            params.set("sortBy", sortBy);
+            params.set("sortDir", sortDir);
             if (productId) params.set("productId", productId);
             return `${basePath}?${params.toString()}`;
           }}

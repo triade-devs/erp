@@ -16,6 +16,9 @@ export default async function MovementsPage({ params, searchParams }: Props) {
   const company = await resolveCompany(companySlug);
   const rawParams = await searchParams;
 
+  const sortBy = rawParams.sortBy ?? "created_at";
+  const sortDir: "asc" | "desc" = rawParams.sortDir === "asc" ? "asc" : "desc";
+
   const [movements, products] = await Promise.all([
     listMovements(company.id, rawParams),
     listProducts(company.id, { onlyActive: true, pageSize: 100 }),
@@ -35,7 +38,6 @@ export default async function MovementsPage({ params, searchParams }: Props) {
         <p className="text-sm text-muted-foreground">Registre entradas, saídas e ajustes</p>
       </header>
 
-      {/* Formulário de registro — apenas para quem pode criar movimentações */}
       <Can permission="movements:movement:create">
         <div className="rounded-lg border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold">Nova movimentação</h2>
@@ -49,7 +51,6 @@ export default async function MovementsPage({ params, searchParams }: Props) {
         </div>
       </Can>
 
-      {/* Histórico */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Histórico</h2>
         <MovementTable
@@ -58,6 +59,9 @@ export default async function MovementsPage({ params, searchParams }: Props) {
           page={movements.page}
           totalPages={movements.totalPages}
           basePath={`/${companySlug}/inventory/movements`}
+          productId={rawParams.productId}
+          sortBy={sortBy}
+          sortDir={sortDir}
         />
       </div>
     </section>

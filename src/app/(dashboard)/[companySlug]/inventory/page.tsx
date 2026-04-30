@@ -21,6 +21,9 @@ export default async function InventoryPage({ params, searchParams }: Props) {
   const queryParams = { ...rawParams, onlyActive: !showInactive };
   const { data, total, page, pageSize, totalPages } = await listProducts(company.id, queryParams);
 
+  const sortBy = rawParams.sortBy ?? "name";
+  const sortDir: "asc" | "desc" = rawParams.sortDir === "desc" ? "desc" : "asc";
+
   const basePath = `/${companySlug}/inventory`;
   const toggleHref = showInactive ? basePath : `${basePath}?inactive=true`;
 
@@ -48,6 +51,8 @@ export default async function InventoryPage({ params, searchParams }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <form className="flex gap-2">
           {showInactive && <input type="hidden" name="inactive" value="true" />}
+          {rawParams.sortBy && <input type="hidden" name="sortBy" value={rawParams.sortBy} />}
+          {rawParams.sortDir && <input type="hidden" name="sortDir" value={rawParams.sortDir} />}
           <Input
             name="q"
             defaultValue={rawParams.q ?? ""}
@@ -73,6 +78,8 @@ export default async function InventoryPage({ params, searchParams }: Props) {
         searchQuery={rawParams.q}
         createHref={`/${companySlug}/inventory/new`}
         showInactive={showInactive}
+        sortBy={sortBy}
+        sortDir={sortDir}
       />
     </section>
   );

@@ -33,12 +33,16 @@ export const listProductsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(9999).default(20),
   onlyActive: z.coerce.boolean().default(true),
+  sortBy: z.enum(["name", "sku", "stock", "cost_price", "sale_price"]).default("name"),
+  sortDir: z.enum(["asc", "desc"]).default("asc"),
 });
 
 export const listMovementsSchema = z.object({
   productId: z.string().uuid().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  sortBy: z.enum(["created_at", "quantity", "movement_type"]).default("created_at"),
+  sortDir: z.enum(["asc", "desc"]).default("desc"),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;

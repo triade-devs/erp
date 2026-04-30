@@ -7,7 +7,7 @@ export async function listProducts(
   companyId: string,
   raw: Record<string, unknown>,
 ): Promise<PaginatedResult<Product>> {
-  const { q, page, pageSize, onlyActive } = listProductsSchema.parse(raw);
+  const { q, page, pageSize, onlyActive, sortBy, sortDir } = listProductsSchema.parse(raw);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -16,7 +16,7 @@ export async function listProducts(
     .from("products")
     .select("*", { count: "exact" })
     .eq("company_id", companyId)
-    .order("name")
+    .order(sortBy, { ascending: sortDir === "asc" })
     .range(from, to);
 
   if (onlyActive) query = query.eq("is_active", true);

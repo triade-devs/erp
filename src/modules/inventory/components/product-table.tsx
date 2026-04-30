@@ -10,10 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaginationNav } from "@/components/ui/pagination-nav";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { formatCurrency } from "@/lib/utils";
 import { reactivateProductAction } from "../actions/reactivate-product";
 import { ReactivateProductButton } from "./reactivate-product-button";
 import type { PaginatedResult, Product } from "../types";
+
+type SortDir = "asc" | "desc";
 
 type Props = Pick<
   PaginatedResult<Product>,
@@ -23,6 +26,8 @@ type Props = Pick<
   searchQuery?: string;
   createHref?: string;
   showInactive?: boolean;
+  sortBy: string;
+  sortDir: SortDir;
 };
 
 export function ProductTable({
@@ -34,6 +39,8 @@ export function ProductTable({
   searchQuery,
   createHref,
   showInactive,
+  sortBy,
+  sortDir,
 }: Props) {
   if (data.length === 0) {
     return (
@@ -52,18 +59,30 @@ export function ProductTable({
     );
   }
 
+  const buildSortHref = (col: string, dir: SortDir) => {
+    const params = new URLSearchParams();
+    params.set("sortBy", col);
+    params.set("sortDir", dir);
+    params.set("page", "1");
+    if (searchQuery) params.set("q", searchQuery);
+    if (showInactive) params.set("inactive", "true");
+    return `${basePath}?${params.toString()}`;
+  };
+
+  const sortProps = { currentSort: sortBy, currentDir: sortDir, buildHref: buildSortHref };
+
   return (
     <div className="space-y-3">
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>SKU</TableHead>
-              <TableHead>Produto</TableHead>
+              <SortableHeader column="sku" label="SKU" {...sortProps} />
+              <SortableHeader column="name" label="Produto" {...sortProps} />
               <TableHead>Unidade</TableHead>
-              <TableHead className="text-right">Estoque</TableHead>
-              <TableHead className="text-right">Custo</TableHead>
-              <TableHead className="text-right">Venda</TableHead>
+              <SortableHeader column="stock" label="Estoque" {...sortProps} align="right" />
+              <SortableHeader column="cost_price" label="Custo" {...sortProps} align="right" />
+              <SortableHeader column="sale_price" label="Venda" {...sortProps} align="right" />
               <TableHead>Status</TableHead>
               {showInactive && <TableHead />}
             </TableRow>
@@ -91,6 +110,8 @@ export function ProductTable({
           buildHref={(p) => {
             const params = new URLSearchParams();
             params.set("page", String(p));
+            params.set("sortBy", sortBy);
+            params.set("sortDir", sortDir);
             if (searchQuery) params.set("q", searchQuery);
             if (showInactive) params.set("inactive", "true");
             return `${basePath}?${params.toString()}`;
