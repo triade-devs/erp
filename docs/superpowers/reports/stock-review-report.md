@@ -91,11 +91,89 @@
 
 ## Camada 4: Actions
 
-_(a preencher na Task 5)_
+### Achados
+
+**[ACT-01] 🔴 BUG — `reactivateProductAction` usa permissão errada**
+
+- **Arquivo**: `src/modules/inventory/actions/reactivate-product.ts:20`
+- **Detalhe**: `requirePermission("inventory:product:delete")` — semanticamente incorreto. Reativar um produto não é uma exclusão; é uma atualização. Viola princípio de menor privilégio: usuários com `delete` conseguem ativar produtos, enquanto quem tem apenas `update` não consegue.
+- **Correção sugerida**: Mudar para `requirePermission("inventory:product:update")`.
+
+**[ACT-02] 🔴 BUG — `updateProductAction` reseta `is_active` para true silenciosamente**
+
+- **Arquivo**: `src/modules/inventory/actions/update-product.ts:15-47`
+- **Detalhe**: O form não renderiza o campo `is_active` (é readonly em UI). Quando usuário edita um produto inativo, o `productSchema` tem `isActive: z.coerce.boolean().default(true)` — se o campo não vem na FormData, Zod aplica o default, e o produto é reativado sem consentimento. Teste: criar produto, desativá-lo, editar nome — produto volta ativo.
+- **Correção sugerida**:
+  - Opção A: No schema, usar `.optional()` e no action, preservar o valor atual se omitido: `isActive: input.isActive ?? existingProduct.isActive`
+  - Opção B: No form, renderizar checkbox hidden com valor atual para garantir que sempre vem na FormData.
+
+**[ACT-03] 🟡 GAP — `createProductAction` não valida duplicação de SKU pré-inserção**
+
+- **Arquivo**: `src/modules/inventory/actions/create-product.ts:36-54`
+- **Detalhe**: A validação de SKU único é feita apenas pelo constraint de banco (migration 13: `products_sku_per_company`). A ação retorna erro genérico do Postgres quando ocorre violação. UX ruim: usuário não sabe que foi SKU duplicado até submeter.
+- **Correção sugerida**: Adicionar check `const existingSku = await queryProductBySku(sku, companyId)` antes do insert. Se existe, retornar `{ ok: false, message: "SKU já existe nesta empresa", fieldErrors: { sku: "..." } }`.
+
+**[ACT-04] 🟡 GAP — `deleteProductAction` bloqueia mas não explica por quê**
+
+- **Arquivo**: `src/modules/inventory/actions/delete-product.ts:34-42`
+- **Detalhe**: A action implementa soft-delete (UPDATE is_active = false), portanto não há bloqueio real. Porém, se houver tentativa futura de DELETE físico, o erro retornado é genérico. Mensagem "Não foi possível deletar o produto" não esclarece se é permissão, produto não existe, ou se tem histórico.
+- **Correção sugerida**: Adicionar tratamento específico para FK constraint — capturar erro de constraint do Postgres e retornar: "Produto não pode ser deletado pois possui histórico de movimentos. Use soft-delete (desativar)".
+
+**[ACT-05] 🟡 SEC — `registerMovementAction` usa string matching para erro de estoque**
+
+- **Arquivo**: `src/modules/inventory/actions/register-movement.ts:64-68`
+- **Detalhe**: `if (error.message.includes("Estoque insuficiente"))` — detecção de erro via string matching é frágil. Se a mensagem da constraint no banco mudar, o código quebra silenciosamente. Além disso, qualquer erro contendo essa substring seria capturado incorretamente.
+- **Correção sugerida**: Usar código de erro Postgres (`error.code`) — constraint é nomeada `check_stock_positive` ou similar. Capturar por código (`error.code === "23514"` para CHECK constraint) e validar o nome da constraint.
+
+**[ACT-06] 🟡 TEST — `registerMovementAction` não testa movimento com estoque insuficiente**
+
+- **Arquivo**: `src/modules/inventory/actions/__tests__/inventory-actions.test.ts`
+- **Detalhe**: Testes atuais cobrem permissão (ForbiddenError). Não há caso de teste para tentativa de movimento que falha por estoque insuficiente.
+- **Correção sugerida**: Adicionar teste `it("rejects out movement with insufficient stock")` que cria produto com 10 unidades, tenta sacar 20, espera erro.
+
+**[ACT-07] 🟡 TEST — Sem testes de happy-path para actions**
+
+- **Arquivo**: `src/modules/inventory/actions/__tests__/inventory-actions.test.ts`
+- **Detalhe**: Todos os testes verificam rejeição (ForbiddenError). Nenhum valida que um movimento bem-sucedido retorna `{ ok: true }` ou que estoque foi atualizado no DB.
+- **Correção sugerida**: Adicionar testes para sucesso:
+  - `registerMovementAction` com estoque suficiente → espera `ok: true`
+  - `updateProductAction` → espera `ok: true` e dados atualizados
+
+### Verificações OK
+
+- ✅ Todas as actions retornam `ActionResult` (contrato esperado).
+- ✅ `revalidatePath` chamado em todas as mutações (cache invalidation OK).
+- ✅ Schemas Zod aplicados antes de usar dados.
+- ✅ Tratamento de erro genérico com try/catch em lugar apropriado.
 
 ## Camada 5: Queries
 
-_(a preencher na Task 6)_
+### Achados
+
+**[QRY-01] 🟢 TEST — `listProducts` busca sem índice**
+
+- **Arquivo**: `src/modules/inventory/queries/list-products.ts:15-25`
+- **Detalhe**: Query filtra por `is_active = true` frequentemente, mas schema não criou índice nessa coluna (verificado em Task 2, DB-02). Isso resulta em seq scan em tabelas grandes.
+- **Correção sugerida**: Já coberta em Task 2 (DB-02) — criar índice parcial. Aqui é apenas observação de que a query sofre performance.
+
+**[QRY-02] 🟢 TEST — Paginação sem validação de cursor**
+
+- **Arquivo**: `src/modules/inventory/queries/list-movements.ts:10-30`
+- **Detalhe**: A query aceita `offset` e `limit` via parâmetros Zod-validados, mas não há teste para valores extremos (offset > row count, limit inválido).
+- **Correção sugerida**: Testes para paginação edge cases (offset=999999, limit=0, etc). Behavior é correto (retorna vazio), mas não há validação.
+
+**[QRY-03] 🟡 GAP — `listProducts` usa `or` sem índice, risco de performance**
+
+- **Arquivo**: `src/modules/inventory/queries/list-products.ts:23`
+- **Detalhe**: Query usa `.or('name.ilike.%${q}%,sku.ilike.%${q}%')` para busca por nome ou SKU. Sem índice em ambas as colunas (ou com índice GIN inapropriado em `name`), resulta em seq scan. Parâmetro `q` recebe entrada do usuário — sem validação de tamanho, query muito complexa pode degradar performance.
+- **Correção sugerida**: (1) Adicionar índice BRIN ou pg_trgm em `name` e `sku` (Task 2); (2) Validar tamanho de `q` no schema (max 50 chars) para limitar complexidade.
+
+### Verificações OK
+
+- ✅ Todas as queries importam `"server-only"` (garantem que rodam apenas no servidor).
+- ✅ Supabase client tipado corretamente `<Database>`.
+- ✅ Sem exponibilidade de dados sensíveis (company_id isolado via RLS e filtros explícitos).
+- ✅ `getProduct` valida `company_id` explicitamente (line 11) além de RLS — defesa de profundidade.
 
 ## Camada 6: UI Components
 
