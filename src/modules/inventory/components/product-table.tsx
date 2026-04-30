@@ -83,7 +83,7 @@ export function ProductTable({
               <SortableHeader column="stock" label="Estoque" {...sortProps} align="right" />
               <SortableHeader column="cost_price" label="Custo" {...sortProps} align="right" />
               <SortableHeader column="sale_price" label="Venda" {...sortProps} align="right" />
-              <TableHead>Status</TableHead>
+              <SortableHeader column="is_active" label="Status" {...sortProps} />
               {showInactive && <TableHead />}
             </TableRow>
           </TableHeader>
