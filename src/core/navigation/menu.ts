@@ -40,6 +40,13 @@ export const MODULES_MENU: MenuItem[] = [
     requiresPermission: "kb:article:read",
   },
   {
+    label: "Documentação",
+    href: "/docs",
+    icon: "file-text",
+    requiresSlug: true,
+    requiresPermission: "kb:doc:read",
+  },
+  {
     label: "Configurações",
     href: "/settings/general",
     icon: "settings",

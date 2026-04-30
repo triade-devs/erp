@@ -27,7 +27,18 @@ export { ArticleViewer } from "./components/article-viewer";
 export { ArticleEditor } from "./components/article-editor";
 export { CategoryTree } from "./components/category-tree";
 export { PublishForm } from "./components/publish-form";
+export { DocRenderer } from "./components/doc-renderer";
+export { Callout } from "./components/callout";
+export { TableSpec } from "./components/table-spec";
+export { RlsBlock } from "./components/rls-block";
+export { MermaidDiagram } from "./components/mermaid-diagram";
 
 // Schemas
 export { createArticleSchema, updateArticleSchema } from "./schemas/article";
 export { categorySchema } from "./schemas/category";
+export { docPageFrontmatterSchema } from "./schemas/doc-page";
+export type { DocPageFrontmatter } from "./schemas/doc-page";
+
+// Doc pages (MDX)
+export { listDocPages } from "./queries/list-doc-pages";
+export type { DocPage } from "./queries/list-doc-pages";
