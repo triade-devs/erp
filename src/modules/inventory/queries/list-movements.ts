@@ -7,7 +7,7 @@ export async function listMovements(
   companyId: string,
   raw: Record<string, unknown>,
 ): Promise<PaginatedResult<MovementWithProduct>> {
-  const { productId, page, pageSize } = listMovementsSchema.parse(raw);
+  const { productId, page, pageSize, sortBy, sortDir } = listMovementsSchema.parse(raw);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -16,7 +16,7 @@ export async function listMovements(
     .from("stock_movements")
     .select("*, products(name, sku)", { count: "exact" })
     .eq("company_id", companyId)
-    .order("created_at", { ascending: false })
+    .order(sortBy, { ascending: sortDir === "asc" })
     .range(from, to);
 
   if (productId) query = query.eq("product_id", productId);
