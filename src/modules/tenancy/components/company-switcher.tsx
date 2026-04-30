@@ -42,13 +42,20 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
       } else if (result.ok) {
         setError(null);
         if (targetCompany?.slug) {
-          // Substitui o slug atual pelo slug da empresa selecionada,
-          // mantendo o restante da rota (ex: /default/inventory → /empresa-teste/inventory)
           const currentSlug = activeCompany?.slug ?? "";
-          const newPath = currentSlug
+          const withNewSlug = currentSlug
             ? pathname.replace(new RegExp(`^/${currentSlug}(/|$)`), `/${targetCompany.slug}$1`)
             : `/${targetCompany.slug}`;
-          router.push(newPath);
+
+          // Se a rota contém um UUID (ID de entidade), trunca até o segmento anterior
+          // pois o ID não pertence à nova empresa
+          const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+          const segments = withNewSlug.split("/");
+          const uuidIndex = segments.findIndex((s) => UUID_RE.test(s));
+          const safePath =
+            uuidIndex !== -1 ? segments.slice(0, uuidIndex).join("/") || "/" : withNewSlug;
+
+          router.push(safePath);
         }
       }
     });
