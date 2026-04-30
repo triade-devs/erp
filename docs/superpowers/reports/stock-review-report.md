@@ -69,7 +69,25 @@
 
 ## Camada 3: Services
 
-_(a preencher na Task 4)_
+### Achados
+
+**[SVC-01] 🟡 TEST — `validateMovement()` nunca é testada**
+
+- **Arquivo**: `src/modules/inventory/services/stock-service.ts:7-25`
+- **Detalhe**: Função validação de movimento (estoque suficiente, tipo válido) é crítica para a lógica do domínio, mas não há testes. Testes atuais (em `inventory-actions.test.ts`) só cobrem permissões RLS, não a lógica de services.
+- **Correção sugerida**: Criar `stock-service.test.ts` com testes unitários para `validateMovement()` — casos: estoque suficiente, insuficiente, movimento inválido, tipos. Use `vi.mock` do supabase-js se necessário.
+
+**[SVC-02] 🟡 TEST — `calculateNewStock()` nunca é testada**
+
+- **Arquivo**: `src/modules/inventory/services/stock-service.ts:27-35`
+- **Detalhe**: Função que calcula o novo saldo após movimento (`in`, `out`, `adjustment`) não tem cobertura. Isso é aritmética crítica.
+- **Correção sugerida**: Adicionar testes em `stock-service.test.ts` para cada tipo: `in` (soma), `out` (subtrai), `adjustment` (seta valor absoluto). Incluir casos extremos: 0, negativos (pós-`out`), valores grandes.
+
+### Verificações OK
+
+- ✅ Funções exportadas corretamente no `index.ts`.
+- ✅ Sem side effects — funções são puras (não consultam DB, apenas computam).
+- ✅ Tipos bem-definidos: parâmetros esperados e retorno claro.
 
 ## Camada 4: Actions
 
