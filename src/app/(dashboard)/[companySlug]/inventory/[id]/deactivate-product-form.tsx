@@ -21,13 +21,13 @@ import type { ActionResult } from "@/lib/errors";
 const initial: ActionResult = { ok: false };
 
 type Props = {
-  deleteAction: (_prev: ActionResult, formData: FormData) => Promise<ActionResult>;
+  deactivateAction: (_prev: ActionResult, formData: FormData) => Promise<ActionResult>;
   isActive: boolean;
   redirectTo: string;
 };
 
-export function DeleteProductForm({ deleteAction, isActive, redirectTo }: Props) {
-  const [state, formAction] = useActionState(deleteAction, initial);
+export function DeactivateProductForm({ deactivateAction, isActive, redirectTo }: Props) {
+  const [state, formAction] = useActionState(deactivateAction, initial);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
