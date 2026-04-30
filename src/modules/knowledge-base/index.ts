@@ -26,6 +26,11 @@ export { ArticleViewer } from "./components/article-viewer";
 export { ArticleEditor } from "./components/article-editor";
 export { CategoryTree } from "./components/category-tree";
 export { PublishForm } from "./components/publish-form";
+export { DocRenderer } from "./components/doc-renderer";
+export { Callout } from "./components/callout";
+export { TableSpec } from "./components/table-spec";
+export { RlsBlock } from "./components/rls-block";
+export { MermaidDiagram } from "./components/mermaid-diagram";
 
 // Schemas
 export { createArticleSchema, updateArticleSchema } from "./schemas/article";
