@@ -81,7 +81,7 @@ export function ProductTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="sticky bottom-0 flex items-center justify-between border-t bg-background/95 px-1 py-3 text-sm text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <span>
           {total} produto{total !== 1 ? "s" : ""}
         </span>
