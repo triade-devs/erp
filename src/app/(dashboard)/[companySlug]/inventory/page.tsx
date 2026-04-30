@@ -51,6 +51,8 @@ export default async function InventoryPage({ params, searchParams }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <form className="flex gap-2">
           {showInactive && <input type="hidden" name="inactive" value="true" />}
+          {rawParams.sortBy && <input type="hidden" name="sortBy" value={rawParams.sortBy} />}
+          {rawParams.sortDir && <input type="hidden" name="sortDir" value={rawParams.sortDir} />}
           <Input
             name="q"
             defaultValue={rawParams.q ?? ""}
