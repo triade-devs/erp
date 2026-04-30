@@ -31,7 +31,7 @@ export const movementSchema = z.object({
 export const listProductsSchema = z.object({
   q: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  pageSize: z.coerce.number().int().min(1).max(9999).default(20),
   onlyActive: z.coerce.boolean().default(true),
 });
 
