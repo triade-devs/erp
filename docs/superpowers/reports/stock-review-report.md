@@ -266,8 +266,98 @@
 
 ## Sumário dos Achados
 
-_(a preencher na Task 9)_
+| ID     | Eixo | Severidade | Camada     | Descrição                                                                                                        |
+| ------ | ---- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| DB-01  | TEST | 🟢 Baixa   | Migrations | Índice GIN não utilizado — busca de produto usa `ilike` sem aproveitar índice full-text.                         |
+| DB-02  | TEST | 🟢 Baixa   | Migrations | Sem índice em `products.is_active` — filtra frequentemente sem índice (seq scan).                                |
+| DB-03  | GAP  | 🟢 Baixa   | Migrations | Policy `products_delete` nunca ativada — soft-delete usa `products_update`, não DELETE.                          |
+| SCH-01 | GAP  | 🟡 Média   | Schemas    | `movementSchema.positive()` bloqueia ajuste com quantidade zero — inventário não pode ser zerado via adjustment. |
+| SVC-01 | TEST | 🟡 Média   | Services   | `validateMovement()` nunca testada — função crítica sem cobertura.                                               |
+| SVC-02 | TEST | 🟡 Média   | Services   | `calculateNewStock()` nunca testada — aritmética crítica sem casos de teste.                                     |
+| ACT-01 | BUG  | 🔴 Alta    | Actions    | `reactivateProductAction` usa permissão errada (`delete` em vez de `update`) — viola menor privilégio.           |
+| ACT-02 | BUG  | 🔴 Alta    | Actions    | `updateProductAction` reativa produto silenciosamente — schema `.default(true)` quando campo omitido.            |
+| ACT-03 | GAP  | 🟡 Média   | Actions    | Sem validação pre-insert de SKU duplicado — erro genérico do banco (UX ruim).                                    |
+| ACT-04 | GAP  | 🟡 Média   | Actions    | `deleteProductAction` retorna erro genérico — usuário não sabe se é permissão ou histórico.                      |
+| ACT-05 | SEC  | 🟡 Média   | Actions    | `registerMovementAction` usa string matching (`error.message.includes(...)`) — frágil, falha silenciosa.         |
+| ACT-06 | TEST | 🟡 Média   | Actions    | Sem teste de movimento com estoque insuficiente — edge case crítico não coberto.                                 |
+| ACT-07 | TEST | 🟡 Média   | Actions    | Sem testes happy-path — nenhum valida que ação bem-sucedida retorna `ok: true`.                                  |
+| QRY-01 | TEST | 🟢 Baixa   | Queries    | `listProducts` busca sem índice — observação (já tratada em DB-02).                                              |
+| QRY-02 | TEST | 🟢 Baixa   | Queries    | Paginação sem testes edge case — offset > row count, limit=0 não testados.                                       |
+| QRY-03 | GAP  | 🟡 Média   | Queries    | `getProduct` confia apenas em RLS — sem `.eq('company_id', ...)` explícito (defesa de profundidade).             |
+| UI-01  | BUG  | 🔴 Alta    | Components | `ReactivateProductButton` ignora `ActionResult` — sem feedback de erro se ação falha.                            |
+| UI-02  | GAP  | 🟡 Média   | Components | `ProductForm` não renderiza `is_active` — causa reativação silenciosa (ACT-02).                                  |
+| UI-03  | TEST | 🟡 Média   | Components | `MovementForm` sem testes de validação — quantidade <= 0 não testada.                                            |
+| UI-04  | TEST | 🟡 Média   | Components | `MovementList` sem teste de lista vazia — mensagem "nenhum resultado" não validada.                              |
+| TST-01 | TEST | 🟡 Média   | Tests      | Sem testes unitários de services — `validateMovement()` e `calculateNewStock()` não cobertos.                    |
+| TST-02 | TEST | 🟡 Média   | Tests      | Sem testes happy-path — todas as ações só testam rejeição, não sucesso.                                          |
+
+**Resumo por Severidade:**
+
+- 🔴 **Alta (Prioridade 1)**: 3 bugs críticos (ACT-01, ACT-02, UI-01) — resolvam já
+- 🟡 **Média (Prioridade 2)**: 11 gaps + security issues — resolver em próximo ciclo
+- 🟢 **Baixa (Prioridade 3)**: 8 melhorias de teste + performance — resolver conforme capacidade
+
+**Total de achados: 22** (3 🔴 + 11 🟡 + 8 🟢)
 
 ## Próximos Passos — Plano de Correções Priorizadas
 
-_(a preencher na Task 9)_
+### Prioridade 1 (Bugs Críticos — Resolver Hoje)
+
+1. **[ACT-01]** Fix: `reactivateProductAction` → usar permissão `inventory:product:update` em vez de `delete`
+   - **Esforço**: 5 min | **Risco**: Baixo | **Bloqueador**: Permissioning quebrada
+
+2. **[ACT-02]** Fix: `updateProductAction` não deve reativar produto silenciosamente
+   - **Opção A** (recomendada): Schema `.optional()` + preservar valor atual se omitido
+   - **Opção B**: ProductForm renderiza checkbox `is_active` explícito
+   - **Esforço**: 10 min | **Risco**: Baixo | **Impacto**: Data integrity
+
+3. **[UI-01]** Fix: `ReactivateProductButton` captura `ActionResult` e exibe erro
+   - **Esforço**: 5 min | **Risco**: Baixo | **Impacto**: UX/feedback
+
+### Prioridade 2 (Gaps & Security — Resolver Próximo Sprint)
+
+4. **[ACT-03]** Adicionar validação pre-insert de SKU duplicado em `registerProductAction`
+   - Melhor UX: erro claro antes de submeter para banco
+
+5. **[ACT-04]** Melhorar mensagem de erro em `deleteProductAction` (distinguir constraint vs permissão)
+
+6. **[ACT-05]** Trocar string matching por `error.code` em `registerMovementAction`
+   - Capturar constraint de estoque por código Postgres
+
+7. **[QRY-03]** Adicionar `.eq('company_id', ...)` explícita em `getProduct` (defesa de profundidade)
+
+8. **[SCH-01]** Permitir quantity >= 0 em `movementSchema` para ajustes (requer refinamento contextual)
+
+### Prioridade 3 (Testes & Performance — Resolver Conforme Capacidade)
+
+9. **[SVC-01, SVC-02]** Criar `stock-service.test.ts` com testes unitários
+   - `validateMovement()`: estoque suficiente, insuficiente, tipo inválido
+   - `calculateNewStock()`: in/out/adjustment, edge cases (0, negativos)
+
+10. **[ACT-06, ACT-07]** Adicionar happy-path + edge cases em `inventory-actions.test.ts`
+    - Sucesso: movimento bem-sucedido retorna `ok: true`
+    - Edge cases: quantidade <= 0, tipo inválido, product not found
+
+11. **[UI-01, UI-02, UI-03, UI-04]** Criar `__tests__/*.test.tsx` para componentes
+    - ReactivateProductButton: mock action, verifica toast
+    - ProductForm: verifica `is_active` renderizado
+    - MovementForm/List: validação, empty state
+
+12. **[TST-04]** (Opcional) Criar teste de integração com branch de Supabase
+    - Validar que trigger `apply_stock_movement` funciona end-to-end
+
+13. **[DB-01, DB-02, QRY-01, QRY-02]** Performance + índices
+    - Criar índice parcial em `products(is_active)` (DB-02)
+    - Considerar GIN com `pg_trgm` ou full-text refactor (DB-01)
+    - Testes de paginação edge cases (QRY-02)
+
+### Próximos Passos Recomendados
+
+1. **Hoje**: Marque 3 bugs críticos como PRs + atribua donos (ACT-01, ACT-02, UI-01)
+2. **Próxima semana**: Gaps (ACT-03 até QRY-03)
+3. **Próximas 2 semanas**: Testes (SVC-01/SVC-02, componentes)
+4. **Backlog**: Performance + integração (DB-01/02, TST-04)
+
+**Relatório gerado em**: 2026-04-29
+**Duração da auditoria**: ~2h (7 camadas)
+**Total de achados**: 22 (3 🔴 + 11 🟡 + 8 🟢)
