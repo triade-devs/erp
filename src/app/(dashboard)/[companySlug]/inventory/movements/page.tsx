@@ -59,6 +59,7 @@ export default async function MovementsPage({ params, searchParams }: Props) {
           page={movements.page}
           totalPages={movements.totalPages}
           basePath={`/${companySlug}/inventory/movements`}
+          productId={rawParams.productId}
           sortBy={sortBy}
           sortDir={sortDir}
         />
