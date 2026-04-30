@@ -33,7 +33,10 @@ export function SortableHeader({
   const Icon = isActive ? (currentDir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
 
   return (
-    <TableHead className="p-0">
+    <TableHead
+      className="p-0"
+      aria-sort={isActive ? (currentDir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <Link
         href={buildHref(column, nextDir)}
         className={cn(
@@ -43,6 +46,7 @@ export function SortableHeader({
       >
         {label}
         <Icon
+          aria-hidden="true"
           className={cn(
             "h-3.5 w-3.5 shrink-0",
             isActive ? "text-foreground" : "text-muted-foreground/50",
