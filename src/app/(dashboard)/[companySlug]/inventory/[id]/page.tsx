@@ -17,15 +17,20 @@ import { DeleteProductForm } from "./delete-product-form";
 
 export const metadata = { title: "Produto — ERP" };
 
-type Props = { params: Promise<{ companySlug: string; id: string }> };
+type Props = {
+  params: Promise<{ companySlug: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default async function ProductDetailPage({ params }: Props) {
-  const { companySlug, id } = await params;
+export default async function ProductDetailPage({ params, searchParams }: Props) {
+  const [resolvedParams, resolvedSearch] = await Promise.all([params, searchParams]);
+  const { companySlug, id } = resolvedParams;
+  const page = Number(resolvedSearch.page ?? 1) || 1;
   const company = await resolveCompany(companySlug);
 
   const [product, movements] = await Promise.all([
     getProduct(id, company.id),
-    listMovements(company.id, { productId: id, pageSize: 10 }),
+    listMovements(company.id, { productId: id, pageSize: 10, page }),
   ]);
 
   if (!product) notFound();
@@ -100,7 +105,7 @@ export default async function ProductDetailPage({ params }: Props) {
             total={movements.total}
             page={movements.page}
             totalPages={movements.totalPages}
-            basePath={`/${companySlug}/inventory/movements`}
+            basePath={`/${companySlug}/inventory/${id}`}
             productId={product.id}
           />
         </div>
