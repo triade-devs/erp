@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   getProduct,
   updateProductAction,
-  deleteProductAction,
+  deactivateProductAction,
   listMovements,
 } from "@/modules/inventory";
 import { ProductForm } from "@/modules/inventory";
@@ -13,7 +13,7 @@ import { MovementTable } from "@/modules/inventory";
 import { formatCurrency } from "@/lib/utils";
 import { resolveCompany } from "@/modules/tenancy";
 import { Can } from "@/modules/authz";
-import { DeleteProductForm } from "./delete-product-form";
+import { DeactivateProductForm } from "./deactivate-product-form";
 
 export const metadata = { title: "Produto — ERP" };
 
@@ -38,7 +38,7 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
   if (!product) notFound();
 
   const updateAction = updateProductAction.bind(null, product.id);
-  const deleteAction = deleteProductAction.bind(null, companySlug, product.id);
+  const deactivateAction = deactivateProductAction.bind(null, companySlug, product.id);
   const isLowStock = Number(product.stock) <= Number(product.min_stock);
 
   return (
@@ -87,7 +87,11 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
           <p className="mb-4 text-sm text-muted-foreground">
             Desativa o produto e preserva o histórico de movimentações.
           </p>
-          <DeleteProductForm deleteAction={deleteAction} isActive={product.is_active} />
+          <DeactivateProductForm
+            deactivateAction={deactivateAction}
+            isActive={product.is_active}
+            redirectTo={`/${companySlug}/inventory`}
+          />
         </div>
       </Can>
 

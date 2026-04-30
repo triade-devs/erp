@@ -1,13 +1,12 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveCompanyId } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import type { ActionResult } from "@/lib/errors";
 
-export async function deleteProductAction(
+export async function deactivateProductAction(
   companySlug: string,
   id: string,
   _prev: ActionResult,
@@ -42,5 +41,5 @@ export async function deleteProductAction(
   }
 
   revalidatePath("/", "layout");
-  redirect(`/${companySlug}/inventory`);
+  return { ok: true, message: "Produto desativado com sucesso" };
 }

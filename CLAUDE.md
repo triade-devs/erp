@@ -52,6 +52,24 @@ modules/<domain>/
 1. **Middleware** (`src/middleware.ts`) refreshes the Supabase session on every request and gates routes via `PUBLIC_ROUTES` allowlist. Authenticated users hitting `/login` or `/register` get redirected to `/`.
 2. **RLS in Postgres** is the authoritative permission layer. Policies use helpers like `is_platform_admin()` and `has_permission()` from the `authz` module (see `supabase/migrations/20260423_15_products_rls.sql` and `20260423_16_movements_rls.sql`). In TS, Server Actions call `requirePermission()` from `src/modules/authz/` to enforce permission checks; UI/UX role checks use the user's memberships via `getCurrentUser()` — but never rely on TS checks alone for security.
 
+> ⚠️ **Platform admins bypass `requirePermission()` in TypeScript** (returns `Set(["*"])`), but `has_permission()` in Postgres only checks `memberships → role_permissions` — it has no knowledge of `platform_admins`. If a role lacks the required `permission_code`, the RLS USING clause silently returns 0 rows updated (no error). Always verify RLS works for both platform admins and regular users.
+
+### Adding permissions for a new module
+
+When creating a new module with its own permissions, **always include a migration in the same PR** that assigns those permissions to all existing roles (using `r.code`, not role UUIDs). Failing to do so leaves companies created before the migration without any access — and the failure is silent (RLS returns 0 rows, no error). Follow the pattern in `supabase/migrations/20260425000021_kb_permissions.sql`:
+
+```sql
+-- Enable module for all companies
+INSERT INTO company_modules (company_id, module_code)
+SELECT id, 'my-module' FROM companies ON CONFLICT DO NOTHING;
+
+-- Assign permissions by role code (covers all companies, past and future)
+INSERT INTO role_permissions (role_id, permission_code)
+SELECT r.id, p.code FROM roles r CROSS JOIN permissions p
+WHERE r.code = 'owner' AND p.module_code = 'my-module'
+ON CONFLICT DO NOTHING;
+```
+
 ### Two Supabase clients
 
 `src/lib/supabase/server.ts` (cookies via `next/headers`, used in Server Components, Actions, Route Handlers) and `src/lib/supabase/client.ts` (browser). Both are typed `<Database>` and read env via `src/core/config/env.ts`, which validates env vars at import time using Zod — adding a new env var requires updating that schema.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useFormStatus } from "react-dom";
@@ -20,17 +21,24 @@ import type { ActionResult } from "@/lib/errors";
 const initial: ActionResult = { ok: false };
 
 type Props = {
-  deleteAction: (_prev: ActionResult, formData: FormData) => Promise<ActionResult>;
+  deactivateAction: (_prev: ActionResult, formData: FormData) => Promise<ActionResult>;
   isActive: boolean;
+  redirectTo: string;
 };
 
-export function DeleteProductForm({ deleteAction, isActive }: Props) {
-  const [state, formAction] = useActionState(deleteAction, initial);
+export function DeactivateProductForm({ deactivateAction, isActive, redirectTo }: Props) {
+  const [state, formAction] = useActionState(deactivateAction, initial);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    if (!state.ok && state.message) toast.error(state.message);
-  }, [state]);
+    if (state.ok) {
+      toast.success(state.message ?? "Produto desativado com sucesso");
+      router.push(redirectTo);
+    } else if (state.message) {
+      toast.error(state.message);
+    }
+  }, [state, redirectTo, router]);
 
   if (!isActive) {
     return <p className="text-sm text-muted-foreground">Este produto já está inativo.</p>;
