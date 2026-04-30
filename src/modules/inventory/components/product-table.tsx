@@ -65,7 +65,7 @@ export function ProductTable({
     params.set("sortDir", dir);
     params.set("page", "1");
     if (searchQuery) params.set("q", searchQuery);
-    if (col === "is_active" || showInactive) params.set("inactive", "true");
+    if (showInactive) params.set("inactive", "true");
     return `${basePath}?${params.toString()}`;
   };
 
@@ -83,7 +83,7 @@ export function ProductTable({
               <SortableHeader column="stock" label="Estoque" {...sortProps} align="right" />
               <SortableHeader column="cost_price" label="Custo" {...sortProps} align="right" />
               <SortableHeader column="sale_price" label="Venda" {...sortProps} align="right" />
-              <SortableHeader column="is_active" label="Status" {...sortProps} />
+              <TableHead>Status</TableHead>
               {showInactive && <TableHead />}
             </TableRow>
           </TableHeader>
@@ -113,7 +113,7 @@ export function ProductTable({
             params.set("sortBy", sortBy);
             params.set("sortDir", sortDir);
             if (searchQuery) params.set("q", searchQuery);
-            if (sortBy === "is_active" || showInactive) params.set("inactive", "true");
+            if (showInactive) params.set("inactive", "true");
             return `${basePath}?${params.toString()}`;
           }}
         />
