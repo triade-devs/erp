@@ -1,0 +1,26 @@
+{
+  "name": "kb-maintainer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Skill de manutenção orgânica da Base de Conhecimento do ERP",
+  "type": "module",
+  "scripts": {
+    "detect": "tsx scripts/detect-drift.ts --dry-run",
+    "detect:ci": "tsx scripts/detect-drift.ts --ci",
+    "drafts": "tsx scripts/generate-drafts.ts",
+    "phase": "tsx scripts/validate-phase.ts",
+    "phase:all": "tsx scripts/validate-phase.ts --all"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@ai-sdk/anthropic": "^0.0.55",
+    "ai": "^3.4.0",
+    "gray-matter": "^4.0.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0"
+  }
+}

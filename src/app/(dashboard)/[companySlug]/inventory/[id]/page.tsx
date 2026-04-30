@@ -27,10 +27,12 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
   const { companySlug, id } = resolvedParams;
   const page = Number(resolvedSearch.page ?? 1) || 1;
   const company = await resolveCompany(companySlug);
+  const sortBy = (resolvedSearch.sortBy as string) ?? "created_at";
+  const sortDir: "asc" | "desc" = (resolvedSearch.sortDir as string) === "asc" ? "asc" : "desc";
 
   const [product, movements] = await Promise.all([
     getProduct(id, company.id),
-    listMovements(company.id, { productId: id, pageSize: 10, page }),
+    listMovements(company.id, { productId: id, pageSize: 10, page, sortBy, sortDir }),
   ]);
 
   if (!product) notFound();
@@ -107,6 +109,8 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
             totalPages={movements.totalPages}
             basePath={`/${companySlug}/inventory/${id}`}
             productId={product.id}
+            sortBy={sortBy}
+            sortDir={sortDir}
           />
         </div>
       </Can>

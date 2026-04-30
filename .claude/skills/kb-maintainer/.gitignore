@@ -1,0 +1,5 @@
+# Cache local da skill
+.kb-maintainer/
+report.md
+report.json
+node_modules/
