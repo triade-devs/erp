@@ -21,6 +21,9 @@ export default async function InventoryPage({ params, searchParams }: Props) {
   const queryParams = { ...rawParams, onlyActive: !showInactive };
   const { data, total, page, pageSize, totalPages } = await listProducts(company.id, queryParams);
 
+  const sortBy = rawParams.sortBy ?? "name";
+  const sortDir: "asc" | "desc" = rawParams.sortDir === "desc" ? "desc" : "asc";
+
   const basePath = `/${companySlug}/inventory`;
   const toggleHref = showInactive ? basePath : `${basePath}?inactive=true`;
 
@@ -73,6 +76,8 @@ export default async function InventoryPage({ params, searchParams }: Props) {
         searchQuery={rawParams.q}
         createHref={`/${companySlug}/inventory/new`}
         showInactive={showInactive}
+        sortBy={sortBy}
+        sortDir={sortDir}
       />
     </section>
   );
