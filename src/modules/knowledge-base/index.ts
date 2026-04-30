@@ -33,6 +33,10 @@ export { TableSpec } from "./components/table-spec";
 export { RlsBlock } from "./components/rls-block";
 export { MermaidDiagram } from "./components/mermaid-diagram";
 
+// Remotion
+export { RemotionPlayer } from "./components/remotion-player";
+export { RemotionEmbedExtension } from "./components/remotion-embed-extension";
+
 // Schemas
 export { createArticleSchema, updateArticleSchema } from "./schemas/article";
 export { categorySchema } from "./schemas/category";

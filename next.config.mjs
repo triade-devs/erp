@@ -5,6 +5,7 @@ const nextConfig = {
       allowedOrigins: ["localhost:3000"],
     },
   },
+  transpilePackages: ["remotion", "@remotion/player"],
 };
 
 export default nextConfig;
