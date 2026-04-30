@@ -30,3 +30,9 @@ export { PublishForm } from "./components/publish-form";
 // Schemas
 export { createArticleSchema, updateArticleSchema } from "./schemas/article";
 export { categorySchema } from "./schemas/category";
+export { docPageFrontmatterSchema } from "./schemas/doc-page";
+export type { DocPageFrontmatter } from "./schemas/doc-page";
+
+// Doc pages (MDX)
+export { listDocPages } from "./queries/list-doc-pages";
+export type { DocPage } from "./queries/list-doc-pages";
