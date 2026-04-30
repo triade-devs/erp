@@ -1,0 +1,81 @@
+name: KB Maintain
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'supabase/migrations/**'
+      - 'src/modules/**'
+      - 'src/remotion/**'
+      - 'src/content/docs/**'
+      - '.claude/skills/kb-maintainer/**'
+
+permissions:
+  contents: write       # commitar fixes na PR branch
+  pull-requests: write  # comentar no PR
+
+concurrency:
+  group: kb-maintain-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    # Bloqueia execução em PRs vindos de forks (segurança: não expor secrets)
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.KB_BOT_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '.claude/skills/kb-maintainer/package-lock.json'
+
+      - name: Install skill deps
+        working-directory: .claude/skills/kb-maintainer
+        run: npm ci || npm install
+
+      - name: Detect drift
+        id: detect
+        working-directory: .claude/skills/kb-maintainer
+        env:
+          SUPABASE_URL:               ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY:  ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY:          ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx tsx scripts/detect-drift.ts --ci --report-path report.md --json-out report.json
+          echo "blocks=$(jq '.summary.blocks' report.json)" >> "$GITHUB_OUTPUT"
+          echo "auto=$(jq   '.summary.auto'   report.json)" >> "$GITHUB_OUTPUT"
+          echo "drafts=$(jq '.summary.drafts' report.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Comment drift report on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: .claude/skills/kb-maintainer/report.md
+          header: kb-maintainer
+
+      - name: Commit auto fixes & drafts
+        if: steps.detect.outputs.blocks == '0'
+        run: |
+          git config user.name  "kb-maintainer-bot"
+          git config user.email "kb-bot@erp.local"
+          git add -A
+          if ! git diff --staged --quiet; then
+            git commit -m "docs(kb): auto-update by kb-maintainer
+
+            auto=${{ steps.detect.outputs.auto }} drafts=${{ steps.detect.outputs.drafts }}"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
+
+      - name: Fail if BLOCK detected
+        if: steps.detect.outputs.blocks != '0'
+        run: |
+          echo "::error::kb-maintainer detectou ${{ steps.detect.outputs.blocks }} drift(s) BLOCK. Resolva antes do merge."
+          exit 1

@@ -1,0 +1,114 @@
+name: Phase Gate
+
+# Valida o checklist de Definition-of-Done de cada fase (F0..F5) do plano
+# da Base de Conhecimento. Roda em PR e em push para main. Não hospeda nada
+# externo: tudo é verificado contra o próprio repo (e, opcionalmente, contra
+# o Supabase via service role para checks de tabela).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'supabase/migrations/**'
+      - 'src/modules/**'
+      - 'src/core/navigation/**'
+      - 'src/content/docs/**'
+      - 'src/remotion/**'
+      - 'package.json'
+      - '.claude/skills/kb-maintainer/phases/**'
+      - '.claude/skills/kb-maintainer/scripts/validate-phase.ts'
+      - '.claude/skills/kb-maintainer/scripts/phases.ts'
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: 'Fase a validar (F0..F5 ou "all")'
+        required: false
+        default: 'all'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: phase-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    # Em forks, secrets não estão disponíveis; checks que dependem de Supabase
+    # ficam degradados, mas o resto do checklist (filesystem) ainda roda.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '.claude/skills/kb-maintainer/package-lock.json'
+
+      - name: Install skill deps
+        working-directory: .claude/skills/kb-maintainer
+        run: npm ci || npm install
+
+      - name: Install root deps (para typecheck/lint do projeto)
+        run: npm ci || npm install
+
+      - name: Resolve phase target
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ github.event.inputs.phase }}"
+          else
+            TARGET="all"
+          fi
+          if [ "$TARGET" = "all" ]; then
+            echo "args=--all" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=--phase $TARGET" >> "$GITHUB_OUTPUT"
+          fi
+          echo "label=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Run phase validator
+        id: validate
+        working-directory: .claude/skills/kb-maintainer
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set +e
+          npx tsx scripts/validate-phase.ts ${{ steps.target.outputs.args }} \
+            --report-path report.md \
+            --json-out report.json
+          STATUS=$?
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          # Não falha o step ainda — deixa o comentário acontecer antes
+          exit 0
+
+      - name: Comment phase report on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: .claude/skills/kb-maintainer/report.md
+          header: phase-gate-${{ steps.target.outputs.label }}
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-gate-report-${{ steps.target.outputs.label }}
+          path: |
+            .claude/skills/kb-maintainer/report.md
+            .claude/skills/kb-maintainer/report.json
+          retention-days: 30
+
+      - name: Enforce gate
+        if: steps.validate.outputs.status != '0'
+        run: |
+          echo "::error::phase-gate falhou para ${{ steps.target.outputs.label }} (exit=${{ steps.validate.outputs.status }}). Veja o relatório no comentário do PR ou no artifact."
+          exit 1
