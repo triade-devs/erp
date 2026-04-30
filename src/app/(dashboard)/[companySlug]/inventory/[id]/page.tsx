@@ -87,7 +87,11 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
           <p className="mb-4 text-sm text-muted-foreground">
             Desativa o produto e preserva o histórico de movimentações.
           </p>
-          <DeleteProductForm deleteAction={deleteAction} isActive={product.is_active} />
+          <DeleteProductForm
+            deleteAction={deleteAction}
+            isActive={product.is_active}
+            redirectTo={`/${companySlug}/inventory`}
+          />
         </div>
       </Can>
 
