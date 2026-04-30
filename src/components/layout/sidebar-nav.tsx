@@ -10,6 +10,7 @@ import {
   Settings,
   Building2,
   Activity,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   settings: Settings,
   "building-2": Building2,
   activity: Activity,
+  "book-open": BookOpen,
 };
 
 type ResolvedItem = MenuItem & { resolvedHref: string };
@@ -45,8 +47,17 @@ export function SidebarNav({ items, groupLabel }: Props) {
       <nav className="flex flex-col gap-0.5">
         {items.map((item) => {
           const Icon = item.icon ? ICON_MAP[item.icon] : null;
-          const isActive =
-            item.resolvedHref === "/" ? pathname === "/" : pathname.startsWith(item.resolvedHref);
+          const isActive = (() => {
+            if (item.resolvedHref === "/") return pathname === "/";
+            if (!pathname.startsWith(item.resolvedHref)) return false;
+            // yield to any sibling whose href extends this one and also matches
+            return !items.some(
+              (other) =>
+                other.resolvedHref !== item.resolvedHref &&
+                other.resolvedHref.startsWith(item.resolvedHref) &&
+                pathname.startsWith(other.resolvedHref),
+            );
+          })();
 
           return (
             <Link

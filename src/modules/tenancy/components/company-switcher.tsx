@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -21,6 +21,7 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   if (companies.length <= 1) {
     const company = companies[0];
@@ -38,10 +39,23 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
       const result = await switchActiveCompanyAction({ ok: true }, formData);
       if (!result.ok) {
         setError(result.message ?? "Erro ao trocar empresa");
-      } else {
+      } else if (result.ok) {
         setError(null);
         if (targetCompany?.slug) {
-          router.push(`/${targetCompany.slug}/inventory`);
+          const currentSlug = activeCompany?.slug ?? "";
+          const withNewSlug = currentSlug
+            ? pathname.replace(new RegExp(`^/${currentSlug}(/|$)`), `/${targetCompany.slug}$1`)
+            : `/${targetCompany.slug}`;
+
+          // Se a rota contém um UUID (ID de entidade), trunca até o segmento anterior
+          // pois o ID não pertence à nova empresa
+          const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+          const segments = withNewSlug.split("/");
+          const uuidIndex = segments.findIndex((s) => UUID_RE.test(s));
+          const safePath =
+            uuidIndex !== -1 ? segments.slice(0, uuidIndex).join("/") || "/" : withNewSlug;
+
+          router.push(safePath);
         }
       }
     });

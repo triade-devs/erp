@@ -86,7 +86,7 @@ export function MovementTable({ data, page, totalPages, total, basePath = "", pr
         </Table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="sticky bottom-0 flex items-center justify-between border-t bg-background/95 px-1 py-3 text-sm text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <span>
           {total} movimentaç{total !== 1 ? "ões" : "ão"}
         </span>

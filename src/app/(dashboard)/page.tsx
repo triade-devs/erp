@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   const { data: allProducts, total } = await listProducts(companyId ?? "", {
     onlyActive: true,
-    pageSize: 100,
+    pageSize: 9999,
   });
 
   const lowStockProducts = allProducts.filter((p) => Number(p.stock) <= Number(p.min_stock));
