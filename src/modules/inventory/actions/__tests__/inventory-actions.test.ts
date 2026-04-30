@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/modules/tenancy", () => ({ getActiveCompanyId: vi.fn() }));
 vi.mock("@/modules/authz", () => {
@@ -21,7 +20,7 @@ import { getActiveCompanyId } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { createProductAction } from "../create-product";
 import { updateProductAction } from "../update-product";
-import { deleteProductAction } from "../delete-product";
+import { deactivateProductAction } from "../deactivate-product";
 import { registerMovementAction } from "../register-movement";
 
 const COMPANY_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -181,17 +180,17 @@ describe("updateProductAction — controle de permissão", () => {
   });
 });
 
-// ─── deleteProductAction ──────────────────────────────────────────────────────
+// ─── deactivateProductAction ──────────────────────────────────────────────────
 
-describe("deleteProductAction — controle de permissão", () => {
+describe("deactivateProductAction — controle de permissão", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("bloqueia operador sem permissão de delete", async () => {
+  it("bloqueia operador sem permissão de desativar", async () => {
     vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
     vi.mocked(createClient).mockResolvedValue(makeSupabaseMock() as never);
     vi.mocked(requirePermission).mockRejectedValue(new ForbiddenError("inventory:product:delete"));
 
-    const result = await deleteProductAction(
+    const result = await deactivateProductAction(
       "default-company",
       "prod-id-1",
       { ok: false },
@@ -202,15 +201,65 @@ describe("deleteProductAction — controle de permissão", () => {
     expect((result as { message: string }).message).toMatch(/acesso negado/i);
   });
 
-  it("chama requirePermission com a permissão correta de delete", async () => {
+  it("chama requirePermission com a permissão correta de desativar", async () => {
     vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
     vi.mocked(requirePermission).mockResolvedValue(undefined);
     vi.mocked(createClient).mockResolvedValue(makeSupabaseMock() as never);
 
-    // redirect() do Next.js é mockado — não lança de verdade no teste
-    await deleteProductAction("default-company", "prod-id-1", { ok: false }, new FormData());
+    await deactivateProductAction("default-company", "prod-id-1", { ok: false }, new FormData());
 
     expect(requirePermission).toHaveBeenCalledWith(COMPANY_A, "inventory:product:delete");
+  });
+
+  it("chama update com is_active false no produto correto", async () => {
+    vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
+    vi.mocked(requirePermission).mockResolvedValue(undefined);
+
+    const eqCompany = vi.fn().mockResolvedValue({ error: null });
+    const eqId = vi.fn().mockReturnValue({ eq: eqCompany });
+    const updateFn = vi.fn().mockReturnValue({ eq: eqId });
+    const fromMock = vi.fn().mockReturnValue({ update: updateFn });
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }) },
+      from: fromMock,
+    } as never);
+
+    const result = await deactivateProductAction(
+      "default-company",
+      PRODUCT_UUID,
+      { ok: false },
+      new FormData(),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(fromMock).toHaveBeenCalledWith("products");
+    expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ is_active: false }));
+    expect(eqId).toHaveBeenCalledWith("id", PRODUCT_UUID);
+    expect(eqCompany).toHaveBeenCalledWith("company_id", COMPANY_A);
+  });
+
+  it("retorna ok false quando o banco retorna erro", async () => {
+    vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
+    vi.mocked(requirePermission).mockResolvedValue(undefined);
+
+    const dbError = { message: "DB error simulado" };
+    const eqCompany = vi.fn().mockResolvedValue({ error: dbError });
+    const eqId = vi.fn().mockReturnValue({ eq: eqCompany });
+    const updateFn = vi.fn().mockReturnValue({ eq: eqId });
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }) },
+      from: vi.fn().mockReturnValue({ update: updateFn }),
+    } as never);
+
+    const result = await deactivateProductAction(
+      "default-company",
+      PRODUCT_UUID,
+      { ok: false },
+      new FormData(),
+    );
+
+    expect(result.ok).toBe(false);
+    expect((result as { message: string }).message).toBe("DB error simulado");
   });
 });
 
