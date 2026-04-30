@@ -1,7 +1,7 @@
 // Barrel — única API pública do módulo inventory
 export { createProductAction } from "./actions/create-product";
 export { updateProductAction } from "./actions/update-product";
-export { deleteProductAction } from "./actions/delete-product";
+export { deactivateProductAction } from "./actions/deactivate-product";
 export { reactivateProductAction } from "./actions/reactivate-product";
 export { registerMovementAction } from "./actions/register-movement";
 

@@ -6,7 +6,7 @@ import { getActiveCompanyId } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import type { ActionResult } from "@/lib/errors";
 
-export async function deleteProductAction(
+export async function deactivateProductAction(
   companySlug: string,
   id: string,
   _prev: ActionResult,
