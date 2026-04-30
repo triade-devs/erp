@@ -177,7 +177,38 @@
 
 ## Camada 6: UI Components
 
-_(a preencher na Task 7)_
+### Achados
+
+**[UI-01] 🔴 BUG — `ReactivateProductButton` ignora resultado da action**
+
+- **Arquivo**: `src/modules/inventory/components/reactivate-product-button.tsx`
+- **Detalhe**: Componente chama `onReactivate(productId)` mas não verifica o retorno `ActionResult`. Se a action retorna `{ ok: false }`, o usuário não vê erro nenhum — UI permanece sem feedback de falha.
+- **Correção sugerida**: Capturar resultado, verificar `if (!result.ok)` e exibir `toast.error(result.message)` ou similar. Atualizar estado de loading apenas se `ok: true`.
+
+**[UI-02] 🟡 GAP — `ProductForm` não renderiza campo `is_active`**
+
+- **Arquivo**: `src/modules/inventory/components/product-form.tsx`
+- **Detalhe**: Ao editar produto, campo `is_active` não é renderizado (readonly em UI). Isso causa bug em `updateProductAction` (ACT-02): schema aplica `.default(true)` e reativa produto silenciosamente.
+- **Correção sugerida**: Renderizar checkbox de `is_active` com label "Ativo" e placeholder "Desativar para arquivar". No form, passar valor atual do produto. Assim `updateProductAction` recebe valor explícito.
+
+**[UI-03] 🟡 TEST — `MovementForm` não testa validação de quantidade**
+
+- **Arquivo**: `src/modules/inventory/components/movement-form.tsx`
+- **Detalhe**: Form renderiza input de quantidade, mas não há teste verificando que `quantity > 0` é validado (schema rejeita `<= 0`).
+- **Correção sugerida**: Teste unitário no Vitest checando que submeter movimento com `quantity = 0` exibe erro de validação ou desabilita botão submit.
+
+**[UI-04] 🟡 TEST — `MovementTable` nunca testa carregamento de lista vazia**
+
+- **Arquivo**: `src/modules/inventory/components/movement-table.tsx`
+- **Detalhe**: Componente renderiza `movements.map()`, mas não há teste para o caso `movements = []` (lista vazia com mensagem "Nenhuma movimentação encontrada").
+- **Correção sugerida**: Teste que quando `listMovementsQuery` retorna array vazio, componente exibe mensagem vazia (não erro, não crash).
+
+### Verificações OK
+
+- ✅ Componentes usam `"use client"` (Client Components) apropriadamente (`ProductForm`, `MovementForm`, `ReactivateProductButton`).
+- ✅ Estados (`useState`) usados apenas para UI ephemeral (`formKey` em `MovementForm`, `isPending` em `ReactivateProductButton`).
+- ✅ Server Actions chamadas de `onSubmit` com `await` (`useActionState`, `useTransition`).
+- ✅ Toast/alerts usados para feedback de sucesso e erro em `ProductForm` e `MovementForm`.
 
 ## Camada 7: Testes Existentes
 
