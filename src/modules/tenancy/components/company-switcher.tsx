@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -21,6 +21,7 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   if (companies.length <= 1) {
     const company = companies[0];
@@ -38,10 +39,16 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
       const result = await switchActiveCompanyAction({ ok: true }, formData);
       if (!result.ok) {
         setError(result.message ?? "Erro ao trocar empresa");
-      } else {
+      } else if (result.ok) {
         setError(null);
         if (targetCompany?.slug) {
-          router.push(`/${targetCompany.slug}/inventory`);
+          // Substitui o slug atual pelo slug da empresa selecionada,
+          // mantendo o restante da rota (ex: /default/inventory → /empresa-teste/inventory)
+          const currentSlug = activeCompany?.slug ?? "";
+          const newPath = currentSlug
+            ? pathname.replace(new RegExp(`^/${currentSlug}(/|$)`), `/${targetCompany.slug}$1`)
+            : `/${targetCompany.slug}`;
+          router.push(newPath);
         }
       }
     });
