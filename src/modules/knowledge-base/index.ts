@@ -5,6 +5,7 @@ export { createArticleAction } from "./actions/create-article";
 export { updateArticleAction } from "./actions/update-article";
 export { deleteArticleAction } from "./actions/delete-article";
 export { publishArticleAction } from "./actions/publish-article";
+export { upsertCategoryAction } from "./actions/upsert-category";
 
 // Queries
 export { listArticles } from "./queries/list-articles";
