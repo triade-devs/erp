@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,9 +24,10 @@ export function RoleForm({ action, backHref, submitLabel, defaultValues }: Props
 
   useEffect(() => {
     if (state.ok) {
+      toast.success(state.message ?? "Salvo com sucesso");
       router.push(backHref);
     }
-  }, [state.ok, router, backHref]);
+  }, [state.ok, router, backHref, state.message]);
 
   const fieldErrors = !state.ok ? (state.fieldErrors ?? {}) : {};
 

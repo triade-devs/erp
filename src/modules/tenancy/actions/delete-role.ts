@@ -28,7 +28,7 @@ export async function deleteRoleAction(companyId: string, roleId: string): Promi
 
   const { count, error: countError } = await supabase
     .from("membership_roles")
-    .select("id", { count: "exact", head: true })
+    .select("membership_id", { count: "exact", head: true })
     .eq("role_id", roleId);
 
   if (countError) return { ok: false, message: countError.message };
