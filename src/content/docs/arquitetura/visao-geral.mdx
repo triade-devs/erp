@@ -1,0 +1,64 @@
+---
+title: "Visão Geral"
+audience: "both"
+tags: ["arquitetura", "intro"]
+---
+
+Este ERP é uma aplicação **multi-tenant** construída com Next.js 15 (App Router), Supabase e TypeScript strict. Cada empresa opera em isolamento total via RLS no Postgres.
+
+## Stack
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend + BFF | Next.js 15 App Router, React 19, Server Actions |
+| Banco de dados | Supabase Postgres + RLS + pgvector |
+| Autenticação | Supabase Auth (JWT) |
+| UI | Tailwind CSS + shadcn/ui |
+| Validação | Zod (schemas compartilhados entre client e server) |
+| Tipagem do banco | `database.types.ts` gerado via `npm run db:types` |
+
+## Módulos existentes
+
+| Módulo | Responsabilidade |
+|--------|-----------------|
+| `authz` | RBAC: roles, memberships, `requirePermission`, `has_permission()` RLS |
+| `tenancy` | Empresas, convites, `resolveCompany` |
+| `inventory` | Produtos, movimentações de estoque, trigger de atualização |
+| `knowledge-base` | Manual operacional, documentação técnica, busca, IA |
+
+## Arquitetura de alto nível
+
+<MermaidDiagram chart={`
+graph TD
+  User["Usuário (browser)"] --> Next["Next.js App Router"]
+  Next --> SA["Server Actions"]
+  Next --> RC["React Server Components"]
+  SA --> Supa["Supabase Postgres"]
+  RC --> Supa
+  Supa --> RLS["RLS Policies"]
+  RLS --> Tables["Tabelas por empresa"]
+`} />
+
+## Princípios não-negociáveis
+
+<Callout type="info">
+  Todas as strings voltadas ao usuário estão em **pt-BR**. Comentários no código também.
+</Callout>
+
+### Modularidade
+
+Cada domínio vive em `src/modules/<domain>/` com barrel `index.ts` como única API pública. ESLint bloqueia imports internos diretos.
+
+### RLS é a camada autoritativa
+
+Políticas RLS no Postgres são a fonte de verdade para controle de acesso. Checagens em TypeScript (`requirePermission`) são defesa em profundidade — nunca a única barreira.
+
+### Server Actions retornam `ActionResult`
+
+```ts
+type ActionResult =
+  | { ok: true; message?: string }
+  | { ok: false; message?: string; fieldErrors?: Record<string, string[]> }
+```
+
+Todas as actions seguem esse contrato: parse com Zod, retornam `fieldErrors` em erros de validação, chamam `revalidatePath` ao sucesso.
