@@ -65,7 +65,7 @@ export function ProductTable({
     params.set("sortDir", dir);
     params.set("page", "1");
     if (searchQuery) params.set("q", searchQuery);
-    if (showInactive) params.set("inactive", "true");
+    if (col === "is_active" || showInactive) params.set("inactive", "true");
     return `${basePath}?${params.toString()}`;
   };
 
@@ -113,7 +113,7 @@ export function ProductTable({
             params.set("sortBy", sortBy);
             params.set("sortDir", sortDir);
             if (searchQuery) params.set("q", searchQuery);
-            if (showInactive) params.set("inactive", "true");
+            if (sortBy === "is_active" || showInactive) params.set("inactive", "true");
             return `${basePath}?${params.toString()}`;
           }}
         />
