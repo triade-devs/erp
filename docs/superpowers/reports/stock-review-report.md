@@ -210,9 +210,57 @@
 - ✅ Server Actions chamadas de `onSubmit` com `await` (`useActionState`, `useTransition`).
 - ✅ Toast/alerts usados para feedback de sucesso e erro em `ProductForm` e `MovementForm`.
 
-## Camada 7: Testes Existentes
+## Camada 7: Testes Existentes & Coverage
 
-_(a preencher na Task 8)_
+### Achados
+
+**[TST-01] 🟡 TEST — Sem testes unitários de services**
+
+- **Arquivo**: `src/modules/inventory/services/` (nenhum arquivo `.test.ts`)
+- **Detalhe**: Funções `validateMovement()` e `calculateNewStock()` (business logic crítica) não têm testes. Testes atuais só cobrem Server Actions (que testam permissões, não lógica).
+- **Correção sugerida**: Criar `src/modules/inventory/services/__tests__/stock-service.test.ts` com casos:
+  - `validateMovement()`: estoque suficiente, insuficiente, tipo inválido
+  - `calculateNewStock()`: in (soma), out (subtrai), adjustment (valor absoluto), valores grandes/zero
+
+**[TST-02] 🟡 TEST — Sem testes happy-path de actions**
+
+- **Arquivo**: `src/modules/inventory/actions/__tests__/inventory-actions.test.ts`
+- **Detalhe**: Todos os testes `expect().toThrow(ForbiddenError)` — nenhum valida que uma ação bem-sucedida retorna `{ ok: true }` ou que dados foram persistidos no banco.
+- **Correção sugerida**: Adicionar casos com usuário autorizado:
+  - `registerMovementAction` com estoque suficiente → espera `{ ok: true }` e movimento inserido no DB
+  - `updateProductAction` → espera `{ ok: true }` e produto atualizado
+
+**[TST-03] 🟡 TEST — Sem testes de UI (componentes)**
+
+- **Arquivo**: `src/modules/inventory/components/` (nenhum arquivo `.test.tsx`)
+- **Detalhe**: Componentes como `ReactivateProductButton`, `ProductForm`, `MovementForm` não têm testes unitários. UI-01 (ignora result) nunca seria descoberto automaticamente.
+- **Correção sugerida**: Criar testes com `vitest` + `@testing-library/react`:
+  - `ReactivateProductButton`: mock action, verifica `toast.error` se action falha
+  - `ProductForm`: verifica que campo `is_active` é renderizado e enviado
+  - `MovementForm`: verifica validação de quantidade (rejeita `<= 0`)
+
+**[TST-04] 🟡 TEST — Sem testes de integração (action + query)**
+
+- **Arquivo**: `src/modules/inventory/actions/__tests__/inventory-actions.test.ts`
+- **Detalhe**: Testes atuais mockam Supabase (`vi.mock("@supabase/supabase-js")`). Não há testes end-to-end validando que inserir um movimento de fato atualiza `products.stock` via trigger.
+- **Correção sugerida**: Criar teste de integração (opcional, mas recomendado) usando branch de Supabase ou container Docker: inserir movimento, verificar que `products.stock` foi atualizado pelo trigger.
+
+**[TST-05] 🟡 TEST — Sem cobertura de edge cases de validação**
+
+- **Arquivo**: `src/modules/inventory/actions/__tests__/inventory-actions.test.ts`
+- **Detalhe**: Testes não verificam rejeição de:
+  - Quantidade <= 0 (schema rejeita, mas não testado)
+  - Tipo de movimento inválido (ex: `type: "invalid"`)
+  - Product ID inválido ou não existente
+  - Company ID mismatch (RLS deveria rejeitar, mas sem teste explícito)
+- **Correção sugerida**: Adicionar teste para cada edge case acima.
+
+### Verificações OK
+
+- ✅ Testes existentes cobrem permissioning corretamente (ForbiddenError para usuário não autorizado).
+- ✅ `vi.mock` usado apropriadamente para isolação (não toca DB real durante tests).
+- ✅ Vitest configurado (`vitest.config.ts` presente na raiz).
+- ✅ Testes rodam com `npx vitest run` (CI-ready) — 12 testes passam com sucesso.
 
 ---
 
