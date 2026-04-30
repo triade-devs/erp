@@ -15,6 +15,7 @@ vi.mock("@/modules/authz", () => {
   return { requirePermission: vi.fn(), ForbiddenError };
 });
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveCompanyId } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
@@ -236,6 +237,7 @@ describe("deactivateProductAction — controle de permissão", () => {
     expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ is_active: false }));
     expect(eqId).toHaveBeenCalledWith("id", PRODUCT_UUID);
     expect(eqCompany).toHaveBeenCalledWith("company_id", COMPANY_A);
+    expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
   });
 
   it("retorna ok false quando o banco retorna erro", async () => {
