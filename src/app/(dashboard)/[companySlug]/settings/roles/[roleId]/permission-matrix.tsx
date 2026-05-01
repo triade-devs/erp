@@ -12,6 +12,7 @@ import {
   useSensor,
   useSensors,
   useDroppable,
+  useDraggable,
 } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,17 +41,43 @@ function actionLabel(action: string): string {
   return ACTION_LABELS[action] ?? action;
 }
 
+function DraggablePerm({
+  perm,
+  isGrantedZone,
+  isSystem,
+}: {
+  perm: PermissionRow;
+  isGrantedZone: boolean;
+  isSystem: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: perm.code,
+    disabled: isSystem,
+  });
+  return (
+    <span ref={setNodeRef} {...listeners} {...attributes} style={{ touchAction: "none" }}>
+      <Badge
+        variant={isGrantedZone ? "default" : "outline"}
+        className={`select-none text-xs ${isSystem ? "cursor-default" : "cursor-grab"} ${
+          isDragging ? "opacity-50" : ""
+        }`}
+        title={perm.description ?? perm.resource}
+      >
+        {actionLabel(perm.action)}
+      </Badge>
+    </span>
+  );
+}
+
 function PermDropZone({
   id,
   label,
   permissions,
-  activeId,
   isSystem,
 }: {
   id: string;
   label: string;
   permissions: PermissionRow[];
-  activeId: string | null;
   isSystem: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -68,16 +95,12 @@ function PermDropZone({
       </p>
       <div className="flex flex-wrap gap-1">
         {permissions.map((perm) => (
-          <Badge
+          <DraggablePerm
             key={perm.code}
-            variant={isGrantedZone ? "default" : "outline"}
-            className={`select-none text-xs ${isSystem ? "cursor-default" : "cursor-grab"} ${
-              activeId === perm.code ? "opacity-50" : ""
-            }`}
-            title={perm.description ?? perm.resource}
-          >
-            {actionLabel(perm.action)}
-          </Badge>
+            perm={perm}
+            isGrantedZone={isGrantedZone}
+            isSystem={isSystem}
+          />
         ))}
         {permissions.length === 0 && (
           <span className="text-[10px] italic text-muted-foreground">
@@ -198,14 +221,12 @@ export function PermissionMatrix({ matrix, isSystem, action }: Props) {
                   id={`granted-${mod.moduleCode}`}
                   label="Concedido"
                   permissions={grantedPerms}
-                  activeId={activeId}
                   isSystem={isSystem}
                 />
                 <PermDropZone
                   id={`available-${mod.moduleCode}`}
                   label="Não concedido"
                   permissions={availPerms}
-                  activeId={activeId}
                   isSystem={isSystem}
                 />
               </div>

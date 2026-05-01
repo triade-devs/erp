@@ -9,6 +9,7 @@ import {
   useSensor,
   useSensors,
   useDroppable,
+  useDraggable,
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
@@ -30,17 +31,21 @@ type Props = {
 
 type RoleDragItem = CompanyRole & { zone: "available" | "assigned" };
 
-function DroppableZone({
-  id,
-  label,
-  roles,
-  activeId,
-}: {
-  id: string;
-  label: string;
-  roles: RoleDragItem[];
-  activeId: string | null;
-}) {
+function DraggableRole({ role }: { role: RoleDragItem }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: role.id });
+  return (
+    <span ref={setNodeRef} {...listeners} {...attributes} style={{ touchAction: "none" }}>
+      <Badge
+        variant={role.zone === "assigned" ? "default" : "secondary"}
+        className={`cursor-grab select-none text-xs ${isDragging ? "opacity-50" : ""}`}
+      >
+        {role.name}
+      </Badge>
+    </span>
+  );
+}
+
+function DroppableZone({ id, label, roles }: { id: string; label: string; roles: RoleDragItem[] }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
@@ -55,14 +60,7 @@ function DroppableZone({
       </p>
       <div className="flex flex-wrap gap-1.5">
         {roles.map((role) => (
-          <Badge
-            key={role.id}
-            variant={role.zone === "assigned" ? "default" : "secondary"}
-            className={`cursor-grab select-none text-xs ${activeId === role.id ? "opacity-50" : ""}`}
-            draggable
-          >
-            {role.name}
-          </Badge>
+          <DraggableRole key={role.id} role={role} />
         ))}
         {roles.length === 0 && (
           <p className="text-xs italic text-muted-foreground">
@@ -157,18 +155,8 @@ export function MemberRolesSheet({
             onDragEnd={handleDragEnd}
           >
             <div className="space-y-3">
-              <DroppableZone
-                id="assigned"
-                label="Roles atribuídas"
-                roles={assignedRoles}
-                activeId={activeId}
-              />
-              <DroppableZone
-                id="available"
-                label="Roles disponíveis"
-                roles={availRoles}
-                activeId={activeId}
-              />
+              <DroppableZone id="assigned" label="Roles atribuídas" roles={assignedRoles} />
+              <DroppableZone id="available" label="Roles disponíveis" roles={availRoles} />
             </div>
 
             <DragOverlay>
