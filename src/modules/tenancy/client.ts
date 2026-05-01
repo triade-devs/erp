@@ -10,3 +10,4 @@ export { deleteRoleAction } from "./actions/delete-role";
 export { updateRolePermissionsAction } from "./actions/update-role-permissions";
 export { switchActiveCompanyAction } from "./actions/switch-active-company";
 export { toggleModuleAction } from "./actions/toggle-module";
+export { transferMemberAction } from "./actions/transfer-member";

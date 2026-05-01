@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { transferMemberAction } from "@/modules/tenancy";
+import { transferMemberAction } from "@/modules/tenancy/client";
 
 type Company = { id: string; name: string };
 
