@@ -12,6 +12,7 @@ export { updateCompanySettingsAction } from "./actions/update-company-settings";
 export { createRoleAction } from "./actions/create-role";
 export { updateRoleAction } from "./actions/update-role";
 export { deleteRoleAction } from "./actions/delete-role";
+export { transferMemberAction } from "./actions/transfer-member";
 export { updateRolePermissionsAction } from "./actions/update-role-permissions";
 
 // Queries
