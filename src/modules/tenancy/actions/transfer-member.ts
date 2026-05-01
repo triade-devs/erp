@@ -54,6 +54,21 @@ export async function transferMemberAction(
 
   if (insertErr) return { ok: false, message: insertErr.message };
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (source.membership_roles.length > 0) {
+    const { error: rolesError } = await supabase.from("membership_roles").insert(
+      source.membership_roles.map((r) => ({
+        membership_id: newMembership.id,
+        role_id: r.role_id,
+        assigned_by: user?.id ?? null,
+      })),
+    );
+    if (rolesError) return { ok: false, message: rolesError.message };
+  }
+
   if (!keepInSource) {
     const { error: delErr } = await supabase
       .from("memberships")

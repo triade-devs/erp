@@ -61,6 +61,10 @@ function makeSupabaseMock({
   const deleteEq1 = vi.fn().mockReturnValue({ eq: deleteEq2 });
   const deleteFn = vi.fn().mockReturnValue({ eq: deleteEq1 });
 
+  // insert membership_roles
+  const rolesInsert = vi.fn().mockResolvedValue({ error: null });
+  const membershipRolesFrom = { insert: rolesInsert };
+
   let membershipsCallCount = 0;
   const from = vi.fn().mockImplementation((table: string) => {
     if (table === "memberships") {
@@ -70,10 +74,15 @@ function makeSupabaseMock({
       if (membershipsCallCount === 3) return { insert: insertFn };
       if (membershipsCallCount === 4) return { delete: deleteFn };
     }
+    if (table === "membership_roles") return membershipRolesFrom;
     return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
   });
 
-  return { rpc, from };
+  const auth = {
+    getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-user" } } }),
+  };
+
+  return { rpc, from, auth };
 }
 
 describe("transferMemberAction", () => {
@@ -127,5 +136,22 @@ describe("transferMemberAction", () => {
     const result = await transferMemberAction("mem-1", "comp-src", "comp-dest", false);
 
     expect(result.ok).toBe(true);
+  });
+
+  it("copia as roles do membro para a empresa destino", async () => {
+    const mock = makeSupabaseMock({
+      sourceMembership: {
+        id: "mem-1",
+        user_id: "user-1",
+        is_owner: false,
+        membership_roles: [{ role_id: "role-editor" }],
+      },
+    });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    const result = await transferMemberAction("mem-1", "comp-src", "comp-dest", false);
+
+    expect(result.ok).toBe(true);
+    expect(mock.from).toHaveBeenCalledWith("membership_roles");
   });
 });
