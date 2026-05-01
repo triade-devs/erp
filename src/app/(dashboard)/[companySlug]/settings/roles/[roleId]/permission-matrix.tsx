@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useActionState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -120,6 +120,8 @@ type ModuleState = {
 
 export function PermissionMatrix({ matrix, isSystem, action }: Props) {
   const initialState: ActionResult = { ok: false };
+  const [state, formAction, isPending] = useActionState(action, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [moduleStates, setModuleStates] = useState<ModuleState[]>(() =>
     matrix.map((mod) => ({
@@ -131,8 +133,6 @@ export function PermissionMatrix({ matrix, isSystem, action }: Props) {
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeModuleCode, setActiveModuleCode] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [statusMsg, setStatusMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -173,20 +173,6 @@ export function PermissionMatrix({ matrix, isSystem, action }: Props) {
     setActiveModuleCode(null);
   }
 
-  function handleSave() {
-    setStatusMsg(null);
-    startTransition(async () => {
-      const formData = new FormData();
-      for (const ms of moduleStates) {
-        for (const code of ms.granted) {
-          formData.append("permission_code", code);
-        }
-      }
-      const result = await action(initialState, formData);
-      setStatusMsg({ ok: result.ok, text: result.message ?? (result.ok ? "Salvo" : "Erro") });
-    });
-  }
-
   if (matrix.length === 0) {
     return (
       <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
@@ -196,9 +182,17 @@ export function PermissionMatrix({ matrix, isSystem, action }: Props) {
   }
 
   const activePermission = matrix.flatMap((m) => m.permissions).find((p) => p.code === activeId);
+  const allGrantedCodes = moduleStates.flatMap((ms) => [...ms.granted]);
 
   return (
     <div className="space-y-4">
+      {/* Form hidden — usa o path de form submission para o Server Action */}
+      <form ref={formRef} action={formAction} className="hidden">
+        {allGrantedCodes.map((code) => (
+          <input key={code} type="hidden" name="permission_code" value={code} />
+        ))}
+      </form>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -243,15 +237,12 @@ export function PermissionMatrix({ matrix, isSystem, action }: Props) {
         </DragOverlay>
       </DndContext>
 
-      {statusMsg && (
-        <p className={`text-sm ${statusMsg.ok ? "text-green-700" : "text-destructive"}`}>
-          {statusMsg.text}
-        </p>
-      )}
+      {!state.ok && state.message && <p className="text-sm text-destructive">{state.message}</p>}
+      {state.ok && state.message && <p className="text-sm text-green-700">{state.message}</p>}
 
       {!isSystem && (
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={isPending}>
+          <Button onClick={() => formRef.current?.requestSubmit()} disabled={isPending}>
             {isPending ? "Salvando..." : "Salvar permissões"}
           </Button>
         </div>
