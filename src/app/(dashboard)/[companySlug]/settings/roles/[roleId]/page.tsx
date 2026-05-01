@@ -11,6 +11,7 @@ import { AppError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleForm } from "../role-form";
 import { PermissionMatrix } from "./permission-matrix";
 
@@ -50,42 +51,59 @@ export default async function EditRolePage({ params }: Props) {
   if (!role) notFound();
 
   const backHref = `/${companySlug}/settings/roles`;
-
   const matrix = await listRolePermissionMatrix(company.id, role.id);
   const permAction = updateRolePermissionsAction.bind(null, company.id, role.id);
 
-  if (role.is_system) {
-    return (
-      <section className="max-w-lg space-y-6">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="sm">
-            <Link href={backHref}>← Roles</Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">{role.name}</h2>
+  return (
+    <section className="max-w-2xl space-y-6">
+      <div className="flex items-center gap-4">
+        <Button asChild variant="ghost" size="sm">
+          <Link href={backHref}>← Roles</Link>
+        </Button>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">{role.name}</h2>
+          {role.is_system ? (
             <Badge variant="secondary">Sistema</Badge>
-          </div>
-        </div>
-
-        <div className="space-y-3 rounded-md border p-4">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">Código</p>
-            <p className="font-mono text-sm">{role.code}</p>
-          </div>
-          {role.description && (
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Descrição</p>
-              <p className="text-sm">{role.description}</p>
-            </div>
+          ) : (
+            <Badge variant="outline">Custom</Badge>
           )}
         </div>
+      </div>
 
-        <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-          Role de sistema — não editável
-        </p>
+      <Tabs defaultValue={role.is_system ? "permissions" : "info"}>
+        <TabsList>
+          {!role.is_system && <TabsTrigger value="info">Informações</TabsTrigger>}
+          <TabsTrigger value="permissions">Permissões</TabsTrigger>
+        </TabsList>
 
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Matriz de permissões</h3>
+        {!role.is_system && (
+          <TabsContent value="info" className="mt-4">
+            <div className="space-y-4 rounded-md border p-4">
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Código
+                </p>
+                <p className="font-mono text-sm">{role.code}</p>
+              </div>
+              <RoleForm
+                action={updateRoleAction.bind(null, company.id, role.id)}
+                backHref={backHref}
+                submitLabel="Salvar alterações"
+                defaultValues={{
+                  name: role.name,
+                  description: role.description ?? undefined,
+                }}
+              />
+            </div>
+          </TabsContent>
+        )}
+
+        <TabsContent value="permissions" className="mt-4">
+          {role.is_system && (
+            <p className="mb-4 rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+              Role de sistema — permissões são gerenciadas automaticamente ao habilitar módulos.
+            </p>
+          )}
           <PermissionMatrix
             matrix={matrix}
             roleId={role.id}
@@ -93,45 +111,8 @@ export default async function EditRolePage({ params }: Props) {
             isSystem={role.is_system}
             action={permAction}
           />
-        </div>
-      </section>
-    );
-  }
-
-  const action = updateRoleAction.bind(null, company.id, role.id);
-
-  return (
-    <section className="max-w-lg space-y-6">
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="sm">
-          <Link href={backHref}>← Roles</Link>
-        </Button>
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">Editar role</h2>
-          <Badge variant="outline">Custom</Badge>
-        </div>
-      </div>
-
-      <RoleForm
-        action={action}
-        backHref={backHref}
-        submitLabel="Salvar alterações"
-        defaultValues={{
-          name: role.name,
-          description: role.description ?? undefined,
-        }}
-      />
-
-      <div className="space-y-2">
-        <h3 className="text-sm font-semibold">Matriz de permissões</h3>
-        <PermissionMatrix
-          matrix={matrix}
-          roleId={role.id}
-          companyId={company.id}
-          isSystem={role.is_system}
-          action={permAction}
-        />
-      </div>
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }
