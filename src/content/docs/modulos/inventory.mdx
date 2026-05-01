@@ -1,0 +1,63 @@
+---
+title: "Módulo Inventory"
+audience: "dev"
+related_module: "inventory"
+tags: ["inventory", "stock", "módulos"]
+---
+
+O módulo `inventory` gerencia o catálogo de produtos e o controle de estoque por empresa.
+
+## Responsabilidades
+
+- CRUD de produtos (`kb_categories`, `products`)
+- Registro de movimentações de entrada e saída
+- Cálculo automático de saldo via trigger no banco
+
+## Tabelas principais
+
+| Tabela | Descrição |
+|--------|-----------|
+| `products` | Catálogo de produtos por empresa |
+| `stock_movements` | Histórico de entradas e saídas |
+
+## Trigger: fonte de verdade do estoque
+
+<Callout type="warning">
+  Nunca escreva diretamente em `products.stock`. O trigger `trg_apply_stock_movement` é a
+  única forma correta de alterar o saldo — qualquer escrita direta viola a integridade dos dados.
+</Callout>
+
+Ao inserir em `stock_movements`, o trigger `trg_apply_stock_movement` executa atomicamente:
+
+1. Atualiza `products.stock` com o delta da movimentação
+2. Lança exceção `Estoque insuficiente` se o saldo ficar negativo
+
+A função `validateMovement` em `modules/inventory/services/stock-service.ts` é um **pré-check de UX** apenas — não substitui o trigger.
+
+## Campos de stock_movements
+
+<TableSpec fields={[
+  { name: "id", type: "uuid", nullable: false, description: "PK gerado automaticamente" },
+  { name: "company_id", type: "uuid", nullable: false, description: "Empresa dona do registro", references: "companies.id" },
+  { name: "product_id", type: "uuid", nullable: false, description: "Produto movimentado", references: "products.id" },
+  { name: "type", type: "text", nullable: false, description: "'in' (entrada) ou 'out' (saída)" },
+  { name: "quantity", type: "numeric", nullable: false, description: "Quantidade (sempre positiva)" },
+  { name: "notes", type: "text", nullable: true, description: "Observação opcional" },
+  { name: "created_by", type: "uuid", nullable: true, description: "Usuário que registrou", references: "auth.users.id" },
+  { name: "created_at", type: "timestamptz", nullable: false, description: "Timestamp de criação" }
+]} />
+
+## Server Actions
+
+| Action | Permissão necessária |
+|--------|---------------------|
+| `registerMovementAction` | `movements:movement:write` |
+
+## Permissões
+
+| Permissão | Descrição |
+|-----------|-----------|
+| `inventory:product:read` | Ver produtos |
+| `inventory:product:write` | Criar/editar produtos |
+| `movements:movement:read` | Ver histórico de movimentações |
+| `movements:movement:write` | Registrar nova movimentação |

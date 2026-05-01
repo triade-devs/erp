@@ -5,6 +5,7 @@ export { createArticleAction } from "./actions/create-article";
 export { updateArticleAction } from "./actions/update-article";
 export { deleteArticleAction } from "./actions/delete-article";
 export { publishArticleAction } from "./actions/publish-article";
+export { upsertCategoryAction } from "./actions/upsert-category";
 
 // Queries
 export { listArticles } from "./queries/list-articles";
@@ -26,7 +27,22 @@ export { ArticleViewer } from "./components/article-viewer";
 export { ArticleEditor } from "./components/article-editor";
 export { CategoryTree } from "./components/category-tree";
 export { PublishForm } from "./components/publish-form";
+export { DocRenderer } from "./components/doc-renderer";
+export { Callout } from "./components/callout";
+export { TableSpec } from "./components/table-spec";
+export { RlsBlock } from "./components/rls-block";
+export { MermaidDiagram } from "./components/mermaid-diagram";
+
+// Remotion
+export { RemotionPlayer } from "./components/remotion-player";
+export { RemotionEmbedExtension } from "./components/remotion-embed-extension";
 
 // Schemas
 export { createArticleSchema, updateArticleSchema } from "./schemas/article";
 export { categorySchema } from "./schemas/category";
+export { docPageFrontmatterSchema } from "./schemas/doc-page";
+export type { DocPageFrontmatter } from "./schemas/doc-page";
+
+// Doc pages (MDX)
+export { listDocPages } from "./queries/list-doc-pages";
+export type { DocPage } from "./queries/list-doc-pages";

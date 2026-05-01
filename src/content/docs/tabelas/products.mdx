@@ -1,0 +1,43 @@
+---
+title: "Tabela products"
+audience: "dev"
+related_module: "inventory"
+tags: ["products", "tabela", "inventory"]
+---
+
+Armazena o catálogo de produtos de cada empresa. O campo `stock` é **calculado pelo banco** via trigger — nunca atualizar diretamente.
+
+## Schema
+
+<TableSpec fields={[
+  { name: "id", type: "uuid", nullable: false, description: "PK gerado automaticamente" },
+  { name: "company_id", type: "uuid", nullable: false, description: "Empresa dona", references: "companies.id" },
+  { name: "name", type: "text", nullable: false, description: "Nome do produto" },
+  { name: "sku", type: "text", nullable: true, description: "Código de referência (único por empresa)" },
+  { name: "stock", type: "numeric", nullable: false, description: "Saldo atual — atualizado pelo trigger trg_apply_stock_movement" },
+  { name: "unit", type: "text", nullable: false, description: "Unidade de medida (ex.: un, kg, cx)" },
+  { name: "min_stock", type: "numeric", nullable: true, description: "Estoque mínimo para alerta" },
+  { name: "created_at", type: "timestamptz", nullable: false, description: "Timestamp de criação" },
+  { name: "updated_at", type: "timestamptz", nullable: false, description: "Timestamp de última alteração" }
+]} />
+
+## Políticas RLS
+
+<RlsBlock policies={[
+  { name: "products_select", operation: "SELECT", description: "Usuário precisa de inventory:product:read e deve pertencer à empresa" },
+  { name: "products_insert", operation: "INSERT", description: "Requer inventory:product:write na empresa" },
+  { name: "products_update", operation: "UPDATE", description: "Requer inventory:product:write; company_id não pode mudar" },
+  { name: "products_delete", operation: "DELETE", description: "Requer inventory:product:write; bloqueia se houver movimentações vinculadas" }
+]} />
+
+## Índices
+
+| Índice | Coluna(s) | Por quê |
+|--------|-----------|---------|
+| PK | `id` | Busca por ID |
+| UNIQUE | `(company_id, sku)` | SKU único por empresa |
+| `products_company_idx` | `company_id` | Listagem por empresa |
+
+## Ver também
+
+- [Módulo Inventory](/docs/modulos/inventory) — ações e regras de negócio
