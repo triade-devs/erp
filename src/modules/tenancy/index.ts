@@ -60,6 +60,8 @@ export { AdminModulesTable } from "./components/admin-modules-table";
 export { CreateModuleForm } from "./components/create-module-form";
 export { EditModuleForm } from "./components/edit-module-form";
 export { ModulePermissionsTable } from "./components/module-permissions-table";
+export { AdminSystemRolesTab } from "./components/admin-system-roles-tab";
+export { AdminAllRolesTab } from "./components/admin-all-roles-tab";
 
 // Types
 export type { Company } from "./queries/list-my-companies";
