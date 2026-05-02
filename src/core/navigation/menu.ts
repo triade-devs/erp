@@ -51,4 +51,6 @@ export const MODULES_MENU: MenuItem[] = [
 export const ADMIN_MENU: MenuItem[] = [
   { label: "Empresas", href: "/admin/companies", icon: "building-2" },
   { label: "Auditoria Global", href: "/admin/audit", icon: "activity" },
+  { label: "Módulos", href: "/admin/platform/modules", icon: "puzzle" },
+  { label: "Roles", href: "/admin/platform/roles", icon: "shield" },
 ];
