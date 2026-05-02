@@ -57,6 +57,7 @@ export { CreateCompanyForm } from "./components/create-company-form";
 export { UpdateCompanyForm } from "./components/update-company-form";
 export { ModuleToggleList } from "./components/module-toggle-list";
 export { AdminModulesTable } from "./components/admin-modules-table";
+export { CreateModuleForm } from "./components/create-module-form";
 
 // Types
 export type { Company } from "./queries/list-my-companies";
