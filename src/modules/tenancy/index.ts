@@ -58,6 +58,8 @@ export { UpdateCompanyForm } from "./components/update-company-form";
 export { ModuleToggleList } from "./components/module-toggle-list";
 export { AdminModulesTable } from "./components/admin-modules-table";
 export { CreateModuleForm } from "./components/create-module-form";
+export { EditModuleForm } from "./components/edit-module-form";
+export { ModulePermissionsTable } from "./components/module-permissions-table";
 
 // Types
 export type { Company } from "./queries/list-my-companies";
