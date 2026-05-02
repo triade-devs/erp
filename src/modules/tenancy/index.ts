@@ -14,6 +14,13 @@ export { updateRoleAction } from "./actions/update-role";
 export { deleteRoleAction } from "./actions/delete-role";
 export { transferMemberAction } from "./actions/transfer-member";
 export { updateRolePermissionsAction } from "./actions/update-role-permissions";
+export { createModuleAction } from "./actions/create-module";
+export { updateModuleAction } from "./actions/update-module";
+export { toggleModuleActiveAction } from "./actions/toggle-module-active";
+export { bulkToggleModuleForCompaniesAction } from "./actions/bulk-toggle-module-for-companies";
+export { createPermissionAction } from "./actions/create-permission";
+export { deletePermissionAction } from "./actions/delete-permission";
+export { updateSystemRolePermissionsAction } from "./actions/update-system-role-permissions";
 
 // Queries
 export { getActiveCompanySlug } from "./queries/get-active-company-slug";
@@ -28,6 +35,17 @@ export { listRolePermissionMatrix } from "./queries/list-role-permission-matrix"
 export type { ModulePermissions, PermissionRow } from "./queries/list-role-permission-matrix";
 export { searchUsersForCompanyAction } from "./actions/search-users-for-company";
 export type { UserSearchResult, SearchUsersResult } from "./actions/search-users-for-company";
+export { listModulesWithStats } from "./queries/list-modules-with-stats";
+export type { ModuleWithStats } from "./queries/list-modules-with-stats";
+export { getModuleWithPermissions } from "./queries/get-module-with-permissions";
+export type {
+  ModuleWithPermissions,
+  ModulePermission,
+} from "./queries/get-module-with-permissions";
+export { listAllRoles } from "./queries/list-all-roles";
+export type { RoleWithCompany } from "./queries/list-all-roles";
+export { getSystemRolePermissions } from "./queries/get-system-role-permissions";
+export type { SystemRoleMatrix, SystemRolePermission } from "./queries/get-system-role-permissions";
 
 // Services
 export { getActiveCompanyId } from "./services/active-company";
