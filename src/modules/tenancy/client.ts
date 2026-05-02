@@ -11,3 +11,6 @@ export { updateRolePermissionsAction } from "./actions/update-role-permissions";
 export { switchActiveCompanyAction } from "./actions/switch-active-company";
 export { toggleModuleAction } from "./actions/toggle-module";
 export { transferMemberAction } from "./actions/transfer-member";
+export { addMemberToCompanyAction } from "./actions/add-member-to-company";
+export { searchUsersForCompanyAction } from "./actions/search-users-for-company";
+export type { UserSearchResult } from "./actions/search-users-for-company";

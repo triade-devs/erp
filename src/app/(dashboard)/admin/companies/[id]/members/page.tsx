@@ -11,6 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TransferMemberDialog } from "./transfer-member-dialog";
+import { AddMemberDialog } from "./add-member-dialog";
+import { AdminRemoveMemberButton } from "./admin-remove-member-button";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -45,11 +47,14 @@ export default async function CompanyMembersPage({ params }: Props) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Membros</h2>
-        <p className="text-sm text-muted-foreground">
-          {members.length} {members.length === 1 ? "membro" : "membros"} nesta empresa
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Membros</h2>
+          <p className="text-sm text-muted-foreground">
+            {members.length} {members.length === 1 ? "membro" : "membros"} nesta empresa
+          </p>
+        </div>
+        <AddMemberDialog companyId={id} />
       </div>
 
       {members.length === 0 ? (
@@ -62,7 +67,7 @@ export default async function CompanyMembersPage({ params }: Props) {
               <TableHead>Status</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Entrou em</TableHead>
-              <TableHead className="w-[120px]">Ações</TableHead>
+              <TableHead className="w-[180px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -98,12 +103,19 @@ export default async function CompanyMembersPage({ params }: Props) {
                 </TableCell>
                 <TableCell>
                   {!member.isOwner && (
-                    <TransferMemberDialog
-                      membershipId={member.membershipId}
-                      memberName={member.fullName}
-                      sourceCompanyId={id}
-                      allCompanies={allCompanies.map((c) => ({ id: c.id, name: c.name }))}
-                    />
+                    <div className="flex items-center gap-1">
+                      <TransferMemberDialog
+                        membershipId={member.membershipId}
+                        memberName={member.fullName}
+                        sourceCompanyId={id}
+                        allCompanies={allCompanies.map((c) => ({ id: c.id, name: c.name }))}
+                      />
+                      <AdminRemoveMemberButton
+                        membershipId={member.membershipId}
+                        companyId={id}
+                        memberName={member.fullName}
+                      />
+                    </div>
                   )}
                 </TableCell>
               </TableRow>

@@ -133,7 +133,9 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
               Reativar
             </Button>
           )}
-          {(currentStatus === "invited" || currentStatus === "suspended") && (
+          {(currentStatus === "invited" ||
+            currentStatus === "suspended" ||
+            currentStatus === "active") && (
             <Button
               variant="ghost"
               size="sm"

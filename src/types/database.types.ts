@@ -571,7 +571,7 @@ export type Database = {
         Insert: {
           granted_at?: string;
           granted_by?: string | null;
-          user_id: string;
+          user_id?: string;
         };
         Update: {
           granted_at?: string;
@@ -803,6 +803,14 @@ export type Database = {
         Returns: boolean;
       };
       is_platform_admin: { Args: never; Returns: boolean };
+      search_users_for_company: {
+        Args: { p_company_id: string; p_query: string };
+        Returns: {
+          email: string;
+          full_name: string;
+          user_id: string;
+        }[];
+      };
       set_member_roles: {
         Args: {
           p_company_id: string;
