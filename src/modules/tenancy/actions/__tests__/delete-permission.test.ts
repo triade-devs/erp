@@ -10,10 +10,18 @@ import { deletePermissionAction } from "../delete-permission";
 function makeSupabaseMock({
   isPlatformAdmin = true,
   deleteError = null as { message: string } | null,
+  notFound = false,
 } = {}) {
-  const permDeleteEq2 = vi
+  const permDeleteSelect = vi
     .fn()
-    .mockResolvedValue(deleteError ? { error: deleteError } : { error: null });
+    .mockResolvedValue(
+      deleteError
+        ? { data: null, error: deleteError }
+        : notFound
+          ? { data: [], error: null }
+          : { data: [{ code: "inventory:product:archive" }], error: null },
+    );
+  const permDeleteEq2 = vi.fn().mockReturnValue({ select: permDeleteSelect });
   const permDeleteEq1 = vi.fn().mockReturnValue({ eq: permDeleteEq2 });
   const permDelete = vi.fn().mockReturnValue({ eq: permDeleteEq1 });
 
@@ -42,5 +50,12 @@ describe("deletePermissionAction", () => {
     await expect(deletePermissionAction("inventory", "inventory:product:archive")).rejects.toThrow(
       "Acesso negado",
     );
+  });
+
+  it("retorna { ok: false } quando permissão não existe (0 rows)", async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ notFound: true }) as never);
+    const result = await deletePermissionAction("inventory", "inexistente:perm");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toBe("Permissão não encontrada");
   });
 });

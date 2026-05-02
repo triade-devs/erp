@@ -14,13 +14,15 @@ export async function deletePermissionAction(
   if (rpcError) return { ok: false, message: rpcError.message };
   if (!isPlatformAdmin) throw new AppError("Acesso negado", "ACCESS_DENIED");
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from("permissions")
     .delete()
     .eq("code", permissionCode)
-    .eq("module_code", moduleCode);
+    .eq("module_code", moduleCode)
+    .select("code");
 
   if (error) return { ok: false, message: error.message };
+  if (!deleted || deleted.length === 0) return { ok: false, message: "Permissão não encontrada" };
 
   revalidatePath(`/admin/platform/modules/${moduleCode}`);
   return { ok: true, message: `Permissão "${permissionCode}" removida` };

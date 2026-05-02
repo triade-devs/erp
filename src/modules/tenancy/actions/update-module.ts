@@ -27,9 +27,14 @@ export async function updateModuleAction(
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { error } = await supabase.from("modules").update(parsed.data).eq("code", code);
+  const { data: updated, error } = await supabase
+    .from("modules")
+    .update(parsed.data)
+    .eq("code", code)
+    .select("code");
 
   if (error) return { ok: false, message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, message: "Módulo não encontrado" };
 
   revalidatePath("/admin/platform/modules");
   revalidatePath(`/admin/platform/modules/${code}`);

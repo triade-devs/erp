@@ -14,10 +14,9 @@ export async function bulkToggleModuleForCompaniesAction(
   if (rpcError) return { ok: false, message: rpcError.message };
   if (!isPlatformAdmin) throw new AppError("Acesso negado", "ACCESS_DENIED");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, message: "Não autenticado" };
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (userError || !data.user) return { ok: false, message: "Não autenticado" };
+  const user = data.user;
 
   if (enable) {
     const { data: companies, error: compErr } = await supabase.from("companies").select("id");

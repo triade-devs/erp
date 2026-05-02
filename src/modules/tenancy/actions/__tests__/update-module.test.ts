@@ -10,12 +10,18 @@ import { updateModuleAction } from "../update-module";
 function makeSupabaseMock({
   isPlatformAdmin = true,
   updateError = null as { message: string } | null,
+  notFound = false,
 } = {}) {
-  const modulesEq = vi
+  const modulesSelect = vi
     .fn()
     .mockResolvedValue(
-      updateError ? { data: null, error: updateError } : { data: null, error: null },
+      updateError
+        ? { data: null, error: updateError }
+        : notFound
+          ? { data: [], error: null }
+          : { data: [{ code: "inventory" }], error: null },
     );
+  const modulesEq = vi.fn().mockReturnValue({ select: modulesSelect });
   const modulesUpdate = vi.fn().mockReturnValue({ eq: modulesEq });
 
   return {
@@ -64,5 +70,16 @@ describe("updateModuleAction", () => {
     );
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors?.name).toBeDefined();
+  });
+
+  it("retorna { ok: false } quando módulo não existe (0 rows)", async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ notFound: true }) as never);
+    const result = await updateModuleAction(
+      "inexistente",
+      { ok: true },
+      fd({ name: "Módulo X", sort_order: 10 }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toBe("Módulo não encontrado");
   });
 });
