@@ -56,6 +56,7 @@ export { CompanyBadge } from "./components/company-badge";
 export { CreateCompanyForm } from "./components/create-company-form";
 export { UpdateCompanyForm } from "./components/update-company-form";
 export { ModuleToggleList } from "./components/module-toggle-list";
+export { AdminModulesTable } from "./components/admin-modules-table";
 
 // Types
 export type { Company } from "./queries/list-my-companies";
