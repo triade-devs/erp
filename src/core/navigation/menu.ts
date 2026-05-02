@@ -40,6 +40,13 @@ export const MODULES_MENU: MenuItem[] = [
     requiresPermission: "kb:article:read",
   },
   {
+    label: "Prontuário",
+    href: "/medical",
+    icon: "stethoscope",
+    requiresSlug: true,
+    requiresPermission: "medical:patient:read_assigned",
+  },
+  {
     label: "Configurações",
     href: "/settings/general",
     icon: "settings",

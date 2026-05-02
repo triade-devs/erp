@@ -11,6 +11,7 @@ import {
   Building2,
   Activity,
   BookOpen,
+  Stethoscope,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "building-2": Building2,
   activity: Activity,
   "book-open": BookOpen,
+  stethoscope: Stethoscope,
 };
 
 type ResolvedItem = MenuItem & { resolvedHref: string };
