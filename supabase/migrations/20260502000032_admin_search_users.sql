@@ -20,9 +20,9 @@ begin
 
   return query
   select
-    u.id,
-    coalesce(p.full_name, split_part(u.email, '@', 1)),
-    u.email
+    u.id::uuid,
+    coalesce(p.full_name, split_part(u.email, '@', 1))::text,
+    u.email::text
   from auth.users u
   left join public.profiles p on p.id = u.id
   where (
