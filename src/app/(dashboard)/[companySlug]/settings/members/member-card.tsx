@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ type Props = {
 };
 
 export function MemberCard({ member, companyId, availableRoles }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [currentStatus, setCurrentStatus] = useState(member.status);
 
@@ -48,6 +50,7 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
       if (result.ok) {
         if (newStatus === "removed") {
           toast.success("Membro removido");
+          router.refresh();
         } else {
           setCurrentStatus(newStatus);
           toast.success(result.message ?? "Status atualizado");

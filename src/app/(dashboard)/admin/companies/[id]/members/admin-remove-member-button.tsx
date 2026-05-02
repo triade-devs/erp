@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateMemberStatusAction } from "@/modules/tenancy/client";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function AdminRemoveMemberButton({ membershipId, companyId, memberName }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleRemove() {
@@ -20,6 +22,7 @@ export function AdminRemoveMemberButton({ membershipId, companyId, memberName }:
       const result = await updateMemberStatusAction(companyId, membershipId, "removed");
       if (result.ok) {
         toast.success("Membro removido");
+        router.refresh();
       } else {
         toast.error(result.message ?? "Erro ao remover membro");
       }
