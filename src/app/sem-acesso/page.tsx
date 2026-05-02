@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser, signOutAction } from "@/modules/auth";
@@ -23,11 +24,16 @@ export default async function SemAcessoPage() {
         </p>
       </div>
 
-      <form action={signOutAction}>
-        <Button type="submit" variant="outline">
-          Sair da conta
+      <div className="flex gap-3">
+        <Button asChild variant="default">
+          <Link href="/">Tentar novamente</Link>
         </Button>
-      </form>
+        <form action={signOutAction}>
+          <Button type="submit" variant="outline">
+            Sair da conta
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
