@@ -1,22 +1,7 @@
--- supabase/migrations/20260502000026_platform_admin_rpcs.sql
+-- supabase/migrations/20260502000027_fix_platform_admin_rpcs_security.sql
+-- Fix: adiciona guard is_platform_admin(), guard role desconhecida,
+--      guard permission_codes null, e revoke correto de anon/authenticated.
 
--- ============================================================
--- RLS write policies para platform admin em modules e permissions
--- ============================================================
-create policy "modules_write_platform" on public.modules
-  for all using (public.is_platform_admin())
-  with check (public.is_platform_admin());
-
-create policy "permissions_write_platform" on public.permissions
-  for all using (public.is_platform_admin())
-  with check (public.is_platform_admin());
-
--- ============================================================
--- RPC: update_system_role_permissions
--- Propaga permissões de um role-sistema para TODAS as empresas.
--- security definer para bypass de RLS em role_permissions
--- (a policy existente só permite quem tem core:role:manage).
--- ============================================================
 create or replace function public.update_system_role_permissions(
   role_code text,
   permission_codes text[]
@@ -52,6 +37,5 @@ begin
 end;
 $$;
 
--- Apenas platform_admins podem chamar esta RPC via service_role/autenticado
 revoke all on function public.update_system_role_permissions(text, text[]) from public, anon, authenticated;
 grant execute on function public.update_system_role_permissions(text, text[]) to authenticated;
