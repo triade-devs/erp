@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
 import { updateModuleSchema } from "../schemas/update-module";
+import { audit } from "@/modules/audit";
 
 export async function updateModuleAction(
   code: string,
@@ -36,6 +37,12 @@ export async function updateModuleAction(
   if (error) return { ok: false, message: error.message };
   if (!updated || updated.length === 0) return { ok: false, message: "Módulo não encontrado" };
 
+  await audit({
+    companyId: null,
+    action: "platform.module.update",
+    resourceType: "module",
+    resourceId: code,
+  });
   revalidatePath("/admin/platform/modules");
   revalidatePath(`/admin/platform/modules/${code}`);
   return { ok: true, message: "Módulo atualizado" };

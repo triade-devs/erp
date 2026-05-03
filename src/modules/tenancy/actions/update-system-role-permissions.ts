@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
+import { audit } from "@/modules/audit";
 
 export async function updateSystemRolePermissionsAction(
   roleCode: string,
@@ -24,6 +25,13 @@ export async function updateSystemRolePermissionsAction(
 
   if (error) return { ok: false, message: error.message };
 
+  await audit({
+    companyId: null,
+    action: "platform.role.update_system_permissions",
+    resourceType: "role",
+    resourceId: roleCode,
+    metadata: { permissionCount: permissionCodes.length },
+  });
   revalidatePath("/admin/platform/roles");
   return {
     ok: true,

@@ -3,50 +3,79 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/modules/audit", () => ({ audit: vi.fn() }));
 
 import { createClient } from "@/lib/supabase/server";
 import { bulkToggleModuleForCompaniesAction } from "../bulk-toggle-module-for-companies";
 
-// Sequência enable=true:
-//   rpc is_platform_admin → auth.getUser → companies.select("id") → company_modules.upsert(rows)
-// Sequência enable=false:
-//   rpc is_platform_admin → auth.getUser → company_modules.delete().eq("module_code")
+// Enable path:
+//   rpc is_platform_admin → auth.getUser → companies.select → company_modules.upsert
+//   → permissions.select.eq → roles.select.eq → role_permissions.upsert
+// Disable path:
+//   rpc is_platform_admin → auth.getUser → company_modules.delete.eq
+//   → permissions.select.eq → role_permissions.delete.in
 
 function makeEnableMock({
   isPlatformAdmin = true,
   companies = [{ id: "c1" }, { id: "c2" }],
   upsertError = null as { message: string } | null,
 } = {}) {
-  const companiesSelect = vi.fn().mockResolvedValue({ data: companies, error: null });
-  const companiesFrom = { select: companiesSelect };
-
-  const cmUpsert = vi
-    .fn()
-    .mockResolvedValue(upsertError ? { error: upsertError } : { error: null });
-  const cmFrom = { upsert: cmUpsert };
-
   return {
     rpc: vi.fn().mockResolvedValue({ data: isPlatformAdmin, error: null }),
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-uid" } } }) },
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-uid" } }, error: null }),
+    },
     from: vi.fn().mockImplementation((table: string) => {
-      if (table === "companies") return companiesFrom;
-      if (table === "company_modules") return cmFrom;
+      if (table === "companies")
+        return { select: vi.fn().mockResolvedValue({ data: companies, error: null }) };
+      if (table === "company_modules")
+        return {
+          upsert: vi.fn().mockResolvedValue(upsertError ? { error: upsertError } : { error: null }),
+        };
+      if (table === "permissions")
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        };
+      if (table === "roles")
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        };
+      if (table === "role_permissions")
+        return { upsert: vi.fn().mockResolvedValue({ error: null }) };
       return {};
     }),
   };
 }
 
 function makeDisableMock({ deleteError = null as { message: string } | null } = {}) {
-  const cmDeleteEq = vi
-    .fn()
-    .mockResolvedValue(deleteError ? { error: deleteError } : { error: null });
-  const cmDelete = vi.fn().mockReturnValue({ eq: cmDeleteEq });
-
   return {
     rpc: vi.fn().mockResolvedValue({ data: true, error: null }),
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-uid" } } }) },
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-uid" } }, error: null }),
+    },
     from: vi.fn().mockImplementation((table: string) => {
-      if (table === "company_modules") return { delete: cmDelete };
+      if (table === "company_modules")
+        return {
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue(deleteError ? { error: deleteError } : { error: null }),
+          }),
+        };
+      if (table === "permissions")
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: [{ code: "kb:article:read" }], error: null }),
+          }),
+        };
+      if (table === "role_permissions")
+        return {
+          delete: vi.fn().mockReturnValue({
+            in: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        };
       return {};
     }),
   };

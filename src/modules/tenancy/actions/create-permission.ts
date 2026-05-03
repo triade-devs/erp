@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
 import { createPermissionSchema } from "../schemas/create-permission";
+import { audit } from "@/modules/audit";
 
 export async function createPermissionAction(
   moduleCode: string,
@@ -37,6 +38,13 @@ export async function createPermissionAction(
     return { ok: false, message: error.message };
   }
 
+  await audit({
+    companyId: null,
+    action: "platform.permission.create",
+    resourceType: "permission",
+    resourceId: parsed.data.code,
+    metadata: { moduleCode },
+  });
   revalidatePath(`/admin/platform/modules/${moduleCode}`);
   return { ok: true, message: `Permissão "${parsed.data.code}" criada` };
 }

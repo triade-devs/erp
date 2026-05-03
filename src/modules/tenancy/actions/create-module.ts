@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
 import { createModuleSchema } from "../schemas/create-module";
+import { audit } from "@/modules/audit";
 
 export async function createModuleAction(
   _prev: ActionResult,
@@ -36,6 +37,13 @@ export async function createModuleAction(
     return { ok: false, message: error.message };
   }
 
+  await audit({
+    companyId: null,
+    action: "platform.module.create",
+    resourceType: "module",
+    resourceId: parsed.data.code,
+    metadata: { name: parsed.data.name },
+  });
   revalidatePath("/admin/platform/modules");
   return { ok: true, message: `Módulo "${parsed.data.name}" criado com sucesso` };
 }

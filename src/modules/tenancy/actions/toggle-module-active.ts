@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
+import { audit } from "@/modules/audit";
 
 export async function toggleModuleActiveAction(
   code: string,
@@ -18,6 +19,13 @@ export async function toggleModuleActiveAction(
 
   if (error) return { ok: false, message: error.message };
 
+  await audit({
+    companyId: null,
+    action: "platform.module.toggle_active",
+    resourceType: "module",
+    resourceId: code,
+    metadata: { isActive },
+  });
   revalidatePath("/admin/platform/modules");
   return { ok: true, message: `Módulo ${isActive ? "ativado" : "desativado"} no catálogo` };
 }

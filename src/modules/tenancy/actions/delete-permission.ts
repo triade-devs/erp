@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
+import { audit } from "@/modules/audit";
 
 export async function deletePermissionAction(
   moduleCode: string,
@@ -24,6 +25,13 @@ export async function deletePermissionAction(
   if (error) return { ok: false, message: error.message };
   if (!deleted || deleted.length === 0) return { ok: false, message: "Permissão não encontrada" };
 
+  await audit({
+    companyId: null,
+    action: "platform.permission.delete",
+    resourceType: "permission",
+    resourceId: permissionCode,
+    metadata: { moduleCode },
+  });
   revalidatePath(`/admin/platform/modules/${moduleCode}`);
   return { ok: true, message: `Permissão "${permissionCode}" removida` };
 }

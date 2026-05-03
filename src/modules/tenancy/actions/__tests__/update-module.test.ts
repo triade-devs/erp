@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/modules/audit", () => ({ audit: vi.fn() }));
 
 import { createClient } from "@/lib/supabase/server";
 import { updateModuleAction } from "../update-module";
