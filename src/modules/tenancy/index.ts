@@ -26,6 +26,8 @@ export { listCompanyMembers } from "./queries/list-company-members";
 export { listCompanyRoles } from "./queries/list-company-roles";
 export { listRolePermissionMatrix } from "./queries/list-role-permission-matrix";
 export type { ModulePermissions, PermissionRow } from "./queries/list-role-permission-matrix";
+export { searchUsersForCompanyAction } from "./actions/search-users-for-company";
+export type { UserSearchResult, SearchUsersResult } from "./actions/search-users-for-company";
 
 // Services
 export { getActiveCompanyId } from "./services/active-company";

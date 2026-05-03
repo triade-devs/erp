@@ -66,6 +66,7 @@ export async function transferMemberAction(
         assigned_by: user?.id ?? null,
       })),
     );
+
     if (rolesError) return { ok: false, message: rolesError.message };
   }
 
