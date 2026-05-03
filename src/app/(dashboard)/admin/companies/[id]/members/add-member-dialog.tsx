@@ -41,7 +41,7 @@ export function AddMemberDialog({ companyId }: Props) {
     debounceRef.current = setTimeout(() => {
       startSearch(async () => {
         const result = await searchUsersForCompanyAction(companyId, value);
-        if (result.ok) setResults(result.users);
+        if (result.ok) setResults(result.users ?? []);
         else toast.error(result.message);
       });
     }, 300);

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { type ActionResult } from "@/lib/errors";
 
 export type UserSearchResult = {
   userId: string;
@@ -8,10 +9,14 @@ export type UserSearchResult = {
   email: string;
 };
 
+export type SearchUsersResult = ActionResult & {
+  users?: UserSearchResult[];
+};
+
 export async function searchUsersForCompanyAction(
   companyId: string,
   query: string,
-): Promise<{ ok: true; users: UserSearchResult[] } | { ok: false; message: string }> {
+): Promise<SearchUsersResult> {
   if (!query || query.trim().length < 2) return { ok: true, users: [] };
 
   const supabase = await createClient();
