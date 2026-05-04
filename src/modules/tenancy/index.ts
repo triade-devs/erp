@@ -20,6 +20,7 @@ export { toggleModuleActiveAction } from "./actions/toggle-module-active";
 export { bulkToggleModuleForCompaniesAction } from "./actions/bulk-toggle-module-for-companies";
 export { createPermissionAction } from "./actions/create-permission";
 export { deletePermissionAction } from "./actions/delete-permission";
+export { deleteModuleAction } from "./actions/delete-module";
 export { updateSystemRolePermissionsAction } from "./actions/update-system-role-permissions";
 
 // Queries
@@ -60,6 +61,7 @@ export { AdminModulesTable } from "./components/admin-modules-table";
 export { CreateModuleForm } from "./components/create-module-form";
 export { EditModuleForm } from "./components/edit-module-form";
 export { ModulePermissionsTable } from "./components/module-permissions-table";
+export { DeleteModuleButton } from "./components/delete-module-button";
 export { AdminSystemRolesTab } from "./components/admin-system-roles-tab";
 export { AdminAllRolesTab } from "./components/admin-all-roles-tab";
 

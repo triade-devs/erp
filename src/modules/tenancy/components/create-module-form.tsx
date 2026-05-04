@@ -31,7 +31,7 @@ export function CreateModuleForm() {
     <form action={formAction} className="max-w-lg space-y-4">
       <div className="space-y-1">
         <Label htmlFor="code">Código</Label>
-        <Input id="code" name="code" placeholder="ex: crm" pattern="[a-z0-9-]+" required />
+        <Input id="code" name="code" placeholder="ex: crm" pattern="[a-z0-9\-]+" required />
         {errors?.code && <p className="text-sm text-destructive">{errors.code[0]}</p>}
       </div>
 

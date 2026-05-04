@@ -68,7 +68,7 @@ export function CreateCompanyForm({ modules }: Props) {
             name="slug"
             required
             placeholder="acme"
-            pattern="[a-z0-9-]+"
+            pattern="[a-z0-9\-]+"
             title="Apenas letras minúsculas, números e hífens"
             aria-invalid={!!fieldErrors?.slug}
           />

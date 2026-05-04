@@ -48,44 +48,50 @@ export function AdminAllRolesTab({ roles }: Props) {
         <span className="ml-auto text-sm text-muted-foreground">{filtered.length} roles</span>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Empresa</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Código</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead className="text-right">Permissões</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filtered.map((role) => (
-            <TableRow key={role.id}>
-              <TableCell className="text-sm">{role.companyName}</TableCell>
-              <TableCell className="font-medium">{role.name}</TableCell>
-              <TableCell className="font-mono text-sm text-muted-foreground">{role.code}</TableCell>
-              <TableCell>
-                {role.isSystem ? (
-                  <Badge variant="secondary" className="text-xs">
-                    sistema
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs">
-                    customizado
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-right">{role.permissionCount}</TableCell>
-              <TableCell>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/admin/companies/${role.companyId}`}>Ver empresa</Link>
-                </Button>
-              </TableCell>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhuma role encontrada.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Código</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead className="text-right">Permissões</TableHead>
+              <TableHead></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((role) => (
+              <TableRow key={role.id}>
+                <TableCell className="text-sm">{role.companyName}</TableCell>
+                <TableCell className="font-medium">{role.name}</TableCell>
+                <TableCell className="font-mono text-sm text-muted-foreground">
+                  {role.code}
+                </TableCell>
+                <TableCell>
+                  {role.isSystem ? (
+                    <Badge variant="secondary" className="text-xs">
+                      sistema
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      customizado
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">{role.permissionCount}</TableCell>
+                <TableCell>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/companies/${role.companyId}`}>Ver empresa</Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

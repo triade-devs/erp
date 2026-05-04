@@ -5,6 +5,7 @@ import {
   getModuleWithPermissions,
   EditModuleForm,
   ModulePermissionsTable,
+  DeleteModuleButton,
 } from "@/modules/tenancy";
 
 type Props = { params: Promise<{ code: string }> };
@@ -27,6 +28,16 @@ export default async function EditModulePage({ params }: Props) {
       <EditModuleForm module={mod} />
 
       <ModulePermissionsTable moduleCode={mod.code} permissions={mod.permissions} />
+
+      {!mod.is_system && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <h2 className="mb-1 text-sm font-semibold text-destructive">Zona de perigo</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Excluir o módulo remove permanentemente todas as permissões e vínculos com empresas.
+          </p>
+          <DeleteModuleButton moduleCode={mod.code} moduleName={mod.name} />
+        </div>
+      )}
     </div>
   );
 }
