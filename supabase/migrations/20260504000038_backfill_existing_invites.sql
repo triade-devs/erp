@@ -13,6 +13,12 @@ create table if not exists public.migration_backfill_log (
   created_at    timestamptz not null default now()
 );
 
+alter table public.migration_backfill_log enable row level security;
+
+create policy "migration_backfill_log_platform_admin_only"
+  on public.migration_backfill_log
+  using (is_platform_admin());
+
 -- Backfill: para cada membership com status='invited', cria company_invitation
 -- Usa gen_random_uuid() para token_hash (placeholder) e um short_code único
 -- O token real não pode ser recuperado — platform admin deve regenerar via UI
