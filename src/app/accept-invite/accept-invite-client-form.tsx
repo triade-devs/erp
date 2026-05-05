@@ -6,9 +6,9 @@ import { useTransition, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { acceptInvitationAction } from "@/modules/tenancy";
-import { signOutAction } from "@/modules/auth";
-import type { InvitationLookup } from "@/modules/tenancy";
+import { acceptInvitationAction } from "@/modules/tenancy/client";
+import { signOutAction } from "@/modules/auth/client";
+import type { InvitationLookup } from "@/modules/tenancy/client";
 
 type Props = {
   token?: string;
