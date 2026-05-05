@@ -1,9 +1,16 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { recoverSchema } from "../schemas";
-import { env } from "@/core/config/env";
+import { audit } from "@/modules/audit";
 import type { ActionResult } from "@/lib/errors";
+
+const GENERIC_MESSAGE =
+  "Se o email estiver cadastrado, sua solicitação foi recebida. Aguarde contato do administrador.";
+
+// RPC não tipado ainda — cast necessário
+// deno-lint-ignore no-explicit-any
+type AnyClient = any;
 
 export async function recoverPasswordAction(
   _prev: ActionResult,
@@ -14,17 +21,26 @@ export async function recoverPasswordAction(
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback?next=/recover/reset`,
-  });
+  const serviceClient: AnyClient = createServiceClient();
 
-  if (error) {
-    return { ok: false, message: error.message };
+  try {
+    await serviceClient.rpc("request_password_reset", { p_email: parsed.data.email });
+  } catch {
+    // Erro ignorado — resposta genérica por anti-enumeração
   }
 
-  return {
-    ok: true,
-    message: "Se o email estiver cadastrado, enviaremos um link de recuperação.",
-  };
+  try {
+    await audit({
+      companyId: "",
+      action: "password.reset_requested",
+      resourceType: "password_reset_request",
+      resourceId: parsed.data.email,
+      status: "success",
+      metadata: { email: parsed.data.email },
+    });
+  } catch {
+    // Auditoria não deve bloquear o fluxo
+  }
+
+  return { ok: true, message: GENERIC_MESSAGE };
 }

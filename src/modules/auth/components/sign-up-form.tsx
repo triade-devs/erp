@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,11 @@ import { signUpAction } from "../actions/sign-up";
 
 const initial = { ok: false } as const;
 
-export function SignUpForm() {
+type Props = {
+  inviteToken?: string;
+};
+
+export function SignUpForm({ inviteToken }: Props) {
   const [state, formAction] = useActionState(signUpAction, initial);
 
   if (state.ok) {
@@ -23,19 +28,28 @@ export function SignUpForm() {
 
   return (
     <form action={formAction} className="space-y-4">
+      {inviteToken ? (
+        <input type="hidden" name="inviteToken" value={inviteToken} />
+      ) : (
+        <div className="space-y-2">
+          <Label htmlFor="inviteToken">Código ou link de convite *</Label>
+          <Input
+            id="inviteToken"
+            name="inviteToken"
+            required
+            placeholder="Ex: INV-XXXX-XXXX ou cole o link completo"
+          />
+          {state.fieldErrors?.inviteToken && (
+            <p className="text-sm text-red-600">{state.fieldErrors.inviteToken[0]}</p>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="fullName">Nome completo</Label>
         <Input id="fullName" name="fullName" required placeholder="João da Silva" />
         {state.fieldErrors?.fullName && (
           <p className="text-sm text-red-600">{state.fieldErrors.fullName[0]}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" required placeholder="seu@email.com" />
-        {state.fieldErrors?.email && (
-          <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>
         )}
       </div>
 
@@ -66,6 +80,13 @@ export function SignUpForm() {
       )}
 
       <SubmitButton />
+
+      <p className="text-center text-sm text-muted-foreground">
+        Já tenho conta?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline">
+          Entrar
+        </Link>
+      </p>
     </form>
   );
 }

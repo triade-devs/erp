@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { createInvitationAction } from "@/modules/tenancy/client";
 import type { CompanyRole } from "@/modules/tenancy";
+import { CredentialDisplayDialog } from "./credential-display-dialog";
 
 type Props = {
   companyId: string;
@@ -24,6 +25,10 @@ export function InviteMemberDialog({ companyId, roles }: Props) {
   const [email, setEmail] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [credentialData, setCredentialData] = useState<{
+    link: string;
+    shortCode: string;
+  } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function toggleRole(id: string) {
@@ -36,86 +41,102 @@ export function InviteMemberDialog({ companyId, roles }: Props) {
     setMessage(null);
     startTransition(async () => {
       const result = await createInvitationAction(companyId, email, selectedRoles);
-      if (result.ok) {
+      if (result.ok && result.data) {
         setEmail("");
         setSelectedRoles([]);
-        setOpen(false);
+        setCredentialData({ link: result.data.link, shortCode: result.data.shortCode });
+        return;
       }
       setMessage({
-        ok: result.ok,
-        text: result.message ?? (result.ok ? "Convite enviado" : "Erro"),
+        ok: false,
+        text: result.message ?? "Erro ao criar convite",
       });
     });
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">+ Convidar membro</Button>
-      </DialogTrigger>
-      <DialogContent className="w-full max-w-md">
-        <DialogHeader>
-          <DialogTitle>Convidar membro</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm">+ Convidar membro</Button>
+        </DialogTrigger>
+        <DialogContent className="w-full max-w-md">
+          <DialogHeader>
+            <DialogTitle>Convidar membro</DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="invite-email">
-              E-mail <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="invite-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="usuario@exemplo.com"
-            />
-          </div>
-
-          {roles.length > 0 && (
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Roles</Label>
-              <div className="space-y-1">
-                {roles.map((role) => (
-                  <label key={role.id} className="flex cursor-pointer items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={selectedRoles.includes(role.id)}
-                      onChange={() => toggleRole(role.id)}
-                    />
-                    {role.name}
-                  </label>
-                ))}
-              </div>
+              <Label htmlFor="invite-email">
+                E-mail <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="invite-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="usuario@exemplo.com"
+              />
             </div>
-          )}
 
-          {message && (
-            <p className={`text-sm ${message.ok ? "text-green-700" : "text-destructive"}`}>
-              {message.text}
-            </p>
-          )}
+            {roles.length > 0 && (
+              <div className="space-y-2">
+                <Label>Roles</Label>
+                <div className="space-y-1">
+                  {roles.map((role) => (
+                    <label key={role.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={selectedRoles.includes(role.id)}
+                        onChange={() => toggleRole(role.id)}
+                      />
+                      {role.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setOpen(false);
-                setMessage(null);
-              }}
-              disabled={isPending}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Enviando..." : "Enviar convite"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            {message && (
+              <p className={`text-sm ${message.ok ? "text-green-700" : "text-destructive"}`}>
+                {message.text}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setOpen(false);
+                  setMessage(null);
+                }}
+                disabled={isPending}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Enviando..." : "Enviar convite"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {credentialData && (
+        <CredentialDisplayDialog
+          open={!!credentialData}
+          onClose={() => {
+            setCredentialData(null);
+            setOpen(false);
+          }}
+          link={credentialData.link}
+          shortCode={credentialData.shortCode}
+          title="Convite gerado"
+        />
+      )}
+    </>
   );
 }

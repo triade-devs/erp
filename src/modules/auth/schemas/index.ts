@@ -7,8 +7,8 @@ export const signInSchema = z.object({
 
 export const signUpSchema = z
   .object({
+    inviteToken: z.string().min(1, "Convite obrigatório"),
     fullName: z.string().min(3, "Informe seu nome completo"),
-    email: z.string().email("Email inválido"),
     password: z.string().min(8, "Mínimo 8 caracteres"),
     confirmPassword: z.string(),
   })
@@ -23,6 +23,7 @@ export const recoverSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
+    tokenOrShortCode: z.string().min(1, "Token ou código obrigatório"),
     password: z.string().min(8, "Mínimo 8 caracteres"),
     confirmPassword: z.string(),
   })
