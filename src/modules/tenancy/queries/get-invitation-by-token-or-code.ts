@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { hashTokenHex } from "@/lib/tokens";
 
 export type InvitationLookup = {
@@ -11,10 +11,11 @@ export type InvitationLookup = {
   expiresAt: string;
 };
 
-export async function getInvitationByTokenOrCode(
-  input: string,
-): Promise<InvitationLookup | null> {
-  const supabase = await createClient();
+export async function getInvitationByTokenOrCode(input: string): Promise<InvitationLookup | null> {
+  // Usa service client: o token/código em si é a autorização (pré-lookup para UX).
+  // A RLS de company_invitations requer autenticação, mas visitantes não autenticados
+  // precisam ver os dados do convite antes de criar conta.
+  const supabase = createServiceClient();
   const isShortCode = /^[A-Z0-9]{3}-[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(input);
 
   let query = supabase

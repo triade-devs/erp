@@ -70,10 +70,7 @@ export async function signUpAction(_prev: ActionResult, formData: FormData): Pro
         p_user_id: newUser.id,
       };
 
-  const { data: rpcData, error: rpcError } = await serviceClient.rpc(
-    "accept_invitation",
-    rpcArgs,
-  );
+  const { data: rpcData, error: rpcError } = await serviceClient.rpc("accept_invitation", rpcArgs);
   if (rpcError ?? !rpcData) {
     return { ok: false, message: rpcError?.message ?? "Erro ao aceitar convite" };
   }
@@ -93,5 +90,5 @@ export async function signUpAction(_prev: ActionResult, formData: FormData): Pro
     // Auditoria não deve bloquear o fluxo
   }
 
-  redirect(`/${rpcResult.company_slug}`);
+  redirect(`/${rpcResult.company_slug}/inventory`);
 }

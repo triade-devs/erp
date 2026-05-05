@@ -29,7 +29,7 @@ export async function resetPasswordAction(
 
   if (isShortCode) {
     const headersList = await headers();
-    const ip = headersList.get("x-forwarded-for") ?? "unknown";
+    const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1";
     const { data: allowed } = await serviceClient.rpc("record_short_code_attempt", {
       p_ip: ip,
       p_identifier: tokenOrShortCode.toUpperCase(),
@@ -51,7 +51,7 @@ export async function resetPasswordAction(
     return { ok: false, message: "Token inválido, expirado ou já utilizado" };
   }
 
-  const { error: updateError } = await serviceClient.auth.admin.updateUser(userId as string, {
+  const { error: updateError } = await serviceClient.auth.admin.updateUserById(userId as string, {
     password,
   });
   if (updateError) {

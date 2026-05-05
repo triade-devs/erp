@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { type ActionResult } from "@/lib/errors";
@@ -29,8 +30,10 @@ export async function acceptInvitationAction(
 
   if (isShortCode) {
     // Rate limit check
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1";
     const { data: allowed } = await serviceClient.rpc("record_short_code_attempt", {
-      p_ip: "server",
+      p_ip: ip,
       p_identifier: `inv:${tokenOrShortCode.toUpperCase()}`,
     });
     if (!allowed) {
@@ -71,5 +74,5 @@ export async function acceptInvitationAction(
     metadata: {},
   });
 
-  redirect(`/${companySlug}`);
+  redirect(`/${companySlug}/inventory`);
 }

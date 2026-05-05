@@ -24,7 +24,7 @@ export async function approveResetRequestAction(
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
   const serviceClient = createServiceClient();
-  const { error, count } = await serviceClient
+  const { error, data: updated } = await serviceClient
     .from("password_reset_requests")
     .update({
       status: "approved",
@@ -33,12 +33,13 @@ export async function approveResetRequestAction(
       expires_at: expiresAt,
     })
     .eq("id", requestId)
-    .eq("status", "pending_review");
+    .eq("status", "pending_review")
+    .select("id");
 
   if (error) {
     return { ok: false, message: error.message };
   }
-  if ((count ?? 0) === 0) {
+  if (!updated || updated.length === 0) {
     return { ok: false, message: "Solicitação não encontrada ou já processada" };
   }
 
