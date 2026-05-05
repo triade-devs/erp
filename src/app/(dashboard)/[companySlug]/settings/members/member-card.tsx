@@ -186,7 +186,6 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
           link={resetCredential.link}
           shortCode={resetCredential.shortCode}
           title="Reset iniciado"
-          description="Compartilhe estas credenciais com o membro para que ele redefina sua senha."
         />
       )}
     </Card>
