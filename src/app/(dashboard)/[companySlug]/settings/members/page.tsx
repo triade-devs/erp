@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
-import { resolveCompany, listCompanyMembers, listCompanyRoles } from "@/modules/tenancy";
+import { resolveCompany, listCompanyMembers, listCompanyRoles, listPendingInvitations } from "@/modules/tenancy";
+import { listResetRequestsForCompany } from "@/modules/auth";
 import { Can } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { MemberCard } from "./member-card";
+import { PendingInvitationsTab } from "./pending-invitations-tab";
+import { ResetRequestsTab } from "./reset-requests-tab";
 
 export const metadata = { title: "Membros — ERP" };
 
@@ -22,9 +26,11 @@ export default async function SettingsMembersPage({ params }: Props) {
     throw e;
   }
 
-  const [members, roles] = await Promise.all([
+  const [members, roles, invitations, resetRequests] = await Promise.all([
     listCompanyMembers(company.id),
     listCompanyRoles(company.id),
+    listPendingInvitations(company.id),
+    listResetRequestsForCompany(company.id),
   ]);
 
   return (
@@ -36,25 +42,43 @@ export default async function SettingsMembersPage({ params }: Props) {
             {members.length} {members.length === 1 ? "membro" : "membros"} nesta empresa
           </p>
         </div>
-        <Can permission="core:member:invite">
+        <Can permission="core:invitation:create">
           <InviteMemberDialog companyId={company.id} roles={roles} />
         </Can>
       </div>
 
-      {members.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum membro cadastrado.</p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {members.map((member) => (
-            <MemberCard
-              key={member.membershipId}
-              member={member}
-              companyId={company.id}
-              availableRoles={roles}
-            />
-          ))}
-        </div>
-      )}
+      <Tabs defaultValue="ativos">
+        <TabsList>
+          <TabsTrigger value="ativos">Ativos ({members.length})</TabsTrigger>
+          <TabsTrigger value="convites">Convites ({invitations.length})</TabsTrigger>
+          <TabsTrigger value="resets">Resets ({resetRequests.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ativos">
+          {members.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">Nenhum membro cadastrado.</p>
+          ) : (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {members.map((member) => (
+                <MemberCard
+                  key={member.membershipId}
+                  member={member}
+                  companyId={company.id}
+                  availableRoles={roles}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="convites">
+          <PendingInvitationsTab companyId={company.id} initialInvitations={invitations} />
+        </TabsContent>
+
+        <TabsContent value="resets">
+          <ResetRequestsTab companyId={company.id} initialRequests={resetRequests} />
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }

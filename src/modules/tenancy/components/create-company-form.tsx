@@ -15,9 +15,8 @@ import {
 } from "@/components/ui/select";
 import { createCompanyAction } from "../actions/create-company";
 import type { Module } from "../queries/list-modules";
-import type { ActionResult } from "@/lib/errors";
 
-const initial: ActionResult = { ok: false };
+const initial = { ok: false } as const;
 
 type Props = {
   modules: Module[];

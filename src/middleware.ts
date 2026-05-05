@@ -2,7 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { ACTIVE_COMPANY_SLUG_COOKIE } from "@/core/config/cookies";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/recover", "/api/auth/callback", "/accept-invite"];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/register",
+  "/recover",
+  "/api/auth/callback",
+  "/accept-invite",
+  "/api/cron",
+];
 
 export async function middleware(request: NextRequest) {
   // Generate or forward x-request-id for observability

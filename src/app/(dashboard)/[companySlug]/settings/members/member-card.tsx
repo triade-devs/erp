@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { updateMemberStatusAction } from "@/modules/tenancy/client";
+import { initiateResetForUserAction } from "@/modules/auth/client";
 import type { CompanyMember, CompanyRole } from "@/modules/tenancy";
 import { MemberRolesSheet } from "./member-roles-sheet";
+import { CredentialDisplayDialog } from "./credential-display-dialog";
 
 function getInitials(name: string): string {
   return name
@@ -43,6 +45,21 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [currentStatus, setCurrentStatus] = useState(member.status);
+  const [resetCredential, setResetCredential] = useState<{
+    link: string;
+    shortCode: string;
+  } | null>(null);
+
+  function handleInitiateReset() {
+    startTransition(async () => {
+      const result = await initiateResetForUserAction(member.userId);
+      if (result.ok && result.data) {
+        setResetCredential({ link: result.data.link, shortCode: result.data.shortCode });
+      } else {
+        toast.error(result.message ?? "Erro ao iniciar reset");
+      }
+    });
+  }
 
   function handleStatusChange(newStatus: "active" | "suspended" | "removed") {
     startTransition(async () => {
@@ -149,7 +166,27 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
               Remover
             </Button>
           )}
+          {currentStatus === "active" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              disabled={isPending}
+              onClick={handleInitiateReset}
+            >
+              Iniciar reset
+            </Button>
+          )}
         </CardFooter>
+      )}
+      {resetCredential && (
+        <CredentialDisplayDialog
+          open={!!resetCredential}
+          onClose={() => setResetCredential(null)}
+          link={resetCredential.link}
+          shortCode={resetCredential.shortCode}
+          title="Reset iniciado"
+        />
       )}
     </Card>
   );
