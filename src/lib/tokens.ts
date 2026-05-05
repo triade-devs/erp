@@ -1,0 +1,21 @@
+import { randomBytes, createHash } from "node:crypto";
+
+export function generateToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export function generateShortCode(prefix: "INV" | "RST"): string {
+  const bytes = randomBytes(8);
+  let out = "";
+  for (let i = 0; i < 8; i++) out += ALPHABET[bytes[i]! % ALPHABET.length];
+  return `${prefix}-${out.slice(0, 4)}-${out.slice(4)}`;
+}
+
+export function hashToken(token: string): Buffer {
+  return createHash("sha256").update(token).digest();
+}
+
+export function compareTokenHash(plain: string, stored: Buffer): boolean {
+  return hashToken(plain).equals(stored);
+}
