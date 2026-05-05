@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Can } from "@/modules/authz";
+import { Can } from "@/modules/authz/client";
 import { approveResetRequestAction, revokeResetRequestAction } from "@/modules/auth/client";
 import type { ResetRequestRow } from "@/modules/auth";
 import { CredentialDisplayDialog } from "./credential-display-dialog";

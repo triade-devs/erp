@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Can } from "@/modules/authz";
+import { Can } from "@/modules/authz/client";
 import { revokeInvitationAction, regenerateInvitationAction } from "@/modules/tenancy/client";
 import type { PendingInvitation } from "@/modules/tenancy";
 import { CredentialDisplayDialog } from "./credential-display-dialog";
