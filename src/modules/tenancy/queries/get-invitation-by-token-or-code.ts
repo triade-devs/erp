@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { hashToken } from "@/lib/tokens";
+import { hashTokenHex } from "@/lib/tokens";
 
 export type InvitationLookup = {
   id: string;
@@ -26,8 +26,7 @@ export async function getInvitationByTokenOrCode(
   if (isShortCode) {
     query = query.eq("short_code", input.toUpperCase());
   } else {
-    const tokenHash = hashToken(input);
-    query = query.eq("token_hash", Array.from(tokenHash));
+    query = query.eq("token_hash", hashTokenHex(input));
   }
 
   const { data, error } = await query.maybeSingle();

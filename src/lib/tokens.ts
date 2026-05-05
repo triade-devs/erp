@@ -16,6 +16,11 @@ export function hashToken(token: string): Buffer {
   return createHash("sha256").update(token).digest();
 }
 
+/** Retorna o hash em formato \x<hex> para inserção em colunas bytea via PostgREST */
+export function hashTokenHex(token: string): string {
+  return `\\x${createHash("sha256").update(token).digest("hex")}`;
+}
+
 export function compareTokenHash(plain: string, stored: Buffer): boolean {
   return hashToken(plain).equals(stored);
 }

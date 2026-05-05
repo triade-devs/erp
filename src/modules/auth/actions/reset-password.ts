@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/service";
-import { hashToken } from "@/lib/tokens";
+import { hashTokenHex } from "@/lib/tokens";
 import { resetPasswordSchema } from "../schemas";
 import { audit } from "@/modules/audit";
 import type { ActionResult } from "@/lib/errors";
@@ -40,8 +40,8 @@ export async function resetPasswordAction(
   }
 
   const rpcArgs = isShortCode
-    ? { p_token_hash: null, p_short_code: tokenOrShortCode.toUpperCase() }
-    : { p_token_hash: Array.from(hashToken(tokenOrShortCode)), p_short_code: null };
+    ? { p_token_hash: null as unknown as string, p_short_code: tokenOrShortCode.toUpperCase() }
+    : { p_token_hash: hashTokenHex(tokenOrShortCode), p_short_code: null as unknown as string };
 
   const { data: userId, error: rpcError } = await serviceClient.rpc(
     "consume_password_reset",

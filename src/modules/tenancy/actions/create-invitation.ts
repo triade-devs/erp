@@ -8,7 +8,7 @@ import { type ActionResult } from "@/lib/errors";
 import { requirePermission } from "@/modules/authz";
 import { audit } from "@/modules/audit";
 import { env } from "@/core/config/env";
-import { generateToken, generateShortCode, hashToken } from "@/lib/tokens";
+import { generateToken, generateShortCode, hashTokenHex } from "@/lib/tokens";
 
 const createInvitationSchema = z.object({
   companyId: z.string().uuid(),
@@ -70,7 +70,6 @@ export async function createInvitationAction(
   // Gera token + short code
   const plainToken = generateToken();
   const shortCode = generateShortCode("INV");
-  const tokenHashBuffer = hashToken(plainToken);
 
   // Insere convite (unique index bloqueia duplicatas pendentes)
   const { error: insertError } = await supabase
@@ -78,7 +77,7 @@ export async function createInvitationAction(
     .insert({
       company_id: companyId,
       email: normalizedEmail,
-      token_hash: Array.from(tokenHashBuffer),
+      token_hash: hashTokenHex(plainToken),
       short_code: shortCode,
       role_ids: roleIds,
       invited_by: user.id,

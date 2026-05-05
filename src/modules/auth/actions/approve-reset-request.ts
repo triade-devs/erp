@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { generateToken, generateShortCode, hashToken } from "@/lib/tokens";
+import { generateToken, generateShortCode, hashTokenHex } from "@/lib/tokens";
 import { env } from "@/core/config/env";
 import { audit } from "@/modules/audit";
 import type { ActionResult } from "@/lib/errors";
@@ -21,18 +21,14 @@ export async function approveResetRequestAction(
 
   const plainToken = generateToken();
   const shortCode = generateShortCode("RST");
-  const hash = hashToken(plainToken);
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
   const serviceClient = createServiceClient();
-  // Tabela não tipada ainda — cast necessário
-  // deno-lint-ignore no-explicit-any
-  const sc = serviceClient as any;
-  const { error, count } = await sc
+  const { error, count } = await serviceClient
     .from("password_reset_requests")
     .update({
       status: "approved",
-      token_hash: Array.from(hash),
+      token_hash: hashTokenHex(plainToken),
       short_code: shortCode,
       expires_at: expiresAt,
     })

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { hashToken } from "@/lib/tokens";
+import { hashTokenHex } from "@/lib/tokens";
 import { signUpSchema } from "../schemas";
 import { getInvitationByTokenOrCode } from "@/modules/tenancy";
 import { audit } from "@/modules/audit";
@@ -58,10 +58,15 @@ export async function signUpAction(_prev: ActionResult, formData: FormData): Pro
 
   const isShortCode = SHORT_CODE_RE.test(inviteToken);
   const rpcArgs = isShortCode
-    ? { p_token_hash: null, p_short_code: inviteToken.toUpperCase(), p_user_id: newUser.id }
+    ? {
+        // bytea params aparecem como string no tipo gerado; null é válido em runtime
+        p_token_hash: null as unknown as string,
+        p_short_code: inviteToken.toUpperCase(),
+        p_user_id: newUser.id,
+      }
     : {
-        p_token_hash: Array.from(hashToken(inviteToken)),
-        p_short_code: null,
+        p_token_hash: hashTokenHex(inviteToken),
+        p_short_code: null as unknown as string,
         p_user_id: newUser.id,
       };
 
@@ -73,9 +78,11 @@ export async function signUpAction(_prev: ActionResult, formData: FormData): Pro
     return { ok: false, message: rpcError?.message ?? "Erro ao aceitar convite" };
   }
 
+  const rpcResult = rpcData as { company_id: string; company_slug: string };
+
   try {
     await audit({
-      companyId: rpcData.company_id,
+      companyId: rpcResult.company_id,
       action: "member.signed_up_via_invite",
       resourceType: "membership",
       resourceId: newUser.id,
@@ -86,5 +93,5 @@ export async function signUpAction(_prev: ActionResult, formData: FormData): Pro
     // Auditoria não deve bloquear o fluxo
   }
 
-  redirect(`/${rpcData.company_slug}`);
+  redirect(`/${rpcResult.company_slug}`);
 }

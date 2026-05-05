@@ -16,10 +16,7 @@ export async function revokeResetRequestAction(requestId: string): Promise<Actio
   }
 
   const serviceClient = createServiceClient();
-  // Tabela não tipada ainda — cast necessário
-  // deno-lint-ignore no-explicit-any
-  const sc = serviceClient as any;
-  const { error, count } = await sc
+  const { error, count } = await serviceClient
     .from("password_reset_requests")
     .update({ status: "revoked" })
     .eq("id", requestId)

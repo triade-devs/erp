@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { type ActionResult } from "@/lib/errors";
 import { audit } from "@/modules/audit";
-import { hashToken } from "@/lib/tokens";
+import { hashTokenHex } from "@/lib/tokens";
 
 export async function acceptInvitationAction(
   tokenOrShortCode: string,
@@ -40,15 +40,15 @@ export async function acceptInvitationAction(
       };
     }
     rpcResult = (await serviceClient.rpc("accept_invitation", {
-      p_token_hash: null,
+      // bytea params aparecem como string no tipo gerado; null é válido em runtime
+      p_token_hash: null as unknown as string,
       p_short_code: tokenOrShortCode.toUpperCase(),
       p_user_id: user?.id ?? "",
     })) as typeof rpcResult;
   } else {
-    const tokenHash = hashToken(tokenOrShortCode);
     rpcResult = (await serviceClient.rpc("accept_invitation", {
-      p_token_hash: Array.from(tokenHash),
-      p_short_code: null,
+      p_token_hash: hashTokenHex(tokenOrShortCode),
+      p_short_code: null as unknown as string,
       p_user_id: user?.id ?? "",
     })) as typeof rpcResult;
   }

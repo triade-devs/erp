@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionResult } from "@/lib/errors";
-import { generateToken, generateShortCode, hashToken } from "@/lib/tokens";
+import { generateToken, generateShortCode, hashTokenHex } from "@/lib/tokens";
 import { audit } from "@/modules/audit";
 import { env } from "@/core/config/env";
 
@@ -28,12 +28,11 @@ export async function regenerateInvitationAction(
 
   const plainToken = generateToken();
   const shortCode = generateShortCode("INV");
-  const tokenHashBuffer = hashToken(plainToken);
 
   const { error } = await supabase
     .from("company_invitations")
     .update({
-      token_hash: Array.from(tokenHashBuffer),
+      token_hash: hashTokenHex(plainToken),
       short_code: shortCode,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     })
