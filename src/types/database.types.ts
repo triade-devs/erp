@@ -8,8 +8,66 @@ export type Database = {
   };
   public: {
     Tables: {
-      audit_logs: {
+      company_invitations: {
         Row: {
+          id: string;
+          company_id: string;
+          email: string;
+          token_hash: number[];
+          short_code: string;
+          role_ids: string[];
+          invited_by: string;
+          status: string;
+          expires_at: string;
+          accepted_at: string | null;
+          accepted_by: string | null;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          email: string;
+          token_hash: number[];
+          short_code: string;
+          role_ids?: string[];
+          invited_by: string;
+          status?: string;
+          expires_at: string;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          email?: string;
+          token_hash?: number[];
+          short_code?: string;
+          role_ids?: string[];
+          invited_by?: string;
+          status?: string;
+          expires_at?: string;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_logs: {        Row: {
           action: string;
           actor_email: string | null;
           actor_user_id: string | null;
@@ -411,6 +469,228 @@ export type Database = {
           },
         ];
       };
+      medical_patients: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          full_name: string;
+          document: string | null;
+          birth_date: string | null;
+          sex: string | null;
+          phone: string | null;
+          email: string | null;
+          address: string | null;
+          emergency_contact_name: string | null;
+          emergency_contact_phone: string | null;
+          notes: string | null;
+          is_archived: boolean;
+          created_by: string | null;
+          updated_by: string | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          [key: string]: any;
+          id?: string;
+          company_id: string;
+          full_name: string;
+        };
+        Update: {
+          [key: string]: any;
+          id?: string;
+          company_id?: string;
+          full_name?: string;
+        };
+        Relationships: [];
+      };
+      medical_patient_assignments: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          patient_id: string;
+          membership_id: string;
+          relationship: Database["public"]["Enums"]["medical_assignment_relationship"];
+          is_primary: boolean;
+          assigned_by: string | null;
+          assigned_at: string;
+          ended_at: string | null;
+          notes: string | null;
+        };
+        Insert: {
+          [key: string]: any;
+          company_id: string;
+          patient_id: string;
+          membership_id: string;
+        };
+        Update: {
+          [key: string]: any;
+          id?: string;
+          ended_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "medical_patient_assignments_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "medical_patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "medical_patient_assignments_membership_id_fkey";
+            columns: ["membership_id"];
+            isOneToOne: false;
+            referencedRelation: "memberships";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      medical_consultations: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          patient_id: string;
+          consultation_at: string;
+          chief_complaint: string | null;
+          clinical_evolution: string | null;
+          diagnosis_text: string | null;
+          conduct: string | null;
+          notes: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { [key: string]: any; company_id: string; patient_id: string };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [
+          {
+            foreignKeyName: "medical_consultations_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "medical_patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      medical_anamnesis_templates: {
+        Row: { [key: string]: any; id: string; company_id: string; name: string };
+        Insert: { [key: string]: any; company_id: string; name: string };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [];
+      };
+      medical_anamneses: {
+        Row: { [key: string]: any; id: string; company_id: string; patient_id: string };
+        Insert: { [key: string]: any; company_id: string; patient_id: string };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [];
+      };
+      medical_prescriptions: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          patient_id: string;
+          consultation_id: string | null;
+          issued_at: string;
+          general_instructions: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { [key: string]: any; company_id: string; patient_id: string };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [
+          {
+            foreignKeyName: "medical_prescriptions_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "medical_patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      medical_prescription_items: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          prescription_id: string;
+          company_id: string;
+          medication: string;
+          position: number;
+        };
+        Insert: {
+          [key: string]: any;
+          prescription_id: string;
+          company_id: string;
+          medication: string;
+        };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [
+          {
+            foreignKeyName: "medical_prescription_items_prescription_id_fkey";
+            columns: ["prescription_id"];
+            isOneToOne: false;
+            referencedRelation: "medical_prescriptions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      medical_consent_templates: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          title: string;
+          version: number;
+          body: string;
+          is_active: boolean;
+        };
+        Insert: { [key: string]: any; company_id: string; title: string; body: string };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [];
+      };
+      medical_patient_consents: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          patient_id: string;
+          template_id: string | null;
+          template_title: string;
+          template_version: number;
+          accepted_body: string;
+          accepted_by: string | null;
+          accepted_at: string;
+          notes: string | null;
+        };
+        Insert: {
+          [key: string]: any;
+          company_id: string;
+          patient_id: string;
+          template_title: string;
+          template_version: number;
+          accepted_body: string;
+        };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [];
+      };
+      medical_attachment_metadata: {
+        Row: {
+          [key: string]: any;
+          id: string;
+          company_id: string;
+          patient_id: string;
+          file_name: string;
+        };
+        Insert: { [key: string]: any; company_id: string; patient_id: string; file_name: string };
+        Update: { [key: string]: any; id?: string };
+        Relationships: [];
+      };
       membership_roles: {
         Row: {
           assigned_at: string;
@@ -571,7 +851,7 @@ export type Database = {
         Insert: {
           granted_at?: string;
           granted_by?: string | null;
-          user_id?: string;
+          user_id: string;
         };
         Update: {
           granted_at?: string;
@@ -793,24 +1073,36 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_invitation: {
+        Args: {
+          p_token_hash: number[] | null;
+          p_short_code: string | null;
+          p_user_id: string;
+        };
+        Returns: { company_slug: string; company_id: string };
+      };
+      record_short_code_attempt: {
+        Args: { p_ip: string; p_identifier: string };
+        Returns: boolean;
+      };
+      search_users_for_company: {
+        Args: { p_query: string; p_company_id: string };
+        Returns: { user_id: string; full_name: string; email: string }[];
+      };
       bootstrap_company_rbac: {
         Args: { p_company: string };
         Returns: undefined;
       };
       get_user_id_by_email: { Args: { p_email: string }; Returns: string };
+      has_medical_patient_access: {
+        Args: { p_company: string; p_patient: string };
+        Returns: boolean;
+      };
       has_permission: {
         Args: { p_company: string; p_permission: string };
         Returns: boolean;
       };
       is_platform_admin: { Args: never; Returns: boolean };
-      search_users_for_company: {
-        Args: { p_company_id: string; p_query: string };
-        Returns: {
-          email: string;
-          full_name: string;
-          user_id: string;
-        }[];
-      };
       set_member_roles: {
         Args: {
           p_company_id: string;
@@ -824,6 +1116,13 @@ export type Database = {
       user_company_ids: { Args: never; Returns: string[] };
     };
     Enums: {
+      medical_assignment_relationship:
+        | "primary_physician"
+        | "physician"
+        | "nursing"
+        | "assistant"
+        | "therapist"
+        | "other";
       membership_status: "invited" | "active" | "suspended";
       movement_type: "in" | "out" | "adjustment";
     };
@@ -952,6 +1251,14 @@ export const Constants = {
   public: {
     Enums: {
       membership_status: ["invited", "active", "suspended"],
+      medical_assignment_relationship: [
+        "primary_physician",
+        "physician",
+        "nursing",
+        "assistant",
+        "therapist",
+        "other",
+      ],
       movement_type: ["in", "out", "adjustment"],
     },
   },

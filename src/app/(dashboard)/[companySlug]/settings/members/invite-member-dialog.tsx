@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { inviteMemberAction } from "@/modules/tenancy/client";
+import { createInvitationAction } from "@/modules/tenancy/client";
 import type { CompanyRole } from "@/modules/tenancy";
 
 type Props = {
@@ -35,7 +35,7 @@ export function InviteMemberDialog({ companyId, roles }: Props) {
     if (!email) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await inviteMemberAction(companyId, email, selectedRoles);
+      const result = await createInvitationAction(companyId, email, selectedRoles);
       if (result.ok) {
         setEmail("");
         setSelectedRoles([]);

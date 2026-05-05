@@ -1,7 +1,7 @@
 // Ponto de entrada para Client Components — exporta apenas Server Actions ("use server").
 // Não re-exporta queries/services com server-only; use @/modules/tenancy para Server Components.
 export { updateCompanySettingsAction } from "./actions/update-company-settings";
-export { inviteMemberAction } from "./actions/invite-member";
+export { createInvitationAction } from "./actions/create-invitation";
 export { updateMemberStatusAction } from "./actions/update-member-status";
 export { updateMemberRolesAction } from "./actions/update-member-roles";
 export { createRoleAction } from "./actions/create-role";
