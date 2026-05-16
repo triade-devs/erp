@@ -1,13 +1,15 @@
 "use client";
 
+import { useRef } from "react";
 import { CheckCircle2, Printer } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { usePrint } from "../../hooks/use-print";
 import type { FichaAnestesiaData, PreAvaliacaoData } from "../../types";
 import { AcessosSection } from "./acessos-section";
 import { AlertasSection } from "./alertas-section";
 import { DadosPacienteSection } from "./dados-paciente-section";
+import { FichaAnestesiaPrintLayout } from "./ficha-anestesia-print-layout";
 import { LabResultsSection } from "./lab-results-section";
 import { MedicacaoTecnicaSection } from "./medicacao-tecnica-section";
 import { MedicacoesTable } from "./medicacoes-table";
@@ -22,12 +24,25 @@ type Props = {
 };
 
 export function FichaAnestesiaTab({ data, preAvaliacao, onChange }: Props) {
-  const { print } = usePrint("ficha-anestesia");
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Ficha de Anestesia — ${data.paciente || "Paciente"}`,
+    pageStyle: `
+      @page { size: A4 portrait; margin: 10mm 8mm; }
+      body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    `,
+  });
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap justify-end gap-2" data-no-print>
-        <Button type="button" variant="outline" onClick={print}>
+      <div className="hidden">
+        <FichaAnestesiaPrintLayout ref={printRef} data={data} preAvaliacao={preAvaliacao} />
+      </div>
+
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => handlePrint()}>
           <Printer className="h-4 w-4" />
           IMPRIMIR
         </Button>

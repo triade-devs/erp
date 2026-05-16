@@ -62,33 +62,3 @@
   display: grid;
   grid-template-columns: 140px repeat(12, minmax(0, 1fr));
 }
-
-/* ============================================================
-   ANESTESIA — Print styles (ficha-anestesia uses window.print)
-   ============================================================ */
-@media print {
-  body.printing-ficha-anestesia header,
-  body.printing-ficha-anestesia aside,
-  body.printing-ficha-anestesia nav,
-  body.printing-ficha-anestesia [data-no-print] {
-    display: none !important;
-  }
-
-  body.printing-ficha-anestesia main {
-    margin: 0 !important;
-    padding: 8px !important;
-  }
-
-  body.printing-ficha-anestesia [data-form="pre-avaliacao"] {
-    display: none !important;
-  }
-
-  body.printing-ficha-anestesia [role="tablist"] {
-    display: none !important;
-  }
-
-  body.printing-ficha-anestesia * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-}
