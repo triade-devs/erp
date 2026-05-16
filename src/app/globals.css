@@ -64,13 +64,9 @@
 }
 
 /* ============================================================
-   ANESTESIA — Print styles
+   ANESTESIA — Print styles (ficha-anestesia uses window.print)
    ============================================================ */
 @media print {
-  body.printing-pre-avaliacao header,
-  body.printing-pre-avaliacao aside,
-  body.printing-pre-avaliacao nav,
-  body.printing-pre-avaliacao [data-no-print],
   body.printing-ficha-anestesia header,
   body.printing-ficha-anestesia aside,
   body.printing-ficha-anestesia nav,
@@ -78,37 +74,21 @@
     display: none !important;
   }
 
-  body.printing-pre-avaliacao main,
   body.printing-ficha-anestesia main {
     margin: 0 !important;
     padding: 8px !important;
   }
 
-  /* Hide the other tab when printing */
-  body.printing-pre-avaliacao [data-form="ficha-anestesia"],
   body.printing-ficha-anestesia [data-form="pre-avaliacao"] {
     display: none !important;
   }
 
-  /* Hide tabs nav bar and session selector when printing */
-  body.printing-pre-avaliacao [role="tablist"],
   body.printing-ficha-anestesia [role="tablist"] {
     display: none !important;
   }
 
-  /* Pre-avaliacao: reveal the dedicated print layout */
-  body.printing-pre-avaliacao [data-print="pre-avaliacao"] {
-    display: block !important;
-  }
-
-  body.printing-pre-avaliacao *,
   body.printing-ficha-anestesia * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-
-  @page {
-    margin: 12mm 10mm;
-    size: A4 portrait;
   }
 }

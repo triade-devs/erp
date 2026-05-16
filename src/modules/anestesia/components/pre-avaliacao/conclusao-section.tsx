@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { usePrint } from "../../hooks/use-print";
 import type { PreAvaliacaoData } from "../../types";
 import { ASA_OPTIONS } from "../../types";
 import { SectionCard } from "../shared";
@@ -20,11 +19,10 @@ import { SectionCard } from "../shared";
 type Props = {
   data: PreAvaliacaoData;
   onChange: (partial: Partial<PreAvaliacaoData>) => void;
+  onPrint?: () => void;
 };
 
-export function ConclusaoSection({ data, onChange }: Props) {
-  const { print } = usePrint("pre-avaliacao");
-
+export function ConclusaoSection({ data, onChange, onPrint }: Props) {
   return (
     <SectionCard
       title="Conclusão"
@@ -76,7 +74,7 @@ export function ConclusaoSection({ data, onChange }: Props) {
       </div>
 
       <div className="flex justify-end" data-no-print>
-        <Button type="button" variant="outline" onClick={print}>
+        <Button type="button" variant="outline" onClick={onPrint}>
           <Printer className="h-4 w-4" />
           Imprimir Ficha
         </Button>
