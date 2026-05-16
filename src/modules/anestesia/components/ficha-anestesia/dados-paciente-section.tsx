@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FichaAnestesiaData, PreAvaliacaoData } from "../../types";
+import { calcularIMC, formatarIMC } from "../../utils/session";
 import { SectionCard, formInputClassName } from "../shared";
 
 type Props = {
@@ -14,8 +15,12 @@ type Props = {
 };
 
 const stripItems = [
-  { label: "Peso", value: (pre: PreAvaliacaoData, ficha: FichaAnestesiaData) => pre.peso || "—" },
+  { label: "Peso", value: (pre: PreAvaliacaoData, _ficha: FichaAnestesiaData) => pre.peso || "—" },
   { label: "Altura", value: (pre: PreAvaliacaoData) => pre.altura || "—" },
+  {
+    label: "IMC",
+    value: (pre: PreAvaliacaoData) => formatarIMC(calcularIMC(pre.peso, pre.altura)),
+  },
   { label: "PA", value: (pre: PreAvaliacaoData) => pre.pa || "—" },
   {
     label: "FC",

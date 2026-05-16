@@ -3,6 +3,7 @@
 import { forwardRef } from "react";
 import type { PreAvaliacaoData } from "../../types";
 import { DOENCAS_OPTIONS } from "../../types";
+import { calcularIMC, formatarIMC, classificarIMC } from "../../utils/session";
 
 type Props = {
   data: PreAvaliacaoData;
@@ -85,6 +86,8 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
     const today =
       dataAvaliacao ??
       new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    const imc = calcularIMC(data.peso, data.altura);
 
     const doencasCols = [
       DOENCAS_OPTIONS.slice(0, 7),
@@ -214,6 +217,18 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
                     </div>
                   </div>
                 ))}
+                <div className="col-span-2 rounded border border-gray-200 bg-blue-50 p-2">
+                  <p className="text-[8px] font-bold uppercase text-gray-500">IMC</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[14px] font-semibold text-blue-800">
+                      {formatarIMC(imc)}
+                    </span>
+                    {imc !== null && <span className="text-[9px] text-gray-400">kg/m²</span>}
+                  </div>
+                  {imc !== null && (
+                    <p className="text-[9px] text-blue-700">{classificarIMC(imc)}</p>
+                  )}
+                </div>
               </div>
             </SectionCard>
           </div>

@@ -2,7 +2,13 @@
 
 import { forwardRef } from "react";
 import type { FichaAnestesiaData, PreAvaliacaoData } from "../../types";
-import { buildTimeLabels, syncVitalsWithStartHour } from "../../utils/session";
+import {
+  buildTimeLabels,
+  calcularIMC,
+  classificarIMC,
+  formatarIMC,
+  syncVitalsWithStartHour,
+} from "../../utils/session";
 
 type Props = {
   data: FichaAnestesiaData;
@@ -114,6 +120,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
 
     const timeLabels = buildTimeLabels(data.vitalsHoraInicio);
     const syncedVitals = syncVitalsWithStartHour(data.vitalsHoraInicio, data.vitals);
+    const imc = calcularIMC(preAvaliacao.peso, preAvaliacao.altura);
 
     const extraMetrics = [
       { key: "spo2" as const, label: "SpO₂" },
@@ -173,6 +180,30 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                 value={data.anestesiologista}
                 className="col-span-3"
               />
+              {/* Sinais vitais da pré-avaliação */}
+              <PrintField
+                label="Peso"
+                value={preAvaliacao.peso ? `${preAvaliacao.peso} kg` : ""}
+                className="col-span-2"
+              />
+              <PrintField
+                label="Altura"
+                value={preAvaliacao.altura ? `${preAvaliacao.altura} m` : ""}
+                className="col-span-2"
+              />
+              <div className="col-span-3">
+                <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-gray-500">
+                  IMC
+                </p>
+                <div className="flex h-7 w-full items-center gap-1 border border-gray-300 bg-blue-50 px-2">
+                  <span className="text-[11px] font-semibold text-blue-800">
+                    {formatarIMC(imc)}
+                  </span>
+                  {imc !== null && (
+                    <span className="text-[9px] text-gray-500">kg/m² · {classificarIMC(imc)}</span>
+                  )}
+                </div>
+              </div>
             </div>
           </SectionCard>
 

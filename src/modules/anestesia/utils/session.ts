@@ -192,3 +192,41 @@ export function updateSessionFichaAnestesia(
     atualizadaEm: now.toISOString(),
   };
 }
+
+/**
+ * Calcula o IMC (Índice de Massa Corporal) com base no peso (kg) e altura (m).
+ * Retorna null se os valores forem inválidos ou ausentes.
+ */
+export function calcularIMC(peso: string, altura: string): number | null {
+  const pesoNum = parseFloat(peso.replace(",", "."));
+  const alturaNum = parseFloat(altura.replace(",", "."));
+
+  if (!isFinite(pesoNum) || !isFinite(alturaNum) || alturaNum <= 0 || pesoNum <= 0) {
+    return null;
+  }
+
+  // altura pode ser informada em cm (ex: 170) ou em metros (ex: 1.70)
+  const alturaMetros = alturaNum > 3 ? alturaNum / 100 : alturaNum;
+  return pesoNum / (alturaMetros * alturaMetros);
+}
+
+/**
+ * Formata o IMC com 1 casa decimal e classificação da OMS.
+ */
+export function formatarIMC(imc: number | null): string {
+  if (imc === null) return "—";
+  return imc.toFixed(1);
+}
+
+/**
+ * Retorna a classificação do IMC segundo a OMS.
+ */
+export function classificarIMC(imc: number | null): string {
+  if (imc === null) return "";
+  if (imc < 18.5) return "Abaixo do peso";
+  if (imc < 25) return "Peso normal";
+  if (imc < 30) return "Sobrepeso";
+  if (imc < 35) return "Obesidade grau I";
+  if (imc < 40) return "Obesidade grau II";
+  return "Obesidade grau III";
+}
