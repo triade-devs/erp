@@ -1,39 +1,19 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { resolveCompany, listCompanyMembers, listCompanyRoles } from "@/modules/tenancy";
+import { resolveCompany, listCompanyMembers, listCompanyRoles, listPendingInvitations } from "@/modules/tenancy";
+import { listResetRequestsForCompany } from "@/modules/auth";
 import { Can } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InviteMemberDialog } from "./invite-member-dialog";
-import { MemberStatusButton } from "./member-status-button";
+import { MemberCard } from "./member-card";
+import { PendingInvitationsTab } from "./pending-invitations-tab";
+import { ResetRequestsTab } from "./reset-requests-tab";
 
 export const metadata = { title: "Membros — ERP" };
 
 type Props = {
   params: Promise<{ companySlug: string }>;
 };
-
-function statusVariant(status: string): "default" | "secondary" | "destructive" {
-  if (status === "active") return "default";
-  if (status === "invited") return "secondary";
-  return "destructive";
-}
-
-function statusLabel(status: string): string {
-  if (status === "active") return "Ativo";
-  if (status === "invited") return "Convidado";
-  if (status === "suspended") return "Suspenso";
-  return status;
-}
 
 export default async function SettingsMembersPage({ params }: Props) {
   const { companySlug } = await params;
@@ -46,9 +26,11 @@ export default async function SettingsMembersPage({ params }: Props) {
     throw e;
   }
 
-  const [members, roles] = await Promise.all([
+  const [members, roles, invitations, resetRequests] = await Promise.all([
     listCompanyMembers(company.id),
     listCompanyRoles(company.id),
+    listPendingInvitations(company.id),
+    listResetRequestsForCompany(company.id),
   ]);
 
   return (
@@ -60,78 +42,43 @@ export default async function SettingsMembersPage({ params }: Props) {
             {members.length} {members.length === 1 ? "membro" : "membros"} nesta empresa
           </p>
         </div>
-        <Can permission="core:member:invite">
+        <Can permission="core:invitation:create">
           <InviteMemberDialog companyId={company.id} roles={roles} />
         </Can>
       </div>
 
-      {members.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum membro cadastrado.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Entrou em</TableHead>
-              <TableHead className="w-[160px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.map((member) => (
-              <TableRow key={member.membershipId}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{member.fullName}</span>
-                    {member.isOwner && (
-                      <Badge variant="outline" className="text-xs">
-                        owner
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant(member.status)}>{statusLabel(member.status)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {member.roles.map((role) => (
-                      <Badge key={role.id} variant="secondary" className="text-xs">
-                        {role.name}
-                      </Badge>
-                    ))}
-                    {member.roles.length === 0 && (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("pt-BR") : "—"}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Can permission="core:member:manage">
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/${companySlug}/settings/members/${member.membershipId}`}>
-                          Editar roles
-                        </Link>
-                      </Button>
-                      {!member.isOwner && (
-                        <MemberStatusButton
-                          companyId={company.id}
-                          membershipId={member.membershipId}
-                          currentStatus={member.status}
-                        />
-                      )}
-                    </Can>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <Tabs defaultValue="ativos">
+        <TabsList>
+          <TabsTrigger value="ativos">Ativos ({members.length})</TabsTrigger>
+          <TabsTrigger value="convites">Convites ({invitations.length})</TabsTrigger>
+          <TabsTrigger value="resets">Resets ({resetRequests.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ativos">
+          {members.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">Nenhum membro cadastrado.</p>
+          ) : (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {members.map((member) => (
+                <MemberCard
+                  key={member.membershipId}
+                  member={member}
+                  companyId={company.id}
+                  availableRoles={roles}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="convites">
+          <PendingInvitationsTab companyId={company.id} initialInvitations={invitations} />
+        </TabsContent>
+
+        <TabsContent value="resets">
+          <ResetRequestsTab companyId={company.id} initialRequests={resetRequests} />
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }

@@ -15,9 +15,8 @@ import {
 } from "@/components/ui/select";
 import { createCompanyAction } from "../actions/create-company";
 import type { Module } from "../queries/list-modules";
-import type { ActionResult } from "@/lib/errors";
 
-const initial: ActionResult = { ok: false };
+const initial = { ok: false } as const;
 
 type Props = {
   modules: Module[];
@@ -68,7 +67,7 @@ export function CreateCompanyForm({ modules }: Props) {
             name="slug"
             required
             placeholder="acme"
-            pattern="[a-z0-9-]+"
+            pattern="[a-z0-9\-]+"
             title="Apenas letras minúsculas, números e hífens"
             aria-invalid={!!fieldErrors?.slug}
           />

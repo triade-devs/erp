@@ -2,11 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { AppError, type ActionResult } from "@/lib/errors";
-import { env } from "@/core/config/env";
 import { createCompanySchema } from "../schemas/create-company";
 import { audit } from "@/modules/audit";
+import { createInvitationAction } from "./create-invitation";
 
 /**
  * Server Action para criar uma nova empresa (apenas administradores de plataforma).
@@ -22,9 +21,9 @@ import { audit } from "@/modules/audit";
  * 8. Revalida cache
  */
 export async function createCompanyAction(
-  _prev: ActionResult,
+  _prev: ActionResult<{ ownerInvite?: { link: string; shortCode: string } }>,
   formData: FormData,
-): Promise<ActionResult> {
+): Promise<ActionResult<{ ownerInvite?: { link: string; shortCode: string } }>> {
   const supabase = await createClient();
 
   // 1. Verifica permissão de plataforma
@@ -97,55 +96,24 @@ export async function createCompanyAction(
   });
   if (rbacError) return { ok: false, message: rbacError.message };
 
-  // 7. Convida owner por e-mail (opcional)
-  if (ownerEmail && env.SUPABASE_SERVICE_ROLE_KEY) {
-    const adminClient = createAdminClient(
-      env.NEXT_PUBLIC_SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY,
-    );
+  // 7. Convida owner via sistema de convites SMTP-free (opcional)
+  let ownerInvite: { link: string; shortCode: string } | undefined;
+  if (ownerEmail) {
+    // Busca role owner da empresa recém-criada
+    const { data: ownerRole } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("code", "owner")
+      .maybeSingle();
 
-    // Convida o usuário via Supabase Auth Admin
-    const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    const result = await createInvitationAction(
+      companyId,
       ownerEmail,
-      {
-        redirectTo: `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
-      },
+      ownerRole ? [ownerRole.id] : [],
     );
-
-    if (!inviteError && inviteData.user) {
-      const invitedUserId = inviteData.user.id;
-
-      // Cria membership como owner
-      const { data: membership, error: membershipError } = await supabase
-        .from("memberships")
-        .insert({
-          company_id: companyId,
-          user_id: invitedUserId,
-          is_owner: true,
-          status: "invited",
-          invited_by: user.id,
-          invited_at: new Date().toISOString(),
-        })
-        .select("id")
-        .single();
-
-      if (!membershipError && membership) {
-        // Busca role 'owner' da empresa
-        const { data: ownerRole } = await supabase
-          .from("roles")
-          .select("id")
-          .eq("company_id", companyId)
-          .eq("code", "owner")
-          .maybeSingle();
-
-        if (ownerRole) {
-          await supabase.from("membership_roles").insert({
-            membership_id: membership.id,
-            role_id: ownerRole.id,
-            assigned_by: user.id,
-          });
-        }
-      }
+    if (result.ok && result.data) {
+      ownerInvite = result.data;
     }
   }
 
@@ -160,5 +128,9 @@ export async function createCompanyAction(
   });
 
   revalidatePath("/admin/companies");
-  return { ok: true, message: `Empresa "${name}" criada com sucesso` };
+  return {
+    ok: true,
+    message: `Empresa "${name}" criada com sucesso`,
+    data: ownerInvite ? { ownerInvite } : undefined,
+  };
 }
