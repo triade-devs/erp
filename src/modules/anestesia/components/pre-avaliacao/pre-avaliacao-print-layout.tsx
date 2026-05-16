@@ -64,12 +64,9 @@ function PrintTextarea({
   );
 }
 
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
+function SectionHeader({ title }: { title: string }) {
   return (
     <div className="mb-3 flex items-center gap-2 text-blue-800">
-      <span className="material-symbols-outlined text-[18px]" aria-hidden>
-        {icon}
-      </span>
       <h2 className="text-[11px] font-bold uppercase tracking-widest">{title}</h2>
     </div>
   );
@@ -122,7 +119,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
         <div className="grid grid-cols-12 gap-3">
           {/* Identificação — full width */}
           <SectionCard className="col-span-12">
-            <SectionHeader icon="person" title="Identificação do Paciente" />
+            <SectionHeader title="Identificação do Paciente" />
             <div className="grid grid-cols-12 gap-3">
               <PrintField
                 label="Nome do Paciente"
@@ -143,7 +140,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
 
           {/* Doenças — 8 cols */}
           <SectionCard className="col-span-8">
-            <SectionHeader icon="checklist" title="Doenças ou Sintomas" />
+            <SectionHeader title="Doenças ou Sintomas" />
             <div className="grid grid-cols-3 gap-x-4 gap-y-2">
               {doencasCols[0]?.map((item, i) => (
                 <PrintCheckbox
@@ -179,7 +176,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
           {/* Medicamentos + Sinais Vitais — 4 cols */}
           <div className="col-span-4 space-y-3">
             <SectionCard>
-              <SectionHeader icon="medication" title="Medicamentos em Uso" />
+              <SectionHeader title="Medicamentos em Uso" />
               <PrintTextarea label="" value={data.medicamentosEmUso} rows={5} />
               <div className="mt-3 flex items-center gap-4 rounded border border-gray-200 bg-gray-50 p-2">
                 <span className="flex-1 text-[10px] font-bold">Jejum absoluto orientado?</span>
@@ -201,7 +198,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
             </SectionCard>
 
             <SectionCard>
-              <SectionHeader icon="monitor_heart" title="Sinais Vitais" />
+              <SectionHeader title="Sinais Vitais" />
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: "Peso", value: data.peso, unit: "kg" },
@@ -223,7 +220,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
 
           {/* Exames Complementares — full width */}
           <SectionCard className="col-span-12">
-            <SectionHeader icon="science" title="Exames Complementares" />
+            <SectionHeader title="Exames Complementares" />
             <div className="grid grid-cols-6 gap-3">
               {[
                 { label: "Hb", value: data.hb, placeholder: "mg/dL" },
@@ -254,7 +251,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
 
           {/* Exame Físico — 6 cols */}
           <SectionCard className="col-span-6">
-            <SectionHeader icon="stethoscope" title="Exame Físico Específico" />
+            <SectionHeader title="Exame Físico Específico" />
             <div className="space-y-3">
               <div>
                 <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-gray-500">
@@ -308,7 +305,7 @@ export const PreAvaliacaoPrintLayout = forwardRef<HTMLDivElement, Props>(
 
           {/* Conclusão & ASA — 6 cols */}
           <SectionCard className="col-span-6">
-            <SectionHeader icon="assignment_turned_in" title="Conclusão & ASA" />
+            <SectionHeader title="Conclusão & ASA" />
             <div className="space-y-3">
               <PrintTextarea label="Parecer Clínico" value={data.parecerClinico} rows={5} />
               <div className="grid grid-cols-2 gap-3">

@@ -42,12 +42,9 @@ function PrintField({
   );
 }
 
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
+function SectionHeader({ title }: { title: string }) {
   return (
     <div className="mb-2 flex items-center gap-1.5 text-blue-800">
-      <span className="material-symbols-outlined text-[16px]" aria-hidden>
-        {icon}
-      </span>
       <h2 className="text-[10px] font-bold uppercase tracking-widest">{title}</h2>
     </div>
   );
@@ -159,7 +156,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
         <div className="space-y-2">
           {/* Dados do Paciente */}
           <SectionCard>
-            <SectionHeader icon="person" title="Dados do Paciente" />
+            <SectionHeader title="Dados do Paciente" />
             <div className="grid grid-cols-12 gap-2">
               <PrintField label="Paciente" value={data.paciente} className="col-span-5" />
               <PrintField label="Data" value={today} className="col-span-2" />
@@ -183,7 +180,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
           <div className="grid grid-cols-12 gap-2">
             {/* Técnica Anestésica + Estado Admissão */}
             <SectionCard className="col-span-5">
-              <SectionHeader icon="medical_services" title="Técnica e Admissão" />
+              <SectionHeader title="Técnica e Admissão" />
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                 <div>
                   <p className="mb-1 text-[9px] font-bold uppercase text-gray-500">
@@ -229,7 +226,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
 
             {/* Via Aérea + Ventilação */}
             <SectionCard className="col-span-4">
-              <SectionHeader icon="air" title="Via Aérea e Ventilação" />
+              <SectionHeader title="Via Aérea e Ventilação" />
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 <div>
                   <p className="mb-1 text-[9px] font-bold uppercase text-gray-500">Via Aérea</p>
@@ -280,7 +277,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
 
             {/* Horários */}
             <SectionCard className="col-span-3">
-              <SectionHeader icon="schedule" title="Horários" />
+              <SectionHeader title="Horários" />
               <div className="space-y-2">
                 {[
                   { key: "inicioAnestesia", label: "Início Anestesia" },
@@ -312,7 +309,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
 
           {/* Grade de Sinais Vitais */}
           <SectionCard>
-            <SectionHeader icon="monitor_heart" title="Grade de Sinais Vitais" />
+            <SectionHeader title="Grade de Sinais Vitais" />
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[9px]">
                 <thead>
@@ -379,7 +376,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
 
           {/* Acessos Vasculares */}
           <SectionCard>
-            <SectionHeader icon="vaccines" title="Acessos Vasculares" />
+            <SectionHeader title="Acessos Vasculares" />
             <table className="w-full border-collapse text-[10px]">
               <thead>
                 <tr className="bg-gray-50">
@@ -429,7 +426,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
           <div className="grid grid-cols-12 gap-2">
             {/* Medicações / Ocorrências */}
             <SectionCard className="col-span-7">
-              <SectionHeader icon="medication" title="Medicações / Ocorrências" />
+              <SectionHeader title="Medicações / Ocorrências" />
               {data.medicacoes.length > 0 ? (
                 <table className="w-full border-collapse text-[10px]">
                   <thead>
@@ -481,7 +478,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
             {/* Alertas + Exames Laboratoriais */}
             <div className="col-span-5 space-y-2">
               <SectionCard>
-                <SectionHeader icon="warning" title="Alertas e Monitoração" />
+                <SectionHeader title="Alertas e Monitoração" />
                 <div className="space-y-1.5">
                   <div>
                     <p className="text-[9px] font-bold uppercase text-gray-500">Alergias</p>
@@ -502,7 +499,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
 
               {data.labResults.length > 0 ? (
                 <SectionCard>
-                  <SectionHeader icon="science" title="Exames Laboratoriais" />
+                  <SectionHeader title="Exames Laboratoriais" />
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-[9px]">
                       <thead>
