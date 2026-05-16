@@ -57,3 +57,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+.vitals-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(12, minmax(0, 1fr));
+}
+
+/* ============================================================
+   ANESTESIA — Print styles
+   ============================================================ */
+@media print {
+  body.printing-pre-avaliacao header,
+  body.printing-pre-avaliacao aside,
+  body.printing-pre-avaliacao [data-no-print],
+  body.printing-ficha-anestesia header,
+  body.printing-ficha-anestesia aside,
+  body.printing-ficha-anestesia [data-no-print] {
+    display: none !important;
+  }
+
+  body.printing-pre-avaliacao main,
+  body.printing-ficha-anestesia main {
+    margin: 0 !important;
+    padding: 16px !important;
+  }
+
+  body.printing-pre-avaliacao [data-form="ficha-anestesia"],
+  body.printing-ficha-anestesia [data-form="pre-avaliacao"] {
+    display: none !important;
+  }
+
+  body.printing-pre-avaliacao *,
+  body.printing-ficha-anestesia * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
