@@ -230,3 +230,26 @@ export function classificarIMC(imc: number | null): string {
   if (imc < 40) return "Obesidade grau II";
   return "Obesidade grau III";
 }
+
+/**
+ * Calcula o Peso Predito (Peso Corporal Ideal) pela fórmula de Devine.
+ * Retorna null se altura ou sexo forem inválidos/ausentes.
+ */
+export function calcularPesoPredito(altura: string, sexo: string): number | null {
+  if (!sexo) return null;
+
+  const alturaNum = parseFloat(altura.replace(",", "."));
+  if (!isFinite(alturaNum) || alturaNum <= 0) return null;
+
+  const alturaCm = alturaNum > 3 ? alturaNum : alturaNum * 100;
+  const base = sexo === "M" ? 50 : 45.5;
+  return base + 0.91 * (alturaCm - 152.4);
+}
+
+/**
+ * Formata o Peso Predito com 1 casa decimal. Retorna "—" se null.
+ */
+export function formatarPesoPredito(pp: number | null): string {
+  if (pp === null) return "—";
+  return pp.toFixed(1);
+}

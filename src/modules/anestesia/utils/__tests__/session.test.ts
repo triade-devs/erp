@@ -9,6 +9,8 @@ import {
   updateSessionPreAvaliacao,
   getVitalsChartY,
   buildVitalsSeriesPath,
+  calcularPesoPredito,
+  formatarPesoPredito,
 } from "../session";
 import { defaultPreAvaliacao, defaultFichaAnestesia } from "../../types/defaults";
 
@@ -160,5 +162,59 @@ describe("session helpers", () => {
     expect(path.startsWith("M0,")).toBe(true);
     expect(path).toContain(" M30,");
     expect(path).not.toContain("L30,");
+  });
+});
+
+describe("calcularPesoPredito", () => {
+  it("masculino com altura em metros retorna valor correto", () => {
+    // PP = 50 + 0.91 × (170 - 152.4) = 50 + 16.016 = 66.016
+    const result = calcularPesoPredito("1.70", "M");
+    expect(result).toBeCloseTo(66.016, 2);
+  });
+
+  it("feminino com altura em centímetros retorna valor correto", () => {
+    // PP = 45.5 + 0.91 × (165 - 152.4) = 45.5 + 11.466 = 56.966
+    const result = calcularPesoPredito("165", "F");
+    expect(result).toBeCloseTo(56.966, 2);
+  });
+
+  it("masculino com altura em centímetros retorna valor correto", () => {
+    // PP = 50 + 0.91 × (180 - 152.4) = 50 + 25.116 = 75.116
+    const result = calcularPesoPredito("180", "M");
+    expect(result).toBeCloseTo(75.116, 2);
+  });
+
+  it("retorna null quando sexo está vazio", () => {
+    expect(calcularPesoPredito("1.70", "")).toBeNull();
+  });
+
+  it("retorna null quando altura é texto inválido", () => {
+    expect(calcularPesoPredito("abc", "M")).toBeNull();
+  });
+
+  it("retorna null quando altura é zero", () => {
+    expect(calcularPesoPredito("0", "M")).toBeNull();
+  });
+
+  it("retorna null quando altura é negativa", () => {
+    expect(calcularPesoPredito("-1.70", "M")).toBeNull();
+  });
+
+  it("retorna null quando altura está vazia", () => {
+    expect(calcularPesoPredito("", "F")).toBeNull();
+  });
+});
+
+describe("formatarPesoPredito", () => {
+  it("retorna travessão quando valor é null", () => {
+    expect(formatarPesoPredito(null)).toBe("—");
+  });
+
+  it("formata com 1 casa decimal", () => {
+    expect(formatarPesoPredito(63.2)).toBe("63.2");
+  });
+
+  it("arredonda corretamente", () => {
+    expect(formatarPesoPredito(66.016)).toBe("66.0");
   });
 });
