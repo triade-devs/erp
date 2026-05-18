@@ -203,6 +203,10 @@ describe("calcularPesoPredito", () => {
   it("retorna null quando altura está vazia", () => {
     expect(calcularPesoPredito("", "F")).toBeNull();
   });
+
+  it("retorna null quando sexo tem valor inesperado", () => {
+    expect(calcularPesoPredito("1.70", "X")).toBeNull();
+  });
 });
 
 describe("formatarPesoPredito", () => {

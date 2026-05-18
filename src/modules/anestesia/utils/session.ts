@@ -236,7 +236,7 @@ export function classificarIMC(imc: number | null): string {
  * Retorna null se altura ou sexo forem inválidos/ausentes.
  */
 export function calcularPesoPredito(altura: string, sexo: string): number | null {
-  if (!sexo) return null;
+  if (sexo !== "M" && sexo !== "F") return null;
 
   const alturaNum = parseFloat(altura.replace(",", "."));
   if (!isFinite(alturaNum) || alturaNum <= 0) return null;
