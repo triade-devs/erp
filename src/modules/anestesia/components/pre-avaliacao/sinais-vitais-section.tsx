@@ -2,7 +2,13 @@
 
 import { Input } from "@/components/ui/input";
 import type { PreAvaliacaoData } from "../../types";
-import { calcularIMC, classificarIMC, formatarIMC } from "../../utils/session";
+import {
+  calcularIMC,
+  calcularPesoPredito,
+  classificarIMC,
+  formatarIMC,
+  formatarPesoPredito,
+} from "../../utils/session";
 import { SectionCard, formInputClassName } from "../shared";
 
 type Props = {
@@ -22,12 +28,15 @@ export function SinaisVitaisSection({ data, onChange }: Props) {
   const imcFormatado = formatarIMC(imc);
   const imcClassificacao = classificarIMC(imc);
 
+  const pesoPredito = calcularPesoPredito(data.altura, data.sexo);
+  const pesoPreditoFormatado = formatarPesoPredito(pesoPredito);
+
   return (
     <SectionCard
       title="Sinais vitais"
       description="Valores iniciais para referência clínica e impressão."
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {vitalsFields.map((field) => (
           <div key={field.key} className="rounded-xl border bg-muted/20 p-4">
             <p className="text-sm font-medium text-muted-foreground">{field.label}</p>
@@ -54,6 +63,15 @@ export function SinaisVitaisSection({ data, onChange }: Props) {
           {imcClassificacao && (
             <p className="mt-1 text-xs text-muted-foreground">{imcClassificacao}</p>
           )}
+        </div>
+
+        {/* Peso Predito calculado (fórmula de Devine) */}
+        <div className="rounded-xl border bg-muted/20 p-4">
+          <p className="text-sm font-medium text-muted-foreground">Peso Predito</p>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-xl font-semibold tabular-nums">{pesoPreditoFormatado}</span>
+            {pesoPredito !== null && <span className="text-xs text-muted-foreground">kg</span>}
+          </div>
         </div>
       </div>
     </SectionCard>
