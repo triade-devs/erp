@@ -327,20 +327,22 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
 
         {/* Right: Intraoperatório */}
         <div className="space-y-2">
-          <SectionCard>
-            <SectionLabel title="Intraoperatório" />
-            <div className="space-y-0.5">
-              {estadoAtivo && <Field label="Admissão" value={estadoAtivo} />}
-              {hasHorarios && (
-                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-                  <Field label="Início anest." value={fichaAnestesia.inicioAnestesia} />
-                  <Field label="Início cir." value={fichaAnestesia.inicioCirurgia} />
-                  <Field label="Término cir." value={fichaAnestesia.terminoCirurgia} />
-                  <Field label="Término anest." value={fichaAnestesia.terminoAnestesia} />
-                </div>
-              )}
-            </div>
-          </SectionCard>
+          {(estadoAtivo || hasHorarios) && (
+            <SectionCard>
+              <SectionLabel title="Intraoperatório" />
+              <div className="space-y-0.5">
+                {estadoAtivo && <Field label="Admissão" value={estadoAtivo} />}
+                {hasHorarios && (
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                    <Field label="Início anest." value={fichaAnestesia.inicioAnestesia} />
+                    <Field label="Início cir." value={fichaAnestesia.inicioCirurgia} />
+                    <Field label="Término cir." value={fichaAnestesia.terminoCirurgia} />
+                    <Field label="Término anest." value={fichaAnestesia.terminoAnestesia} />
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          )}
 
           {(tecnicaAtiva.length > 0 || ventilacaoAtiva.length > 0 || viaAereaAtiva.length > 0) && (
             <SectionCard>
