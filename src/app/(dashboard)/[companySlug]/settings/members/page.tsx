@@ -1,5 +1,10 @@
 import { notFound } from "next/navigation";
-import { resolveCompany, listCompanyMembers, listCompanyRoles, listPendingInvitations } from "@/modules/tenancy";
+import {
+  resolveCompany,
+  listCompanyMembers,
+  listCompanyRoles,
+  listPendingInvitations,
+} from "@/modules/tenancy";
 import { listResetRequestsForCompany } from "@/modules/auth";
 import { Can } from "@/modules/authz";
 import { AppError } from "@/lib/errors";

@@ -16,14 +16,16 @@ export async function listPendingInvitations(companyId: string): Promise<Pending
 
   const { data, error } = await supabase
     .from("company_invitations")
-    .select(`
+    .select(
+      `
       id,
       email,
       short_code,
       expires_at,
       created_at,
       invited_by
-    `)
+    `,
+    )
     .eq("company_id", companyId)
     .eq("status", "pending")
     .gt("expires_at", new Date().toISOString())

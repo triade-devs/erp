@@ -466,6 +466,7 @@ Após aprovação deste spec:
 2. Invocar skill `superpowers:writing-plans` para gerar plano de implementação detalhado em `docs/superpowers/plans/2026-05-04-smtp-free-auth-flows-plan.md`.
 3. Executar via `superpowers:executing-plans` ou `superpowers:subagent-driven-development`.
 4. Abrir PR conforme seção 19 ao concluir.
+
 # SMTP-Free Auth Flows — Design Spec
 
 **Data**: 2026-05-04

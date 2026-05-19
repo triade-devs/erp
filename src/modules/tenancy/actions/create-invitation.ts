@@ -72,17 +72,15 @@ export async function createInvitationAction(
   const shortCode = generateShortCode("INV");
 
   // Insere convite (unique index bloqueia duplicatas pendentes)
-  const { error: insertError } = await supabase
-    .from("company_invitations")
-    .insert({
-      company_id: companyId,
-      email: normalizedEmail,
-      token_hash: hashTokenHex(plainToken),
-      short_code: shortCode,
-      role_ids: roleIds,
-      invited_by: user.id,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    });
+  const { error: insertError } = await supabase.from("company_invitations").insert({
+    company_id: companyId,
+    email: normalizedEmail,
+    token_hash: hashTokenHex(plainToken),
+    short_code: shortCode,
+    role_ids: roleIds,
+    invited_by: user.id,
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  });
 
   if (insertError) {
     if (insertError.message.includes("ux_company_invitations_pending_unique")) {
