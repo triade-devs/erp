@@ -1,6 +1,6 @@
 import type { FichaAnestesiaData, LabResult, MedicacaoItem, PreAvaliacaoData } from "./index";
 import { DOENCA_KEYS } from "./constants";
-import { buildVitalsSlots, normalizeAsaStatus } from "../utils/session";
+import { buildVitalsSlots, normalizeAsaStatus } from "../services/session";
 
 function emptyStringArray(length: number): string[] {
   return Array.from({ length }, () => "");

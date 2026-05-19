@@ -8,7 +8,7 @@ import {
   classificarIMC,
   formatarIMC,
   formatarPesoPredito,
-} from "../../utils/session";
+} from "../../services/session";
 import { SectionCard, formInputClassName } from "../shared";
 
 type Props = {

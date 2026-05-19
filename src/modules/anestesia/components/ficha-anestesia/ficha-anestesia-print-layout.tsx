@@ -8,7 +8,7 @@ import {
   classificarIMC,
   formatarIMC,
   syncVitalsWithStartHour,
-} from "../../utils/session";
+} from "../../services/session";
 
 type Props = {
   data: FichaAnestesiaData;

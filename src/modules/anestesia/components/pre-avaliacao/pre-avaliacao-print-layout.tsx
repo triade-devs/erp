@@ -3,7 +3,7 @@
 import { forwardRef } from "react";
 import type { PreAvaliacaoData } from "../../types";
 import { DOENCAS_OPTIONS } from "../../types";
-import { calcularIMC, formatarIMC, classificarIMC } from "../../utils/session";
+import { calcularIMC, formatarIMC, classificarIMC } from "../../services/session";
 
 type Props = {
   data: PreAvaliacaoData;

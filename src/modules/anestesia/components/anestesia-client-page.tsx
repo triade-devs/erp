@@ -2,7 +2,7 @@
 
 import { AnestesiaTabs } from "./anestesia-tabs";
 import { SessionSelector } from "./session-selector";
-import { useAnestesiaSession } from "../hooks/use-anestesia-session";
+import { useAnestesiaSession } from "./hooks/use-anestesia-session";
 
 export function AnestesiaClientPage() {
   const {

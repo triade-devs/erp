@@ -2,20 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { AnestesiaSession, FichaAnestesiaData, PreAvaliacaoData } from "../types";
+import type { AnestesiaSession, FichaAnestesiaData, PreAvaliacaoData } from "../../types";
 import {
   createAnestesiaSession,
   insertSessionWithLimit,
   updateSessionFichaAnestesia,
   updateSessionPreAvaliacao,
-} from "../utils/session";
+} from "../../services/session";
 import {
   ACTIVE_SESSION_KEY,
   hasSessionConflict,
   LS_KEY,
   parseStoredSessions,
   persistSessions,
-} from "../utils/storage";
+} from "../../services/storage";
 
 const MAX_SESSIONS = 50;
 

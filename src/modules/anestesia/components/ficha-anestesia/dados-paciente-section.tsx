@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FichaAnestesiaData, PreAvaliacaoData } from "../../types";
-import { calcularIMC, formatarIMC } from "../../utils/session";
+import { calcularIMC, formatarIMC } from "../../services/session";
 import { SectionCard, formInputClassName } from "../shared";
 
 type Props = {

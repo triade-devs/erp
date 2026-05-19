@@ -11,7 +11,7 @@ import {
   getVitalsChartY,
   normalizeTimelineValues,
   syncVitalsWithStartHour,
-} from "../../utils/session";
+} from "../../services/session";
 import { SectionCard, compactInputClassName, formInputClassName } from "../shared";
 
 type Props = {
