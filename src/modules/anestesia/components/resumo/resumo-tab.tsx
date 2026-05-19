@@ -24,23 +24,19 @@ export function ResumoTab({ preAvaliacao, fichaAnestesia }: Props) {
   });
 
   return (
-    <>
-      <div className="flex flex-col items-center gap-4 py-10 text-center text-muted-foreground">
-        <p className="max-w-sm text-sm">
-          Resumo consolidado para o centro cirúrgico. Inclui dados críticos das duas fichas em uma
-          página A4.
-        </p>
+    <div className="space-y-4">
+      <div className="flex justify-end">
         <Button onClick={handlePrint}>Imprimir Resumo</Button>
       </div>
 
-      {/* Print layout — hidden on screen, used by react-to-print */}
-      <div className="hidden">
+      {/* Preview — também usado pelo react-to-print */}
+      <div className="overflow-auto rounded-lg border bg-white p-6 shadow-sm">
         <ResumoPrintLayout
           ref={printRef}
           preAvaliacao={preAvaliacao}
           fichaAnestesia={fichaAnestesia}
         />
       </div>
-    </>
+    </div>
   );
 }
