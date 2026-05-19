@@ -30,10 +30,10 @@ export function ResumoTab({ preAvaliacao, fichaAnestesia }: Props) {
           Resumo consolidado para o centro cirúrgico. Inclui dados críticos das duas fichas em uma
           página A4.
         </p>
-        <Button onClick={() => handlePrint()}>Imprimir Resumo</Button>
+        <Button onClick={handlePrint}>Imprimir Resumo</Button>
       </div>
 
-      {/* Layout oculto na tela — usado pelo react-to-print */}
+      {/* Print layout — hidden on screen, used by react-to-print */}
       <div className="hidden">
         <ResumoPrintLayout
           ref={printRef}

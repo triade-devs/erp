@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnestesiaSession, FichaAnestesiaData, PreAvaliacaoData } from "../types";
 import { FichaAnestesiaTab } from "./ficha-anestesia/ficha-anestesia-tab";
 import { PreAvaliacaoTab } from "./pre-avaliacao/pre-avaliacao-tab";
+import { ResumoTab } from "./resumo/resumo-tab";
 
 type Props = {
   activeSession: AnestesiaSession | null;
@@ -29,6 +30,7 @@ export function AnestesiaTabs({
       <TabsList>
         <TabsTrigger value="pre-avaliacao">Pré-Avaliação</TabsTrigger>
         <TabsTrigger value="ficha-anestesia">Ficha de Anestesia</TabsTrigger>
+        <TabsTrigger value="resumo">Resumo</TabsTrigger>
       </TabsList>
 
       <TabsContent value="pre-avaliacao" data-form="pre-avaliacao">
@@ -40,6 +42,13 @@ export function AnestesiaTabs({
           data={activeSession.fichaAnestesia}
           preAvaliacao={activeSession.preAvaliacao}
           onChange={onUpdateFichaAnestesia}
+        />
+      </TabsContent>
+
+      <TabsContent value="resumo">
+        <ResumoTab
+          preAvaliacao={activeSession.preAvaliacao}
+          fichaAnestesia={activeSession.fichaAnestesia}
         />
       </TabsContent>
     </Tabs>
