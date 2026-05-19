@@ -20,21 +20,26 @@ import type { ActionResult } from "@/lib/errors";
 
 const initial: ActionResult = { ok: false };
 
-export function ConsentTemplateForm() {
-  const [state, formAction] = useActionState(createConsentTemplateAction, initial);
+type ConsentTemplateFormProps = {
+  template?: MedicalConsentTemplate;
+  action?: (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
+};
+
+export function ConsentTemplateForm({ template, action }: ConsentTemplateFormProps) {
+  const [state, formAction] = useActionState(action ?? createConsentTemplateAction, initial);
   useToast(state);
 
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="title">Título</Label>
-        <Input id="title" name="title" required />
+        <Input id="title" name="title" defaultValue={template?.title ?? ""} required />
       </div>
       <div className="space-y-2">
         <Label htmlFor="body">Texto do termo</Label>
-        <Textarea id="body" name="body" rows={10} required />
+        <Textarea id="body" name="body" rows={10} defaultValue={template?.body ?? ""} required />
       </div>
-      <SubmitButton label="Salvar modelo" />
+      <SubmitButton label={template ? "Salvar alterações" : "Salvar modelo"} />
     </form>
   );
 }

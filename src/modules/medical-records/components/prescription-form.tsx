@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createPrescriptionAction } from "../actions/create-prescription";
+import { mapPrescriptionItemsToFormItems } from "../services/clinical-service";
+import type { MedicalPrescriptionWithItems } from "../types";
 import type { ActionResult } from "@/lib/errors";
 
 const initial: ActionResult = { ok: false };
@@ -22,13 +24,21 @@ type Item = {
   instructions?: string;
 };
 
-export function PrescriptionForm({ patientId }: { patientId: string }) {
-  const [state, formAction] = useActionState(createPrescriptionAction, initial);
-  const [items, setItems] = useState<Item[]>([{ medication: "" }]);
+type Props = {
+  patientId: string;
+  prescription?: MedicalPrescriptionWithItems;
+  action?: (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
+};
+
+export function PrescriptionForm({ patientId, prescription, action }: Props) {
+  const [state, formAction] = useActionState(action ?? createPrescriptionAction, initial);
+  const [items, setItems] = useState<Item[]>(() =>
+    mapPrescriptionItemsToFormItems(prescription?.medical_prescription_items),
+  );
   const jsonItems = useMemo(() => JSON.stringify(items), [items]);
 
   useEffect(() => {
-    if (state.ok) toast.success(state.message ?? "Prescrição criada");
+    if (state.ok) toast.success(state.message ?? "Prescrição salva com sucesso");
     if (!state.ok && state.message) toast.error(state.message);
   }, [state]);
 
@@ -93,9 +103,14 @@ export function PrescriptionForm({ patientId }: { patientId: string }) {
 
       <div className="space-y-2">
         <Label htmlFor="generalInstructions">Orientações gerais</Label>
-        <Textarea id="generalInstructions" name="generalInstructions" rows={4} />
+        <Textarea
+          id="generalInstructions"
+          name="generalInstructions"
+          rows={4}
+          defaultValue={prescription?.general_instructions ?? ""}
+        />
       </div>
-      <SubmitButton />
+      <SubmitButton isUpdate={Boolean(prescription)} />
     </form>
   );
 }
@@ -128,11 +143,11 @@ function updateItem(
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ isUpdate }: { isUpdate: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Salvando..." : "Criar prescrição"}
+      {pending ? "Salvando..." : isUpdate ? "Salvar alterações" : "Criar prescrição"}
     </Button>
   );
 }

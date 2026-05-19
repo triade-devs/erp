@@ -24,24 +24,28 @@ export function PatientRecordNav({ companySlug, patientId, patientName, document
       href: basePath,
       icon: UserRound,
       permission: "medical:patient:read_assigned",
+      isActive: pathname === basePath,
     },
     {
       label: "Consulta",
       href: `${basePath}/consultations/new`,
       icon: ClipboardPlus,
       permission: "medical:consultation:write",
+      isActive: pathname.startsWith(`${basePath}/consultations`),
     },
     {
       label: "Prescrição",
       href: `${basePath}/prescriptions/new`,
       icon: FileText,
       permission: "medical:prescription:write",
+      isActive: pathname.startsWith(`${basePath}/prescriptions`),
     },
     {
       label: "Consentimentos",
       href: `${basePath}/consents/new`,
       icon: FileCheck2,
       permission: "medical:consent:accept",
+      isActive: pathname.startsWith(`${basePath}/consents`),
     },
   ];
 
@@ -66,7 +70,6 @@ export function PatientRecordNav({ companySlug, patientId, patientName, document
       <nav className="flex flex-wrap gap-2 border-b">
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
 
           return (
             <Can key={item.href} permission={item.permission}>
@@ -74,7 +77,7 @@ export function PatientRecordNav({ companySlug, patientId, patientName, document
                 href={item.href}
                 className={cn(
                   "-mb-px inline-flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-medium",
-                  isActive
+                  item.isActive
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground",
                 )}

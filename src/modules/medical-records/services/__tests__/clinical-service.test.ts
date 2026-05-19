@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildConsentVersion,
   compactPrescriptionItems,
+  extractAnamnesisSummary,
+  mapPrescriptionItemsToFormItems,
   normalizeDocument,
 } from "../clinical-service";
 
@@ -23,5 +25,40 @@ describe("clinical-service", () => {
 
     expect(items[0]).toMatchObject({ medication: "Dipirona", position: 0 });
     expect(items[1]).toMatchObject({ medication: "Ibuprofeno", position: 1 });
+  });
+
+  it("extrai o resumo da primeira anamnese vinculada", () => {
+    expect(extractAnamnesisSummary([{ summary: "Resumo clínico" }, { summary: "Outro" }])).toBe(
+      "Resumo clínico",
+    );
+    expect(extractAnamnesisSummary([{ summary: null }])).toBe("");
+  });
+
+  it("mapeia itens existentes para o formulário e garante item vazio quando necessário", () => {
+    expect(
+      mapPrescriptionItemsToFormItems([
+        {
+          medication: "Amoxicilina",
+          dosage: "500mg",
+          route: "VO",
+          frequency: "8/8h",
+          duration: "7 dias",
+          quantity: "21",
+          instructions: "Após refeições",
+        },
+      ]),
+    ).toEqual([
+      {
+        medication: "Amoxicilina",
+        dosage: "500mg",
+        route: "VO",
+        frequency: "8/8h",
+        duration: "7 dias",
+        quantity: "21",
+        instructions: "Após refeições",
+      },
+    ]);
+
+    expect(mapPrescriptionItemsToFormItems([])).toEqual([{ medication: "" }]);
   });
 });

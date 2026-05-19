@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FilePlus2, UsersRound } from "lucide-react";
+import { FileCheck2, FilePlus2, UsersRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Can } from "@/modules/authz/client";
 
@@ -20,6 +20,12 @@ export function MedicalModuleNav({ companySlug }: { companySlug: string }) {
       href: `/${companySlug}/medical/new`,
       icon: FilePlus2,
       permission: "medical:patient:create",
+    },
+    {
+      label: "Modelos de consentimento",
+      href: `/${companySlug}/medical/consent-templates`,
+      icon: FileCheck2,
+      permission: "medical:consent:manage",
     },
   ];
 

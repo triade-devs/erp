@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getPatientRecord,
@@ -60,36 +61,48 @@ export default async function PatientPage({ params }: Props) {
       <div className="grid gap-6 xl:grid-cols-3">
         <TimelineCard title="Consultas">
           {timeline.consultations.map((item) => (
-            <div key={item.id} className="border-b py-3 last:border-0">
+            <Link
+              key={item.id}
+              href={`/${companySlug}/medical/${patient.id}/consultations/${item.id}`}
+              className="block border-b py-3 transition-colors last:border-0 hover:text-primary"
+            >
               <p className="font-medium">
                 {new Date(item.consultation_at).toLocaleString("pt-BR")}
               </p>
               <p className="text-sm text-muted-foreground">
                 {item.chief_complaint ?? "Sem queixa registrada"}
               </p>
-            </div>
+            </Link>
           ))}
         </TimelineCard>
         <TimelineCard title="Prescrições">
           {timeline.prescriptions.map((item) => (
-            <div key={item.id} className="border-b py-3 last:border-0">
+            <Link
+              key={item.id}
+              href={`/${companySlug}/medical/${patient.id}/prescriptions/${item.id}`}
+              className="block border-b py-3 transition-colors last:border-0 hover:text-primary"
+            >
               <p className="font-medium">{new Date(item.issued_at).toLocaleDateString("pt-BR")}</p>
               <p className="text-sm text-muted-foreground">
                 {(item.medical_prescription_items ?? []).length} item(ns)
               </p>
-            </div>
+            </Link>
           ))}
         </TimelineCard>
         <TimelineCard title="Consentimentos">
           {timeline.consents.map((item) => (
-            <div key={item.id} className="border-b py-3 last:border-0">
+            <Link
+              key={item.id}
+              href={`/${companySlug}/medical/${patient.id}/consents/${item.id}`}
+              className="block border-b py-3 transition-colors last:border-0 hover:text-primary"
+            >
               <p className="font-medium">
                 {item.template_title} v{item.template_version}
               </p>
               <p className="text-sm text-muted-foreground">
                 {new Date(item.accepted_at).toLocaleString("pt-BR")}
               </p>
-            </div>
+            </Link>
           ))}
         </TimelineCard>
       </div>
