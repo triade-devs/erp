@@ -11,6 +11,8 @@ import {
   Building2,
   Activity,
   BookOpen,
+  Puzzle,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "building-2": Building2,
   activity: Activity,
   "book-open": BookOpen,
+  puzzle: Puzzle,
+  shield: Shield,
 };
 
 type ResolvedItem = MenuItem & { resolvedHref: string };
@@ -64,10 +68,10 @@ export function SidebarNav({ items, groupLabel }: Props) {
               key={item.href}
               href={item.resolvedHref}
               className={cn(
-                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-md border-l-2 px-3 py-2 text-sm transition-colors",
                 isActive
-                  ? "bg-accent font-medium text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+                  ? "bg-primary/8 border-primary font-medium text-primary"
+                  : "border-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               )}
             >
               {Icon && <Icon className="h-4 w-4 shrink-0" />}

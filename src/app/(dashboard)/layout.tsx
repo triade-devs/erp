@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Package } from "lucide-react";
 import { signOutAction } from "@/modules/auth";
 import { Button } from "@/components/ui/button";
 import { MODULES_MENU, ADMIN_MENU } from "@/core/navigation/menu";
@@ -48,34 +49,52 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const adminItems = ADMIN_MENU.map((item) => ({ ...item, resolvedHref: item.href }));
 
+  const userInitials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
+
   return (
     <div className="grid min-h-screen grid-cols-[240px_1fr]">
       {/* Sidebar */}
-      <aside className="border-r bg-muted/30 p-4">
-        <div className="mb-8">
-          <h2 className="text-lg font-bold tracking-tight">ERP</h2>
-          <p className="text-xs text-muted-foreground">{user.email}</p>
+      <aside className="flex h-screen flex-col border-r bg-card">
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 border-b px-4 py-4">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
+            <Package className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <span className="text-sm font-semibold tracking-tight">ERP Modular</span>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <SidebarNav items={filteredModules} />
-          {isPlatformAdmin && <SidebarNav items={adminItems} groupLabel="Plataforma" />}
+        {/* Nav — scrollável */}
+        <div className="flex-1 overflow-y-auto px-2 py-3">
+          <div className="flex flex-col gap-4">
+            <SidebarNav items={filteredModules} />
+            {isPlatformAdmin && <SidebarNav items={adminItems} groupLabel="Plataforma" />}
+          </div>
+        </div>
+
+        {/* User footer */}
+        <div className="border-t px-3 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+              {userInitials}
+            </div>
+            <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{user.email}</p>
+            <form action={signOutAction}>
+              <Button type="submit" variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                Sair
+              </Button>
+            </form>
+          </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex flex-col">
+      <main className="flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex items-center justify-between border-b px-8 py-3">
+        <header className="flex items-center border-b bg-card px-8 py-3">
           <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
-          <form action={signOutAction}>
-            <Button type="submit" variant="ghost" size="sm">
-              Sair
-            </Button>
-          </form>
         </header>
 
-        <div className="flex-1 p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto p-8">{children}</div>
       </main>
     </div>
   );
