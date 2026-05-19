@@ -1,7 +1,7 @@
 "use client";
 
+import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,15 +31,27 @@ type Props = {
 export function ProductForm({ product, updateAction }: Props) {
   const action = updateAction ?? createProductAction;
   const [state, formAction] = useActionState(action, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
-    if (state.ok) toast.success(state.message ?? "Salvo com sucesso");
-    if (!state.ok && state.message) toast.error(state.message);
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
+    if (state.ok) {
+      formRef.current?.reset();
+      toast.success(state.message ?? "Salvo com sucesso.");
+      return;
+    }
+
+    if (state.message) toast.error(state.message);
   }, [state]);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <Field
         label="SKU"
         name="sku"

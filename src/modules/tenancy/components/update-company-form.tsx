@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,16 +29,28 @@ type Props = {
 export function UpdateCompanyForm({ company }: Props) {
   const router = useRouter();
   const [state, formAction] = useActionState(updateCompanyAction, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
-    if (state.ok) {
-      router.push("/admin/companies");
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
     }
+
+    if (state.ok) {
+      formRef.current?.reset();
+      toast.success(state.message ?? "Salvo com sucesso.");
+      router.push("/admin/companies");
+      return;
+    }
+
+    if (state.message) toast.error(state.message);
   }, [state, router]);
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form ref={formRef} action={formAction} className="space-y-6">
       {/* ID oculto */}
       <input type="hidden" name="id" value={company.id} />
 
