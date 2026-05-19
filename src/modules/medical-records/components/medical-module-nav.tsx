@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FilePlus2, UsersRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Can } from "@/modules/authz";
+import { Can } from "@/modules/authz/client";
 
 export function MedicalModuleNav({ companySlug }: { companySlug: string }) {
   const pathname = usePathname();

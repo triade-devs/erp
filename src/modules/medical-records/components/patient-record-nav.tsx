@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, ClipboardPlus, FileCheck2, FileText, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Can } from "@/modules/authz";
+import { Can } from "@/modules/authz/client";
 
 type Props = {
   companySlug: string;
