@@ -30,7 +30,7 @@ export function ResumoTab({ preAvaliacao, fichaAnestesia }: Props) {
       </div>
 
       {/* Preview — também usado pelo react-to-print */}
-      <div className="overflow-auto rounded-lg border bg-white p-6 shadow-sm">
+      <div className="overflow-auto rounded-lg border bg-white p-6 shadow-sm" style={{ zoom: 1.5 }}>
         <ResumoPrintLayout
           ref={printRef}
           preAvaliacao={preAvaliacao}
