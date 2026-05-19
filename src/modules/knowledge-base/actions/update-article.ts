@@ -7,6 +7,22 @@ import { requirePermission, ForbiddenError } from "@/modules/authz";
 import type { ActionResult } from "@/lib/errors";
 import type { Json } from "@/types/database.types";
 import { updateArticleSchema } from "../schemas/article";
+import type { KbArticleContent, KbArticleUpdate } from "../types";
+
+function isJsonValue(value: unknown): value is Json {
+  if (value === null) return true;
+  if (["string", "number", "boolean"].includes(typeof value)) return true;
+  if (Array.isArray(value)) return value.every(isJsonValue);
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).every(isJsonValue);
+  }
+  return false;
+}
+
+function isKbArticleContent(value: unknown): value is KbArticleContent {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.values(value as Record<string, unknown>).every(isJsonValue);
+}
 
 export async function updateArticleAction(
   _prev: ActionResult,
@@ -17,13 +33,17 @@ export async function updateArticleAction(
     return { ok: false, message: "ID do artigo obrigatório" };
   }
 
-  const rawData = Object.fromEntries(formData);
+  const rawData: Record<string, unknown> = Object.fromEntries(formData);
   delete rawData["id"];
 
   // Parse content_json from JSON string before schema validation
   if (typeof rawData.content_json === "string") {
     try {
-      rawData.content_json = JSON.parse(rawData.content_json) as unknown as string;
+      const content = JSON.parse(rawData.content_json);
+      if (!isKbArticleContent(content)) {
+        return { ok: false, fieldErrors: { content_json: ["JSON de conteúdo inválido"] } };
+      }
+      rawData.content_json = content;
     } catch {
       return { ok: false, fieldErrors: { content_json: ["JSON de conteúdo inválido"] } };
     }
@@ -33,6 +53,12 @@ export async function updateArticleAction(
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Não autenticado" };
 
   const companyId = await getActiveCompanyId();
   if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
@@ -45,22 +71,27 @@ export async function updateArticleAction(
     throw e;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, message: "Não autenticado" };
+  const payload: KbArticleUpdate = {
+    updated_by: user.id,
+    updated_at: new Date().toISOString(),
+  };
 
-  const { content_json, ...rest } = parsed.data;
+  if (parsed.data.title !== undefined) payload.title = parsed.data.title;
+  if (parsed.data.summary !== undefined) payload.summary = parsed.data.summary ?? null;
+  if (parsed.data.content_json !== undefined) payload.content_json = parsed.data.content_json;
+  if (parsed.data.content_md !== undefined) payload.content_md = parsed.data.content_md;
+  if (parsed.data.category_id !== undefined) payload.category_id = parsed.data.category_id ?? null;
+  if (parsed.data.audience !== undefined) payload.audience = parsed.data.audience;
+  if (parsed.data.related_module !== undefined) {
+    payload.related_module = parsed.data.related_module ?? null;
+  }
+  if (parsed.data.related_table !== undefined) {
+    payload.related_table = parsed.data.related_table ?? null;
+  }
 
   const { data, error } = await supabase
     .from("kb_articles")
-    .update({
-      ...rest,
-      ...(content_json !== undefined ? { content_json: content_json as Json } : {}),
-      updated_by: user.id,
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq("id", id)
     .eq("company_id", companyId)
     .select("id")
