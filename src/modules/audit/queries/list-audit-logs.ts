@@ -13,6 +13,6 @@ export async function listAuditLogs(companyId: string): Promise<AuditLog[]> {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data ?? [];
 }

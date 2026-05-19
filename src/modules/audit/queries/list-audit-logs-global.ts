@@ -25,6 +25,6 @@ export async function listAuditLogsGlobal(filters: GlobalAuditFilters = {}): Pro
   if (filters.status) query = query.eq("status", filters.status);
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
