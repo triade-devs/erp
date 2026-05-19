@@ -1,29 +1,44 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
+import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateModuleAction } from "../actions/update-module";
+import type { ActionResult } from "@/lib/errors";
 import type { Tables } from "@/types/database.types";
 
 type Props = { module: Tables<"modules"> };
 
+const initial: ActionResult = { ok: false };
+
 export function EditModuleForm({ module }: Props) {
   const boundAction = updateModuleAction.bind(null, module.code);
-  const [state, formAction, isPending] = useActionState(boundAction, { ok: true as const });
+  const [state, formAction] = useActionState(boundAction, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const hasMountedRef = useRef(false);
 
   useEffect(() => {
-    if (state.ok && state.message) toast.success(state.message);
-    else if (!state.ok && state.message && !("fieldErrors" in state)) toast.error(state.message);
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
+    if (state.ok) {
+      toast.success(state.message ?? "Salvo com sucesso.");
+      return;
+    }
+
+    if (state.message) toast.error(state.message);
   }, [state]);
 
-  const errors = !state.ok && "fieldErrors" in state ? state.fieldErrors : undefined;
+  const errors = state.ok ? undefined : state.fieldErrors;
 
   return (
-    <form action={formAction} className="max-w-lg space-y-4">
+    <form ref={formRef} action={formAction} className="max-w-lg space-y-4">
       <div className="space-y-1">
         <Label>Código</Label>
         <Input value={module.code} disabled className="font-mono" />
@@ -55,9 +70,16 @@ export function EditModuleForm({ module }: Props) {
         <Input id="sort_order" name="sort_order" type="number" defaultValue={module.sort_order} />
       </div>
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Salvando..." : "Salvar alterações"}
-      </Button>
+      <SubmitButton />
     </form>
+  );
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Salvando..." : "Salvar alterações"}
+    </Button>
   );
 }
