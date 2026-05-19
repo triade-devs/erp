@@ -11,7 +11,7 @@ export default async function ConsentDetailPage({ params }: Props) {
   const { companySlug, patientId, consentId } = await params;
   const company = await resolveCompany(companySlug);
 
-  const [{ patient }, consent] = await Promise.all([
+  const [{ patient, timeline }, consent] = await Promise.all([
     getPatientRecord(company.id, patientId),
     getConsent(company.id, consentId),
   ]);
@@ -26,6 +26,12 @@ export default async function ConsentDetailPage({ params }: Props) {
         patientName={patient.full_name}
         document={patient.document}
         phone={patient.phone}
+        counts={{
+          consultations: timeline.consultations.length,
+          prescriptions: timeline.prescriptions.length,
+          consents: timeline.consents.length,
+        }}
+        detailLabel={`${consent.template_title} v${consent.template_version}`}
       />
       <div>
         <h2 className="text-xl font-semibold">Consentimento registrado</h2>

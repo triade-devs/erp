@@ -16,7 +16,7 @@ export default async function ConsultationDetailPage({ params }: Props) {
   const { companySlug, patientId, consultationId } = await params;
   const company = await resolveCompany(companySlug);
 
-  const [{ patient }, consultation] = await Promise.all([
+  const [{ patient, timeline }, consultation] = await Promise.all([
     getPatientRecord(company.id, patientId),
     getConsultation(company.id, consultationId),
   ]);
@@ -24,6 +24,11 @@ export default async function ConsultationDetailPage({ params }: Props) {
   if (consultation.patient_id !== patientId) notFound();
 
   const action = updateConsultationAction.bind(null, consultationId);
+  const detailLabel = new Date(consultation.consultation_at).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   return (
     <section className="space-y-6">
@@ -33,6 +38,12 @@ export default async function ConsultationDetailPage({ params }: Props) {
         patientName={patient.full_name}
         document={patient.document}
         phone={patient.phone}
+        counts={{
+          consultations: timeline.consultations.length,
+          prescriptions: timeline.prescriptions.length,
+          consents: timeline.consents.length,
+        }}
+        detailLabel={detailLabel}
       />
       <div>
         <h2 className="text-xl font-semibold">Editar consulta</h2>
