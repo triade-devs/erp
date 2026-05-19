@@ -23,7 +23,7 @@ export async function listProducts(
   if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);
 
   const { data, count, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 
   const total = count ?? 0;
   return {

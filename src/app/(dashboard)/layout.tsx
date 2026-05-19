@@ -26,6 +26,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
   const companySlug = activeCompany?.slug ?? "";
 
+  if (!isPlatformAdmin) {
+    const hasNoCompany = companies.length === 0;
+    const activeMembership = user.memberships?.find((m) => m.companyId === activeCompany?.id);
+    const hasNoRole =
+      !!activeCompany &&
+      !!activeMembership &&
+      !activeMembership.isOwner &&
+      activeMembership.roles.length === 0;
+    if (hasNoCompany || hasNoRole) redirect("/sem-acesso");
+  }
+
   const filteredModules = MODULES_MENU.filter((item) => {
     if (!item.requiresPermission) return true;
     if (isPlatformAdmin) return true;

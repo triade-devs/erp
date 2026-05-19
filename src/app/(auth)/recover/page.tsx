@@ -10,7 +10,7 @@ export default function RecoverPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold">Recuperar senha</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Informe seu email e enviaremos um link para redefinir sua senha.
+            Informe seu email e nossa equipe processará sua solicitação.
           </p>
         </div>
 

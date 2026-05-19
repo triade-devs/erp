@@ -100,6 +100,65 @@ export type Database = {
         };
         Relationships: [];
       };
+      company_invitations: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          company_id: string;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          role_ids: string[];
+          short_code: string;
+          status: string;
+          token_hash: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          company_id: string;
+          created_at?: string;
+          email: string;
+          expires_at: string;
+          id?: string;
+          invited_by: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          role_ids?: string[];
+          short_code: string;
+          status?: string;
+          token_hash: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          company_id?: string;
+          created_at?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          role_ids?: string[];
+          short_code?: string;
+          status?: string;
+          token_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       company_modules: {
         Row: {
           company_id: string;
@@ -716,6 +775,36 @@ export type Database = {
           },
         ];
       };
+      migration_backfill_log: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          email: string;
+          id: string;
+          invitation_id: string;
+          membership_id: string;
+          short_code: string;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          invitation_id: string;
+          membership_id: string;
+          short_code: string;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          invitation_id?: string;
+          membership_id?: string;
+          short_code?: string;
+        };
+        Relationships: [];
+      };
       modules: {
         Row: {
           code: string;
@@ -746,6 +835,60 @@ export type Database = {
           is_system?: boolean;
           name?: string;
           sort_order?: number;
+        };
+        Relationships: [];
+      };
+      password_reset_requests: {
+        Row: {
+          approved_at: string | null;
+          approved_by: string | null;
+          consumed_at: string | null;
+          email: string;
+          expires_at: string | null;
+          id: string;
+          metadata: Json;
+          requested_at: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          short_code: string | null;
+          source: string;
+          status: string;
+          token_hash: string | null;
+          user_id: string;
+        };
+        Insert: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          consumed_at?: string | null;
+          email: string;
+          expires_at?: string | null;
+          id?: string;
+          metadata?: Json;
+          requested_at?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          short_code?: string | null;
+          source: string;
+          status?: string;
+          token_hash?: string | null;
+          user_id: string;
+        };
+        Update: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          consumed_at?: string | null;
+          email?: string;
+          expires_at?: string | null;
+          id?: string;
+          metadata?: Json;
+          requested_at?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          short_code?: string | null;
+          source?: string;
+          status?: string;
+          token_hash?: string | null;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -959,6 +1102,36 @@ export type Database = {
           },
         ];
       };
+      short_code_attempts: {
+        Row: {
+          attempts: number;
+          created_at: string;
+          id: string;
+          identifier: string;
+          ip: unknown;
+          locked_until: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          attempts?: number;
+          created_at?: string;
+          id?: string;
+          identifier: string;
+          ip?: unknown;
+          locked_until?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          attempts?: number;
+          created_at?: string;
+          id?: string;
+          identifier?: string;
+          ip?: unknown;
+          locked_until?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       stock_movements: {
         Row: {
           company_id: string;
@@ -1015,9 +1188,21 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_invitation: {
+        Args: { p_short_code: string; p_token_hash: string; p_user_id: string };
+        Returns: Json;
+      };
+      actor_can_manage_reset: {
+        Args: { p_permission: string; p_user_id: string };
+        Returns: boolean;
+      };
       bootstrap_company_rbac: {
         Args: { p_company: string };
         Returns: undefined;
+      };
+      consume_password_reset: {
+        Args: { p_short_code: string; p_token_hash: string };
+        Returns: string;
       };
       get_user_id_by_email: { Args: { p_email: string }; Returns: string };
       has_medical_patient_access: {
@@ -1029,6 +1214,19 @@ export type Database = {
         Returns: boolean;
       };
       is_platform_admin: { Args: never; Returns: boolean };
+      record_short_code_attempt: {
+        Args: { p_identifier: string; p_ip: string };
+        Returns: boolean;
+      };
+      request_password_reset: { Args: { p_email: string }; Returns: undefined };
+      search_users_for_company: {
+        Args: { p_company_id: string; p_query: string };
+        Returns: {
+          email: string;
+          full_name: string;
+          user_id: string;
+        }[];
+      };
       set_member_roles: {
         Args: {
           p_company_id: string;
@@ -1039,6 +1237,10 @@ export type Database = {
       };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
+      update_system_role_permissions: {
+        Args: { permission_codes: string[]; role_code: string };
+        Returns: undefined;
+      };
       user_company_ids: { Args: never; Returns: string[] };
     };
     Enums: {

@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,9 +16,8 @@ import {
 } from "@/components/ui/select";
 import { createCompanyAction } from "../actions/create-company";
 import type { Module } from "../queries/list-modules";
-import type { ActionResult } from "@/lib/errors";
 
-const initial: ActionResult = { ok: false };
+const initial = { ok: false } as const;
 
 type Props = {
   modules: Module[];
@@ -26,22 +26,28 @@ type Props = {
 export function CreateCompanyForm({ modules }: Props) {
   const router = useRouter();
   const [state, formAction] = useActionState(createCompanyAction, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
-    if (state.ok) {
-      router.push("/admin/companies");
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
     }
+
+    if (state.ok) {
+      formRef.current?.reset();
+      toast.success(state.message ?? "Salvo com sucesso.");
+      router.push("/admin/companies");
+      return;
+    }
+
+    if (state.message) toast.error(state.message);
   }, [state, router]);
 
   return (
-    <form action={formAction} className="space-y-6">
-      {!state.ok && state.message && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-          {state.message}
-        </div>
-      )}
-
+    <form ref={formRef} action={formAction} className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Nome */}
         <div className="space-y-2">
@@ -68,7 +74,7 @@ export function CreateCompanyForm({ modules }: Props) {
             name="slug"
             required
             placeholder="acme"
-            pattern="[a-z0-9-]+"
+            pattern="[a-z0-9\-]+"
             title="Apenas letras minúsculas, números e hífens"
             aria-invalid={!!fieldErrors?.slug}
           />

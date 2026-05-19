@@ -11,7 +11,11 @@ import { resetPasswordAction } from "../actions/reset-password";
 
 const initial = { ok: false } as const;
 
-export function ResetPasswordForm() {
+type Props = {
+  tokenOrShortCode?: string;
+};
+
+export function ResetPasswordForm({ tokenOrShortCode }: Props) {
   const [state, formAction] = useActionState(resetPasswordAction, initial);
 
   if (state.ok) {
@@ -29,6 +33,26 @@ export function ResetPasswordForm() {
 
   return (
     <form action={formAction} className="space-y-4">
+      {tokenOrShortCode ? (
+        <>
+          <input type="hidden" name="tokenOrShortCode" value={tokenOrShortCode} />
+          <p className="text-sm text-muted-foreground">Usando token da URL</p>
+        </>
+      ) : (
+        <div className="space-y-2">
+          <Label htmlFor="tokenOrShortCode">Token ou código de reset *</Label>
+          <Input
+            id="tokenOrShortCode"
+            name="tokenOrShortCode"
+            required
+            placeholder="Ex: RST-XXXX-XXXX ou cole o token completo"
+          />
+          {state.fieldErrors?.tokenOrShortCode && (
+            <p className="text-sm text-red-600">{state.fieldErrors.tokenOrShortCode[0]}</p>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="password">Nova senha</Label>
         <Input
