@@ -23,7 +23,7 @@ export default async function MedicalPage({ params, searchParams }: Props) {
     <section className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Prontuário — {company.name}</h1>
+          <h2 className="text-xl font-semibold">Pacientes</h2>
           <p className="text-sm text-muted-foreground">{total} pacientes na carteira acessível</p>
         </div>
         <Can permission="medical:patient:create">

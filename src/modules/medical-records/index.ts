@@ -16,5 +16,7 @@ export { PatientAssignments } from "./components/patient-assignments";
 export { ConsultationForm } from "./components/consultation-form";
 export { PrescriptionForm } from "./components/prescription-form";
 export { ConsentAcceptForm, ConsentTemplateForm } from "./components/consent-forms";
+export { MedicalModuleNav } from "./components/medical-module-nav";
+export { PatientRecordNav } from "./components/patient-record-nav";
 
 export type * from "./types";

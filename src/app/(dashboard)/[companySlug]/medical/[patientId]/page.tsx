@@ -1,11 +1,10 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getPatientRecord,
   listAssignableMembers,
   PatientAssignments,
   PatientForm,
+  PatientRecordNav,
   updatePatientAction,
 } from "@/modules/medical-records";
 import { resolveCompany } from "@/modules/tenancy";
@@ -23,32 +22,16 @@ export default async function PatientPage({ params }: Props) {
   ]);
 
   const updateAction = updatePatientAction.bind(null, patient.id);
-  const basePath = `/${companySlug}/medical/${patient.id}`;
 
   return (
     <section className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{patient.full_name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {patient.document ?? "Sem documento"} · {patient.phone ?? "Sem telefone"}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${companySlug}/medical`}>Voltar</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`${basePath}/consents/new`}>Consentimento</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`${basePath}/prescriptions/new`}>Prescrição</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`${basePath}/consultations/new`}>Nova consulta</Link>
-          </Button>
-        </div>
-      </header>
+      <PatientRecordNav
+        companySlug={companySlug}
+        patientId={patient.id}
+        patientName={patient.full_name}
+        document={patient.document}
+        phone={patient.phone}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <Card>

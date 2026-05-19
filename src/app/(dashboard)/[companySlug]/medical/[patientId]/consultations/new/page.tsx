@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ConsultationForm, getPatientRecord } from "@/modules/medical-records";
+import { ConsultationForm, getPatientRecord, PatientRecordNav } from "@/modules/medical-records";
 import { resolveCompany } from "@/modules/tenancy";
 
 type Props = {
@@ -14,15 +12,17 @@ export default async function NewConsultationPage({ params }: Props) {
 
   return (
     <section className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Nova consulta</h1>
-          <p className="text-sm text-muted-foreground">{patient.full_name}</p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href={`/${companySlug}/medical/${patientId}`}>Voltar</Link>
-        </Button>
-      </header>
+      <PatientRecordNav
+        companySlug={companySlug}
+        patientId={patientId}
+        patientName={patient.full_name}
+        document={patient.document}
+        phone={patient.phone}
+      />
+      <div>
+        <h2 className="text-xl font-semibold">Nova consulta</h2>
+        <p className="text-sm text-muted-foreground">Registro clínico e anamnese da consulta</p>
+      </div>
       <div className="rounded-lg border p-6">
         <ConsultationForm patientId={patientId} />
       </div>
