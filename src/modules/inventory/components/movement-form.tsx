@@ -1,7 +1,7 @@
 "use client";
 
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useActionState, useEffect, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -36,21 +36,37 @@ export function MovementForm({ products }: { products: ProductOption[] }) {
   const [formKey, setFormKey] = useState(0);
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string>("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
   const selected = products.find((p) => p.id === selectedId);
 
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
     if (state.ok) {
+      formRef.current?.reset();
       toast.success(state.message ?? "Movimentação registrada");
       setFormKey((k) => k + 1);
       setSelectedId("");
+      setOpen(false);
+      return;
     }
-    if (!state.ok && state.message) toast.error(state.message);
+
+    if (state.message) toast.error(state.message);
   }, [state]);
 
   return (
-    <form key={formKey} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <form
+      key={formKey}
+      ref={formRef}
+      action={formAction}
+      className="grid grid-cols-1 gap-4 md:grid-cols-2"
+    >
       {/* Produto */}
       <div className="space-y-2 md:col-span-2">
         <Label>

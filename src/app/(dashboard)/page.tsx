@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { listProducts } from "@/modules/inventory";
+import { getInventoryStats } from "@/modules/inventory";
 import { getActiveCompanyId, getActiveCompanySlug } from "@/modules/tenancy";
 import { formatCurrency } from "@/lib/utils";
 
@@ -13,16 +13,8 @@ export default async function DashboardPage() {
     getActiveCompanySlug(),
   ]);
 
-  const { data: allProducts, total } = await listProducts(companyId ?? "", {
-    onlyActive: true,
-    pageSize: 9999,
-  });
-
-  const lowStockProducts = allProducts.filter((p) => Number(p.stock) <= Number(p.min_stock));
-  const lowStockCount = lowStockProducts.length;
-  const totalStockValue = allProducts.reduce(
-    (sum, p) => sum + Number(p.stock) * Number(p.cost_price),
-    0,
+  const { totalActive, lowStockCount, totalStockValue, lowStockProducts } = await getInventoryStats(
+    companyId ?? "",
   );
 
   const inventoryHref = companySlug ? `/${companySlug}/inventory` : "/";
@@ -36,7 +28,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard label="Produtos ativos" value={String(total)} />
+        <MetricCard label="Produtos ativos" value={String(totalActive)} />
         <MetricCard label="Estoque baixo" value={String(lowStockCount)} alert={lowStockCount > 0} />
         <MetricCard label="Valor em estoque" value={formatCurrency(totalStockValue)} />
       </div>

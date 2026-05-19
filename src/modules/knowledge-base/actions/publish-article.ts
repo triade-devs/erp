@@ -20,6 +20,12 @@ export async function publishArticleAction(
     return { ok: false, message: "Ação inválida. Use 'publish' ou 'unpublish'" };
   }
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Não autenticado" };
+
   const companyId = await getActiveCompanyId();
   if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
 
@@ -30,12 +36,6 @@ export async function publishArticleAction(
       return { ok: false, message: "Acesso negado: permissão insuficiente" };
     throw e;
   }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, message: "Não autenticado" };
 
   const updatePayload =
     action === "publish"

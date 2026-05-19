@@ -9,6 +9,12 @@ description: Use when creating or modifying modules in the triade-devs/erp proje
 
 Every module lives in `src/modules/<domain>/` and MUST follow this structure and checklist without exception.
 
+## Infrastructure vs. Feature Modules
+
+**Feature modules** (inventory, knowledge-base, anestesia, …) must follow the full structure below.
+
+**Infrastructure modules** (`auth`, `authz`, `audit`, `tenancy`) are framework-level — they may omit folders that don't apply (e.g., `auth` has no `services/`, `authz` exposes only hooks and components). Do NOT enforce full structure on them.
+
 ## Required Structure
 
 ```
