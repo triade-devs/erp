@@ -8,6 +8,8 @@ export { registerMovementAction } from "./actions/register-movement";
 export { listProducts } from "./queries/list-products";
 export { getProduct } from "./queries/get-product";
 export { listMovements } from "./queries/list-movements";
+export { getInventoryStats } from "./queries/get-inventory-stats";
+export type { InventoryStats } from "./queries/get-inventory-stats";
 
 export { ProductTable } from "./components/product-table";
 export { ProductForm } from "./components/product-form";
