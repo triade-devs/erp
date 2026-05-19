@@ -90,8 +90,6 @@ export function PatientRecordNav({
     sectionHref = `${basePath}/consents`;
   }
 
-  const isLastBreadcrumb = !sectionLabel || !detailLabel;
-
   return (
     <div className="space-y-4">
       <Breadcrumb>
@@ -103,7 +101,7 @@ export function PatientRecordNav({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            {isLastBreadcrumb && !sectionLabel ? (
+            {!sectionLabel ? (
               <BreadcrumbPage>{patientName}</BreadcrumbPage>
             ) : (
               <BreadcrumbLink asChild>
