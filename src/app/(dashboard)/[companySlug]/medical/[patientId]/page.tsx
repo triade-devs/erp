@@ -32,6 +32,11 @@ export default async function PatientPage({ params }: Props) {
         patientName={patient.full_name}
         document={patient.document}
         phone={patient.phone}
+        counts={{
+          consultations: timeline.consultations.length,
+          prescriptions: timeline.prescriptions.length,
+          consents: timeline.consents.length,
+        }}
       />
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
