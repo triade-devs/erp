@@ -42,7 +42,9 @@ export function ProductForm({ product, updateAction }: Props) {
     }
 
     if (state.ok) {
-      formRef.current?.reset();
+      if (!product) {
+        formRef.current?.reset();
+      }
       toast.success(state.message ?? "Salvo com sucesso.");
       return;
     }

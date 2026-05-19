@@ -48,12 +48,6 @@ export function CreateCompanyForm({ modules }: Props) {
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
-      {!state.ok && state.message && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-          {state.message}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Nome */}
         <div className="space-y-2">

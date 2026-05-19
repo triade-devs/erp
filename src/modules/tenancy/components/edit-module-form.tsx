@@ -28,7 +28,6 @@ export function EditModuleForm({ module }: Props) {
     }
 
     if (state.ok) {
-      formRef.current?.reset();
       toast.success(state.message ?? "Salvo com sucesso.");
       return;
     }
