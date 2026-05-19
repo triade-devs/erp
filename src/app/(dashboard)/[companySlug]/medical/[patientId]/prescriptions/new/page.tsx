@@ -8,7 +8,7 @@ type Props = {
 export default async function NewPrescriptionPage({ params }: Props) {
   const { companySlug, patientId } = await params;
   const company = await resolveCompany(companySlug);
-  const { patient } = await getPatientRecord(company.id, patientId);
+  const { patient, timeline } = await getPatientRecord(company.id, patientId);
 
   return (
     <section className="space-y-6">
@@ -18,6 +18,12 @@ export default async function NewPrescriptionPage({ params }: Props) {
         patientName={patient.full_name}
         document={patient.document}
         phone={patient.phone}
+        counts={{
+          consultations: timeline.consultations.length,
+          prescriptions: timeline.prescriptions.length,
+          consents: timeline.consents.length,
+        }}
+        detailLabel="Nova prescrição"
       />
       <div>
         <h2 className="text-xl font-semibold">Nova prescrição</h2>

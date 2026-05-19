@@ -14,7 +14,7 @@ type Props = {
 export default async function NewConsentPage({ params }: Props) {
   const { companySlug, patientId } = await params;
   const company = await resolveCompany(companySlug);
-  const [{ patient }, templates] = await Promise.all([
+  const [{ patient, timeline }, templates] = await Promise.all([
     getPatientRecord(company.id, patientId),
     listConsentTemplates(company.id),
   ]);
@@ -27,6 +27,12 @@ export default async function NewConsentPage({ params }: Props) {
         patientName={patient.full_name}
         document={patient.document}
         phone={patient.phone}
+        counts={{
+          consultations: timeline.consultations.length,
+          prescriptions: timeline.prescriptions.length,
+          consents: timeline.consents.length,
+        }}
+        detailLabel="Novo consentimento"
       />
       <div>
         <h2 className="text-xl font-semibold">Consentimentos</h2>
