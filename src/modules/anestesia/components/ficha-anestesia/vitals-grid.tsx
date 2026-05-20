@@ -71,7 +71,7 @@ export function VitalsGrid({ data, onChange }: Props) {
   };
 
   const chartWidth = 1200;
-  const step = chartWidth / Math.max(timeLabels.length - 1, 1);
+  const colWidth = chartWidth / Math.max(timeLabels.length, 1);
 
   const yAxisValues = Array.from({ length: 11 }, (_, index) => 220 - index * 20);
 
@@ -166,7 +166,7 @@ export function VitalsGrid({ data, onChange }: Props) {
                   );
                 })}
                 {timeLabels.map((label, index) => {
-                  const x = index * step;
+                  const x = (index + 0.5) * colWidth;
                   return (
                     <line
                       key={label}
@@ -181,7 +181,7 @@ export function VitalsGrid({ data, onChange }: Props) {
                 })}
                 {series.map((item) => {
                   const numericValues = syncedVitals.map((slot) => parseNumeric(slot[item.key]));
-                  const path = buildVitalsSeriesPath(numericValues, step);
+                  const path = buildVitalsSeriesPath(numericValues, colWidth);
 
                   return (
                     <g key={item.key}>
@@ -193,7 +193,7 @@ export function VitalsGrid({ data, onChange }: Props) {
                         return (
                           <circle
                             key={`${item.key}-${syncedVitals[index]?.hora}`}
-                            cx={index * step}
+                            cx={(index + 0.5) * colWidth}
                             cy={getVitalsChartY(numeric)}
                             r="4"
                             fill={item.color}
