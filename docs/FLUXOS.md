@@ -1,6 +1,15 @@
 # Mapeamento de Fluxos — ERP Modular
 
-Referência de todos os fluxos da aplicação e interações disponíveis por perfil de usuário.
+Índice de todos os fluxos da aplicação. Para detalhes completos (campos, validações, edge cases), consulte os arquivos em `docs/flows/`:
+
+| Módulo                          | Arquivo de detalhe                                        |
+| ------------------------------- | --------------------------------------------------------- |
+| Autenticação                    | [`docs/flows/auth.md`](flows/auth.md)                     |
+| Estoque (Inventory + Movements) | [`docs/flows/inventory.md`](flows/inventory.md)           |
+| Base de Conhecimento            | [`docs/flows/knowledge-base.md`](flows/knowledge-base.md) |
+| Empresa / Tenancy               | [`docs/flows/tenancy.md`](flows/tenancy.md)               |
+| Administração (Platform Admin)  | [`docs/flows/admin.md`](flows/admin.md)                   |
+| Auditoria                       | [`docs/flows/audit.md`](flows/audit.md)                   |
 
 ---
 
