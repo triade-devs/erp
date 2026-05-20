@@ -126,7 +126,7 @@ export function defaultFichaAnestesia(
     diurese: emptyStringArray(12),
     pvc: emptyStringArray(12),
     ritmo: emptyStringArray(12),
-    acessoPeriferico: { ativo: false, calibre: "", local: "" },
+    acessoPeriferico: [{ ativo: false, calibre: "", local: "" }],
     acessoIntraosseo: { ativo: false, calibre: "", local: "" },
     acessoVenosoCentral: { ativo: false, calibre: "", local: "" },
     acessoPAI: { ativo: false, calibre: "", local: "" },

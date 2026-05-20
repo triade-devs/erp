@@ -141,12 +141,25 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
     .map(([k]) => estadoAdmissaoLabels[k] ?? k)
     .join(", ");
 
-  const acessosAtivos = [
-    { label: "Periférico", a: fichaAnestesia.acessoPeriferico },
-    { label: "Intraósseo", a: fichaAnestesia.acessoIntraosseo },
-    { label: "V. Central", a: fichaAnestesia.acessoVenosoCentral },
-    { label: "PAI", a: fichaAnestesia.acessoPAI },
-  ].filter(({ a }) => a.ativo);
+  const acessosAtivos: { label: string; calibre: string; local: string }[] = [
+    ...fichaAnestesia.acessoPeriferico
+      .filter((a) => a.ativo)
+      .map((a, i) => ({
+        label:
+          fichaAnestesia.acessoPeriferico.filter((x) => x.ativo).length > 1
+            ? `Periférico ${i + 1}`
+            : "Periférico",
+        calibre: a.calibre,
+        local: a.local,
+      })),
+    ...[
+      { label: "Intraósseo", a: fichaAnestesia.acessoIntraosseo },
+      { label: "V. Central", a: fichaAnestesia.acessoVenosoCentral },
+      { label: "PAI", a: fichaAnestesia.acessoPAI },
+    ]
+      .filter(({ a }) => a.ativo)
+      .map(({ label, a }) => ({ label, calibre: a.calibre, local: a.local })),
+  ];
 
   const hasExames = [
     preAvaliacao.hb,
@@ -399,10 +412,10 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
             <SectionCard>
               <SectionLabel title="Acessos Vasculares" />
               <div className="space-y-0.5">
-                {acessosAtivos.map(({ label, a }) => (
+                {acessosAtivos.map(({ label, calibre, local }) => (
                   <div key={label} className="text-[10px]">
                     <span className="font-medium text-gray-500">{label}: </span>
-                    {[a.calibre, a.local].filter(Boolean).join(" · ") || "—"}
+                    {[calibre ? `${calibre}G` : "", local].filter(Boolean).join(" · ") || "—"}
                   </div>
                 ))}
               </div>

@@ -92,7 +92,7 @@ export const fichaAnestesiaSchema = z.object({
   diurese: z.array(z.string()),
   pvc: z.array(z.string()),
   ritmo: z.array(z.string()),
-  acessoPeriferico: acessoSchema,
+  acessoPeriferico: z.array(acessoSchema).default([{ ativo: false, calibre: "", local: "" }]),
   acessoIntraosseo: acessoSchema,
   acessoVenosoCentral: acessoSchema,
   acessoPAI: acessoSchema,

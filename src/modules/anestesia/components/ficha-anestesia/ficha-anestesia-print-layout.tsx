@@ -135,7 +135,6 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
     ];
 
     const accessFields = [
-      { key: "acessoPeriferico" as const, label: "Acesso Periférico" },
       { key: "acessoIntraosseo" as const, label: "Intraósseo" },
       { key: "acessoVenosoCentral" as const, label: "Venoso Central" },
       { key: "acessoPAI" as const, label: "PAI" },
@@ -430,10 +429,36 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                 </tr>
               </thead>
               <tbody>
+                {/* Acesso Periférico — múltiplos */}
+                {data.acessoPeriferico.map((item, index) => (
+                  <tr
+                    key={`periferico-${index}`}
+                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="border border-gray-300 px-2 py-1 font-medium text-gray-800">
+                      Acesso Periférico {data.acessoPeriferico.length > 1 ? index + 1 : ""}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1 text-center">
+                      <span
+                        className={`text-[10px] font-bold ${item.ativo ? "text-green-700" : "text-gray-400"}`}
+                      >
+                        {item.ativo ? "✓" : "—"}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1 text-gray-900">
+                      {item.calibre ? `${item.calibre}G` : ""}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1 text-gray-900">
+                      {item.local || ""}
+                    </td>
+                  </tr>
+                ))}
+                {/* Demais acessos */}
                 {accessFields.map((field, index) => {
                   const acesso = data[field.key];
+                  const rowIndex = data.acessoPeriferico.length + index;
                   return (
-                    <tr key={field.key} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    <tr key={field.key} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                       <td className="border border-gray-300 px-2 py-1 font-medium text-gray-800">
                         {field.label}
                       </td>
@@ -445,7 +470,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                         </span>
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-gray-900">
-                        {acesso.calibre || ""}
+                        {acesso.calibre ? `${acesso.calibre}G` : ""}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-gray-900">
                         {acesso.local || ""}
