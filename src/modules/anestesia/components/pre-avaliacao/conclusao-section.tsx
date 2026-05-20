@@ -1,7 +1,5 @@
 "use client";
 
-import { Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,10 +17,9 @@ import { SectionCard } from "../shared";
 type Props = {
   data: PreAvaliacaoData;
   onChange: (partial: Partial<PreAvaliacaoData>) => void;
-  onPrint?: () => void;
 };
 
-export function ConclusaoSection({ data, onChange, onPrint }: Props) {
+export function ConclusaoSection({ data, onChange }: Props) {
   return (
     <SectionCard
       title="Conclusão"
@@ -71,13 +68,6 @@ export function ConclusaoSection({ data, onChange, onPrint }: Props) {
         <p className="text-center text-sm text-muted-foreground">
           Assinatura do anestesiologista responsável
         </p>
-      </div>
-
-      <div className="flex justify-end" data-no-print>
-        <Button type="button" variant="outline" onClick={onPrint}>
-          <Printer className="h-4 w-4" />
-          Imprimir Ficha
-        </Button>
       </div>
     </SectionCard>
   );
