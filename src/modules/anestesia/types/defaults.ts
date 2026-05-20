@@ -120,6 +120,7 @@ export function defaultFichaAnestesia(
     iotTubo: "",
     vitals,
     vitalsHoraInicio,
+    vitalsInterval: 5,
     spo2: emptyStringArray(12),
     temp: emptyStringArray(12),
     diurese: emptyStringArray(12),

@@ -118,8 +118,12 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
           year: "numeric",
         });
 
-    const timeLabels = buildTimeLabels(data.vitalsHoraInicio);
-    const syncedVitals = syncVitalsWithStartHour(data.vitalsHoraInicio, data.vitals);
+    const timeLabels = buildTimeLabels(data.vitalsHoraInicio, data.vitalsInterval);
+    const syncedVitals = syncVitalsWithStartHour(
+      data.vitalsHoraInicio,
+      data.vitals,
+      data.vitalsInterval,
+    );
     const imc = calcularIMC(preAvaliacao.peso, preAvaliacao.altura);
 
     const extraMetrics = [

@@ -7,6 +7,7 @@ import type {
   MALLAMPATI_OPTIONS,
   SEXO_OPTIONS,
 } from "./constants";
+import type { VitalsInterval } from "../services/session";
 
 export type PreAvaliacaoData = {
   nomePaciente: string;
@@ -120,6 +121,7 @@ export type FichaAnestesiaData = {
   iotTubo: string;
   vitals: VitalsTimeSlot[];
   vitalsHoraInicio: string;
+  vitalsInterval: VitalsInterval;
   spo2: string[];
   temp: string[];
   diurese: string[];

@@ -40,6 +40,7 @@ export function parseStoredSessions(raw: string | null): AnestesiaSession[] {
                   ? fichaAnestesia.vitalsHoraInicio
                   : "00:00",
                 Array.isArray(fichaAnestesia.vitals) ? fichaAnestesia.vitals : [],
+                fichaAnestesia.vitalsInterval === 10 ? 10 : 5,
               ),
               spo2: normalizeTimelineValues(
                 Array.isArray(fichaAnestesia.spo2) ? fichaAnestesia.spo2 : [],

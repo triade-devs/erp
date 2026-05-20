@@ -7,7 +7,9 @@ import type {
 import { defaultFichaAnestesia, defaultPreAvaliacao } from "../types/defaults";
 
 const VITALS_SLOTS_COUNT = 12;
-const VITALS_INTERVAL_MINUTES = 15;
+const DEFAULT_VITALS_INTERVAL: VitalsInterval = 5;
+
+export type VitalsInterval = 5 | 10;
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -24,18 +26,27 @@ export function parseTimeToDate(time: string, reference = new Date()): Date {
   return next;
 }
 
-export function roundToQuarterHour(date: Date): Date {
+export function roundToInterval(
+  date: Date,
+  interval: VitalsInterval = DEFAULT_VITALS_INTERVAL,
+): Date {
   const rounded = new Date(date);
   const minutes = rounded.getMinutes();
-  rounded.setMinutes(minutes - (minutes % VITALS_INTERVAL_MINUTES), 0, 0);
+  rounded.setMinutes(minutes - (minutes % interval), 0, 0);
   return rounded;
 }
 
-export function buildVitalsSlots(startAt = new Date()): VitalsTimeSlot[] {
-  const start = roundToQuarterHour(startAt);
+/** @deprecated Use roundToInterval */
+export const roundToQuarterHour = (date: Date) => roundToInterval(date, 5);
+
+export function buildVitalsSlots(
+  startAt = new Date(),
+  interval: VitalsInterval = DEFAULT_VITALS_INTERVAL,
+): VitalsTimeSlot[] {
+  const start = roundToInterval(startAt, interval);
   return Array.from({ length: VITALS_SLOTS_COUNT }, (_, index) => {
     const slotDate = new Date(start);
-    slotDate.setMinutes(start.getMinutes() + index * VITALS_INTERVAL_MINUTES);
+    slotDate.setMinutes(start.getMinutes() + index * interval);
 
     return {
       hora: formatTime(slotDate),
@@ -48,11 +59,14 @@ export function buildVitalsSlots(startAt = new Date()): VitalsTimeSlot[] {
   });
 }
 
-export function buildTimeLabels(startTime: string): string[] {
+export function buildTimeLabels(
+  startTime: string,
+  interval: VitalsInterval = DEFAULT_VITALS_INTERVAL,
+): string[] {
   const start = parseTimeToDate(startTime);
   return Array.from({ length: VITALS_SLOTS_COUNT }, (_, index) => {
     const slotDate = new Date(start);
-    slotDate.setMinutes(start.getMinutes() + index * VITALS_INTERVAL_MINUTES);
+    slotDate.setMinutes(start.getMinutes() + index * interval);
     return formatTime(slotDate);
   });
 }
@@ -60,8 +74,9 @@ export function buildTimeLabels(startTime: string): string[] {
 export function syncVitalsWithStartHour(
   startTime: string,
   vitals: VitalsTimeSlot[],
+  interval: VitalsInterval = DEFAULT_VITALS_INTERVAL,
 ): VitalsTimeSlot[] {
-  const labels = buildTimeLabels(startTime);
+  const labels = buildTimeLabels(startTime, interval);
   return labels.map((hora, index) => ({
     hora,
     pasSis: vitals[index]?.pasSis ?? "",
@@ -180,6 +195,7 @@ export function updateSessionFichaAnestesia(
 ): AnestesiaSession {
   const nextStartTime = partial.vitalsHoraInicio ?? session.fichaAnestesia.vitalsHoraInicio;
   const baseVitals = partial.vitals ?? session.fichaAnestesia.vitals;
+  const interval = partial.vitalsInterval ?? session.fichaAnestesia.vitalsInterval;
 
   return {
     ...session,
@@ -187,7 +203,7 @@ export function updateSessionFichaAnestesia(
       ...session.fichaAnestesia,
       ...partial,
       vitalsHoraInicio: nextStartTime,
-      vitals: syncVitalsWithStartHour(nextStartTime, baseVitals),
+      vitals: syncVitalsWithStartHour(nextStartTime, baseVitals, interval),
     },
     atualizadaEm: now.toISOString(),
   };

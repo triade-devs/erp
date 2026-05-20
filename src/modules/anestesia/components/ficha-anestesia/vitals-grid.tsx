@@ -43,10 +43,14 @@ function parseNumeric(value: string): number | null {
 
 export function VitalsGrid({ data, onChange }: Props) {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-  const timeLabels = useMemo(() => buildTimeLabels(data.vitalsHoraInicio), [data.vitalsHoraInicio]);
+  const interval = data.vitalsInterval;
+  const timeLabels = useMemo(
+    () => buildTimeLabels(data.vitalsHoraInicio, interval),
+    [data.vitalsHoraInicio, interval],
+  );
   const syncedVitals = useMemo(
-    () => syncVitalsWithStartHour(data.vitalsHoraInicio, data.vitals),
-    [data.vitals, data.vitalsHoraInicio],
+    () => syncVitalsWithStartHour(data.vitalsHoraInicio, data.vitals, interval),
+    [data.vitals, data.vitalsHoraInicio, interval],
   );
 
   const updateSlot = (index: number, field: VitalsField, value: string) => {
@@ -74,7 +78,7 @@ export function VitalsGrid({ data, onChange }: Props) {
   return (
     <SectionCard
       title="Grade de sinais vitais"
-      description="Monitorização dinâmica em intervalos de 15 minutos com gráfico sobreposto."
+      description={`Monitorização dinâmica em intervalos de ${data.vitalsInterval} minutos com gráfico sobreposto.`}
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2 text-xs font-medium">
@@ -89,6 +93,28 @@ export function VitalsGrid({ data, onChange }: Props) {
           ))}
         </div>
         <div className="flex items-center gap-2">
+          <Label>Intervalo</Label>
+          <div className="flex overflow-hidden rounded-md border">
+            {([5, 10] as const).map((option) => (
+              <Button
+                key={option}
+                type="button"
+                variant={data.vitalsInterval === option ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none border-0 px-3"
+                onClick={() =>
+                  onChange({
+                    vitalsInterval: option,
+                    vitals: syncVitalsWithStartHour(data.vitalsHoraInicio, syncedVitals, option),
+                  })
+                }
+              >
+                {option} min
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <Label>Hora inicial</Label>
           <Input
             type="time"
@@ -97,7 +123,7 @@ export function VitalsGrid({ data, onChange }: Props) {
             onChange={(event) =>
               onChange({
                 vitalsHoraInicio: event.target.value,
-                vitals: syncVitalsWithStartHour(event.target.value, syncedVitals),
+                vitals: syncVitalsWithStartHour(event.target.value, syncedVitals, interval),
               })
             }
           />

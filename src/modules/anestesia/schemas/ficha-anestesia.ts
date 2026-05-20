@@ -86,6 +86,7 @@ export const fichaAnestesiaSchema = z.object({
   iotTubo: z.string(),
   vitals: z.array(vitalsTimeSlotSchema),
   vitalsHoraInicio: z.string(),
+  vitalsInterval: z.union([z.literal(5), z.literal(10)]).default(5),
   spo2: z.array(z.string()),
   temp: z.array(z.string()),
   diurese: z.array(z.string()),
