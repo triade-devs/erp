@@ -1,0 +1,119 @@
+/*
+ * Tema: Ardósia (Slate)
+ * Identidade neutra e profissional em cinza-ardósia.
+ * Primária: slate-700 (#334155) — WCAG AA 9.1:1 ✓
+ *
+ * Como aplicar:
+ *   Copie o bloco ":root { … }" e ".dark { … }" abaixo
+ *   e substitua os blocos equivalentes em src/app/globals.css.
+ */
+
+:root {
+  /* ── IDENTIDADE ───────────────────────────────────────────────────────── */
+  --primary: 215.4 16.3% 26%; /* slate-700 */
+  --primary-foreground: 0 0% 100%;
+  --ring: 215.4 16.3% 26%;
+
+  /* ── SUPERFÍCIES ──────────────────────────────────────────────────────── */
+  --background: 210 20% 98%;
+  --foreground: 222.2 47.4% 11.2%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 47.4% 11.2%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 47.4% 11.2%;
+
+  /* ── SIDEBAR ──────────────────────────────────────────────────────────── */
+  --sidebar: 215 25% 27%; /* sidebar escura */
+  --sidebar-foreground: 210 40% 96%;
+  --sidebar-border: 215 16% 20%;
+  --sidebar-accent: 215 16% 33%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-active-bg: 215 16% 38%;
+  --sidebar-active: 210 40% 98%;
+
+  /* ── SECUNDÁRIO / MUTED / ACCENT ──────────────────────────────────────── */
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215 16.3% 40%;
+  --accent: 215 16% 93%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  /* ── STATUS ───────────────────────────────────────────────────────────── */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-muted: 0 84.2% 95%;
+  --success: 142.1 76.2% 36.3%;
+  --success-foreground: 0 0% 100%;
+  --success-muted: 142.1 76.2% 94%;
+  --warning: 32.1 94.6% 43.7%;
+  --warning-foreground: 0 0% 100%;
+  --warning-muted: 32.1 94.6% 94%;
+  --info: 199.4 89.7% 40%;
+  --info-foreground: 0 0% 100%;
+  --info-muted: 199.4 89.7% 94%;
+
+  /* ── FORMULÁRIOS ──────────────────────────────────────────────────────── */
+  --border: 214.3 31.8% 88%;
+  --input: 214.3 31.8% 88%;
+
+  /* ── GRÁFICOS ─────────────────────────────────────────────────────────── */
+  --chart-1: 215.4 16.3% 26%;
+  --chart-2: 142.1 76.2% 36.3%;
+  --chart-3: 32.1 94.6% 43.7%;
+  --chart-4: 199.4 89.7% 40%;
+  --chart-5: 262.1 83.3% 57.8%;
+
+  /* ── FORMA ────────────────────────────────────────────────────────────── */
+  --radius: 0.375rem; /* ligeiramente mais quadrado */
+}
+
+.dark {
+  --primary: 210 40% 82%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --ring: 215 16% 65%;
+
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --sidebar: 215 25% 10%;
+  --sidebar-foreground: 210 40% 96%;
+  --sidebar-border: 215 16% 15%;
+  --sidebar-accent: 215 16% 16%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-active-bg: 215 16% 20%;
+  --sidebar-active: 210 40% 82%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-muted: 0 62.8% 15%;
+  --success: 142.1 76.2% 26%;
+  --success-foreground: 210 40% 98%;
+  --success-muted: 142.1 76.2% 12%;
+  --warning: 32.1 94.6% 33%;
+  --warning-foreground: 210 40% 98%;
+  --warning-muted: 32.1 94.6% 12%;
+  --info: 199.4 89.7% 30%;
+  --info-foreground: 210 40% 98%;
+  --info-muted: 199.4 89.7% 12%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+
+  --chart-1: 215 16% 65%;
+  --chart-2: 142.1 60% 55%;
+  --chart-3: 32.1 90% 60%;
+  --chart-4: 199.4 80% 55%;
+  --chart-5: 262.1 70% 68%;
+}

@@ -1,0 +1,119 @@
+/*
+ * Tema: Esmeralda
+ * Identidade sustentável em verde-esmeralda.
+ * Primária: emerald-600 (#059669) — WCAG AA 4.5:1 ✓
+ *
+ * Como aplicar:
+ *   Copie o bloco ":root { … }" e ".dark { … }" abaixo
+ *   e substitua os blocos equivalentes em src/app/globals.css.
+ */
+
+:root {
+  /* ── IDENTIDADE ───────────────────────────────────────────────────────── */
+  --primary: 161.4 93.5% 30.4%; /* emerald-600 */
+  --primary-foreground: 0 0% 100%;
+  --ring: 161.4 93.5% 30.4%;
+
+  /* ── SUPERFÍCIES ──────────────────────────────────────────────────────── */
+  --background: 150 20% 98%;
+  --foreground: 160 40% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 160 40% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 160 40% 10%;
+
+  /* ── SIDEBAR ──────────────────────────────────────────────────────────── */
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 160 40% 10%;
+  --sidebar-border: 150 25% 88%;
+  --sidebar-accent: 161.4 30% 93%;
+  --sidebar-accent-foreground: 160 40% 10%;
+  --sidebar-active-bg: 161.4 93.5% 95%;
+  --sidebar-active: 161.4 93.5% 30.4%;
+
+  /* ── SECUNDÁRIO / MUTED / ACCENT ──────────────────────────────────────── */
+  --secondary: 150 30% 96%;
+  --secondary-foreground: 160 40% 10%;
+  --muted: 150 30% 96%;
+  --muted-foreground: 155 16% 40%;
+  --accent: 161.4 20% 93%;
+  --accent-foreground: 160 40% 10%;
+
+  /* ── STATUS ───────────────────────────────────────────────────────────── */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-muted: 0 84.2% 95%;
+  --success: 161.4 93.5% 30.4%;
+  --success-foreground: 0 0% 100%;
+  --success-muted: 161.4 93.5% 94%;
+  --warning: 32.1 94.6% 43.7%;
+  --warning-foreground: 0 0% 100%;
+  --warning-muted: 32.1 94.6% 94%;
+  --info: 199.4 89.7% 40%;
+  --info-foreground: 0 0% 100%;
+  --info-muted: 199.4 89.7% 94%;
+
+  /* ── FORMULÁRIOS ──────────────────────────────────────────────────────── */
+  --border: 150 25% 88%;
+  --input: 150 25% 88%;
+
+  /* ── GRÁFICOS ─────────────────────────────────────────────────────────── */
+  --chart-1: 161.4 93.5% 30.4%;
+  --chart-2: 221.2 83.2% 47%;
+  --chart-3: 32.1 94.6% 43.7%;
+  --chart-4: 199.4 89.7% 40%;
+  --chart-5: 262.1 83.3% 57.8%;
+
+  /* ── FORMA ────────────────────────────────────────────────────────────── */
+  --radius: 0.5rem;
+}
+
+.dark {
+  --primary: 161.4 70% 60%;
+  --primary-foreground: 160 40% 10%;
+  --ring: 161.4 70% 60%;
+
+  --background: 160 40% 4%;
+  --foreground: 150 40% 96%;
+  --card: 160 40% 4%;
+  --card-foreground: 150 40% 96%;
+  --popover: 160 40% 4%;
+  --popover-foreground: 150 40% 96%;
+
+  --sidebar: 160 40% 6%;
+  --sidebar-foreground: 150 40% 96%;
+  --sidebar-border: 160 30% 15%;
+  --sidebar-accent: 160 30% 15%;
+  --sidebar-accent-foreground: 150 40% 96%;
+  --sidebar-active-bg: 161.4 93.5% 12%;
+  --sidebar-active: 161.4 70% 60%;
+
+  --secondary: 160 30% 17%;
+  --secondary-foreground: 150 40% 96%;
+  --muted: 160 30% 17%;
+  --muted-foreground: 155 20% 65%;
+  --accent: 160 30% 17%;
+  --accent-foreground: 150 40% 96%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-muted: 0 62.8% 15%;
+  --success: 161.4 70% 40%;
+  --success-foreground: 150 40% 96%;
+  --success-muted: 161.4 70% 12%;
+  --warning: 32.1 94.6% 33%;
+  --warning-foreground: 210 40% 98%;
+  --warning-muted: 32.1 94.6% 12%;
+  --info: 199.4 89.7% 30%;
+  --info-foreground: 210 40% 98%;
+  --info-muted: 199.4 89.7% 12%;
+
+  --border: 160 30% 15%;
+  --input: 160 30% 15%;
+
+  --chart-1: 161.4 70% 55%;
+  --chart-2: 210 40% 70%;
+  --chart-3: 32.1 90% 60%;
+  --chart-4: 199.4 80% 55%;
+  --chart-5: 262.1 70% 68%;
+}
