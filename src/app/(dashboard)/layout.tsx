@@ -63,11 +63,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <span className="text-sm font-semibold tracking-tight">ERP Modular</span>
         </div>
 
+        {/* Company switcher */}
+        <div className="border-b px-3 py-2">
+          <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Empresa
+          </p>
+          <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
+        </div>
+
         {/* Nav — scrollável */}
         <div className="flex-1 overflow-y-auto px-2 py-3">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
             <SidebarNav items={filteredModules} />
-            {isPlatformAdmin && <SidebarNav items={adminItems} groupLabel="Plataforma" />}
+            {isPlatformAdmin && (
+              <>
+                <div className="my-2 border-t" />
+                <SidebarNav items={adminItems} groupLabel="Plataforma" />
+              </>
+            )}
           </div>
         </div>
 
@@ -89,11 +102,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Main content */}
       <main className="flex flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="flex items-center border-b bg-card px-8 py-3">
-          <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
-        </header>
-
         <div className="flex-1 overflow-y-auto p-8">{children}</div>
       </main>
     </div>

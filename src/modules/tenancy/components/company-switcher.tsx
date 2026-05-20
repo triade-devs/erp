@@ -26,7 +26,11 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
   if (companies.length <= 1) {
     const company = companies[0];
     if (!company) return null;
-    return <span className="text-sm font-medium">{company.name}</span>;
+    return (
+      <div className="flex items-center gap-2 rounded-md px-1 py-1.5">
+        <span className="truncate text-sm font-medium">{company.name}</span>
+      </div>
+    );
   }
 
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
@@ -64,7 +68,7 @@ export function CompanySwitcher({ companies, activeCompanyId }: CompanySwitcherP
   return (
     <div>
       <Select value={activeCompany?.id ?? ""} onValueChange={handleChange} disabled={isPending}>
-        <SelectTrigger aria-label="Empresa ativa" className="h-8 w-auto min-w-[200px]">
+        <SelectTrigger aria-label="Empresa ativa" className="h-8 w-full">
           <SelectValue placeholder="Selecionar empresa" />
         </SelectTrigger>
         <SelectContent>
