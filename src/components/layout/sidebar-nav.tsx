@@ -68,7 +68,7 @@ export function SidebarNav({ items, groupLabel }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {groupLabel && (
-        <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
           {groupLabel}
         </p>
       )}
@@ -76,7 +76,7 @@ export function SidebarNav({ items, groupLabel }: Props) {
       {sections.map((section, i) => (
         <div key={section.label ?? `__root_${i}`}>
           {section.label && (
-            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
               {section.label}
             </p>
           )}
@@ -91,8 +91,8 @@ export function SidebarNav({ items, groupLabel }: Props) {
                   className={cn(
                     "flex items-center gap-2.5 rounded-md border-l-2 px-3 py-2 text-sm transition-colors",
                     active
-                      ? "bg-primary/8 border-primary font-medium text-primary"
-                      : "border-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                      ? "border-sidebar-active bg-sidebar-active-bg font-medium text-sidebar-active"
+                      : "border-transparent text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   )}
                 >
                   {Icon && <Icon className="h-4 w-4 shrink-0" />}

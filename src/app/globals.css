@@ -2,50 +2,154 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design System — ERP Modular
+ *
+ * Para rebrandar o produto, edite os valores de ":root" abaixo
+ * ou copie um dos presets de src/styles/themes/ sobre esta seção.
+ *
+ * Estrutura de tokens:
+ *   IDENTIDADE  → cor principal da marca (mude aqui para rebrandar)
+ *   SUPERFÍCIES → backgrounds de página, card e popover
+ *   SIDEBAR     → superfície e estados do menu lateral
+ *   SECUNDÁRIO  → secundário, muted, accent
+ *   STATUS      → destructive, success, warning, info (+ variantes muted)
+ *   FORMULÁRIOS → border, input
+ *   GRÁFICOS    → paleta de 5 cores para charts
+ *   FORMA       → raio de borda global
+ */
+
 @layer base {
   :root {
+    /* ── IDENTIDADE ───────────────────────────────────────────────────────── */
+    --primary: 221.2 83.2% 47%; /* azul-600 — WCAG AA 4.9:1 ✓ */
+    --primary-foreground: 0 0% 100%;
+    --ring: 221.2 83.2% 47%;
+
+    /* ── SUPERFÍCIES ──────────────────────────────────────────────────────── */
     --background: 210 20% 98%;
     --foreground: 222.2 47.4% 11.2%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 47.4% 11.2%;
-    --primary: 221.2 83.2% 47%;
-    --primary-foreground: 0 0% 100%;
+
+    /* ── SIDEBAR ──────────────────────────────────────────────────────────── */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 88%;
+    --sidebar-accent: 221.2 14% 93%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-active-bg: 221.2 83.2% 96%;
+    --sidebar-active: 221.2 83.2% 47%;
+
+    /* ── SECUNDÁRIO / MUTED / ACCENT ──────────────────────────────────────── */
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 16.3% 40%;
     --accent: 221.2 14% 93%;
     --accent-foreground: 222.2 47.4% 11.2%;
+
+    /* ── STATUS ───────────────────────────────────────────────────────────── */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-muted: 0 84.2% 95%;
+
+    --success: 142.1 76.2% 36.3%; /* verde-600 */
+    --success-foreground: 0 0% 100%;
+    --success-muted: 142.1 76.2% 94%;
+
+    --warning: 32.1 94.6% 43.7%; /* âmbar-600 */
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 32.1 94.6% 94%;
+
+    --info: 199.4 89.7% 40%; /* céu-600 */
+    --info-foreground: 0 0% 100%;
+    --info-muted: 199.4 89.7% 94%;
+
+    /* ── FORMULÁRIOS ──────────────────────────────────────────────────────── */
     --border: 214.3 31.8% 88%;
     --input: 214.3 31.8% 88%;
-    --ring: 221.2 83.2% 47%;
+
+    /* ── GRÁFICOS ─────────────────────────────────────────────────────────── */
+    --chart-1: 221.2 83.2% 47%; /* azul    */
+    --chart-2: 142.1 76.2% 36.3%; /* verde   */
+    --chart-3: 32.1 94.6% 43.7%; /* âmbar   */
+    --chart-4: 199.4 89.7% 40%; /* céu     */
+    --chart-5: 262.1 83.3% 57.8%; /* violeta */
+
+    /* ── FORMA ────────────────────────────────────────────────────────────── */
     --radius: 0.5rem;
   }
 
   .dark {
+    /* ── IDENTIDADE ───────────────────────────────────────────────────────── */
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --ring: 212.7 26.8% 83.9%;
+
+    /* ── SUPERFÍCIES ──────────────────────────────────────────────────────── */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+
+    /* ── SIDEBAR ──────────────────────────────────────────────────────────── */
+    --sidebar: 222.2 47.4% 7%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-active-bg: 221.2 83.2% 15%;
+    --sidebar-active: 210 40% 98%;
+
+    /* ── SECUNDÁRIO / MUTED / ACCENT ──────────────────────────────────────── */
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+
+    /* ── STATUS ───────────────────────────────────────────────────────────── */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-muted: 0 62.8% 15%;
+
+    --success: 142.1 76.2% 26%;
+    --success-foreground: 210 40% 98%;
+    --success-muted: 142.1 76.2% 12%;
+
+    --warning: 32.1 94.6% 33%;
+    --warning-foreground: 210 40% 98%;
+    --warning-muted: 32.1 94.6% 12%;
+
+    --info: 199.4 89.7% 30%;
+    --info-foreground: 210 40% 98%;
+    --info-muted: 199.4 89.7% 12%;
+
+    /* ── FORMULÁRIOS ──────────────────────────────────────────────────────── */
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+
+    /* ── GRÁFICOS ─────────────────────────────────────────────────────────── */
+    --chart-1: 210 40% 70%;
+    --chart-2: 142.1 60% 55%;
+    --chart-3: 32.1 90% 60%;
+    --chart-4: 199.4 80% 55%;
+    --chart-5: 262.1 70% 68%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 

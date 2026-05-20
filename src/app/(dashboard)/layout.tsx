@@ -54,18 +54,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="grid min-h-screen grid-cols-[240px_1fr]">
       {/* Sidebar */}
-      <aside className="flex h-screen flex-col border-r bg-card">
+      <aside className="flex h-screen flex-col border-r border-sidebar-border bg-sidebar">
         {/* Brand */}
-        <div className="flex items-center gap-2.5 border-b px-4 py-4">
+        <div className="flex items-center gap-2.5 border-b border-sidebar-border px-4 py-4">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
             <Package className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-sm font-semibold tracking-tight">ERP Modular</span>
+          <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">
+            ERP Modular
+          </span>
         </div>
 
         {/* Company switcher */}
-        <div className="border-b px-3 py-2">
-          <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="border-b border-sidebar-border px-3 py-2">
+          <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
             Empresa
           </p>
           <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
@@ -77,7 +79,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <SidebarNav items={filteredModules} />
             {isPlatformAdmin && (
               <>
-                <div className="my-2 border-t" />
+                <div className="my-2 border-t border-sidebar-border" />
                 <SidebarNav items={adminItems} groupLabel="Plataforma" />
               </>
             )}
@@ -85,14 +87,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
         {/* User footer */}
-        <div className="border-t px-3 py-3">
+        <div className="border-t border-sidebar-border px-3 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
               {userInitials}
             </div>
-            <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{user.email}</p>
+            <p className="min-w-0 flex-1 truncate text-xs text-sidebar-foreground/60">
+              {user.email}
+            </p>
             <form action={signOutAction}>
-              <Button type="submit" variant="ghost" size="sm" className="h-7 px-2 text-xs">
+              <Button
+                type="submit"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
                 Sair
               </Button>
             </form>
