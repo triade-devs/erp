@@ -133,6 +133,9 @@ export type FichaAnestesiaData = {
   ritmo: string[];
   bis: string[];
   pai: string[];
+  etco2: string[];
+  oximetriaPosicao: string;
+  etco2Posicao: string;
   acessoPeriferico: { ativo: boolean; calibre: string; local: string }[];
   acessoIntraosseo: { ativo: boolean; calibre: string; local: string };
   acessoVenosoCentral: { ativo: boolean; calibre: string; local: string };

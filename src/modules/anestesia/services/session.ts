@@ -96,7 +96,13 @@ export function normalizeTimelineValues(values: string[], length = VITALS_SLOTS_
   return Array.from({ length }, (_, index) => values[index] ?? "");
 }
 
-export function buildVitalsSeriesPath(values: Array<number | null>, colWidth: number): string {
+export function buildVitalsSeriesPath(
+  values: Array<number | null>,
+  colWidth: number,
+  min = 20,
+  max = 220,
+  height = 350,
+): string {
   let previousWasGap = true;
 
   return values.reduce((path, value, index) => {
@@ -108,7 +114,7 @@ export function buildVitalsSeriesPath(values: Array<number | null>, colWidth: nu
     const command = previousWasGap ? "M" : "L";
     previousWasGap = false;
     const x = (index + 0.5) * colWidth;
-    return `${path}${path ? " " : ""}${command}${x},${getVitalsChartY(value)}`;
+    return `${path}${path ? " " : ""}${command}${x},${getVitalsChartY(value, min, max, height)}`;
   }, "");
 }
 

@@ -63,6 +63,15 @@ export function parseStoredSessions(raw: string | null): AnestesiaSession[] {
               pai: normalizeTimelineValues(
                 Array.isArray(fichaAnestesia.pai) ? fichaAnestesia.pai : [],
               ),
+              etco2: normalizeTimelineValues(
+                Array.isArray(fichaAnestesia.etco2) ? fichaAnestesia.etco2 : [],
+              ),
+              oximetriaPosicao:
+                typeof fichaAnestesia.oximetriaPosicao === "string"
+                  ? fichaAnestesia.oximetriaPosicao
+                  : "",
+              etco2Posicao:
+                typeof fichaAnestesia.etco2Posicao === "string" ? fichaAnestesia.etco2Posicao : "",
             },
           };
         })
