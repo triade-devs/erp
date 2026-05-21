@@ -446,7 +446,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                       </span>
                     </td>
                     <td className="border border-gray-300 px-2 py-1 text-gray-900">
-                      {item.calibre ? `${item.calibre}G` : ""}
+                      {item.calibre || ""}
                     </td>
                     <td className="border border-gray-300 px-2 py-1 text-gray-900">
                       {item.local || ""}
@@ -470,7 +470,7 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                         </span>
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-gray-900">
-                        {acesso.calibre ? `${acesso.calibre}G` : ""}
+                        {acesso.calibre || ""}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-gray-900">
                         {acesso.local || ""}

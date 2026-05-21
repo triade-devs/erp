@@ -105,7 +105,7 @@ export function AcessosSection({ data, onChange }: Props) {
                     <SelectContent>
                       {CALIBRE_OPTIONS.map((g) => (
                         <SelectItem key={g} value={g}>
-                          {g}G
+                          {g}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -157,7 +157,7 @@ export function AcessosSection({ data, onChange }: Props) {
                     <SelectContent>
                       {CALIBRE_OPTIONS.map((g) => (
                         <SelectItem key={g} value={g}>
-                          {g}G
+                          {g}
                         </SelectItem>
                       ))}
                     </SelectContent>

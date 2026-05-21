@@ -415,7 +415,7 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
                 {acessosAtivos.map(({ label, calibre, local }) => (
                   <div key={label} className="text-[10px]">
                     <span className="font-medium text-gray-500">{label}: </span>
-                    {[calibre ? `${calibre}G` : "", local].filter(Boolean).join(" · ") || "—"}
+                    {[calibre, local].filter(Boolean).join(" · ") || "—"}
                   </div>
                 ))}
               </div>
