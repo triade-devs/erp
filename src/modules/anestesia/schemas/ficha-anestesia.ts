@@ -12,7 +12,8 @@ const vitalsTimeSlotSchema = z.object({
 
 const medicacaoItemSchema = z.object({
   id: z.string(),
-  descricao: z.string(),
+  medicamento: z.string(),
+  dose: z.string().default(""),
   hora: z.string(),
   via: z.string(),
   infContinua: z.boolean(),

@@ -53,7 +53,8 @@ export type VitalsTimeSlot = {
 
 export type MedicacaoItem = {
   id: string;
-  descricao: string;
+  medicamento: string;
+  dose: string;
   hora: string;
   via: string;
   infContinua: boolean;

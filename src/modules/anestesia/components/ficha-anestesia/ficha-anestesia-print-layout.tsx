@@ -495,7 +495,10 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                         Nº
                       </th>
                       <th className="border border-gray-300 px-1 py-1 text-left font-bold text-gray-600">
-                        Descrição
+                        Medicamento
+                      </th>
+                      <th className="border border-gray-300 px-1 py-1 text-left font-bold text-gray-600">
+                        Dose
                       </th>
                       <th className="border border-gray-300 px-1 py-1 text-left font-bold text-gray-600">
                         Hora
@@ -515,7 +518,10 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                           {index + 1}
                         </td>
                         <td className="border border-gray-300 px-1 py-1 text-gray-900">
-                          {item.descricao}
+                          {item.medicamento}
+                        </td>
+                        <td className="border border-gray-300 px-1 py-1 text-gray-900">
+                          {item.dose}
                         </td>
                         <td className="border border-gray-300 px-1 py-1 text-gray-900">
                           {item.hora}

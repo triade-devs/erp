@@ -9,7 +9,8 @@ function emptyStringArray(length: number): string[] {
 function defaultMedicacaoItem(): MedicacaoItem {
   return {
     id: globalThis.crypto?.randomUUID?.() ?? `med-${Date.now()}`,
-    descricao: "",
+    medicamento: "",
+    dose: "",
     hora: "",
     via: "",
     infContinua: false,

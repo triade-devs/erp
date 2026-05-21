@@ -428,7 +428,8 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
               <table className="w-full border-collapse text-[9px]">
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-500">
-                    <th className="py-0.5 pr-2 text-left font-semibold">Medicação</th>
+                    <th className="py-0.5 pr-2 text-left font-semibold">Medicamento</th>
+                    <th className="py-0.5 pr-2 text-left font-semibold">Dose</th>
                     <th className="py-0.5 pr-2 text-left font-semibold">Hora</th>
                     <th className="py-0.5 text-left font-semibold">Via</th>
                   </tr>
@@ -436,7 +437,8 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
                 <tbody>
                   {fichaAnestesia.medicacoes.map((m) => (
                     <tr key={m.id}>
-                      <td className="py-0.5 pr-2">{m.descricao}</td>
+                      <td className="py-0.5 pr-2">{m.medicamento}</td>
+                      <td className="py-0.5 pr-2">{m.dose}</td>
                       <td className="py-0.5 pr-2">{m.hora}</td>
                       <td className="py-0.5">
                         {m.via}

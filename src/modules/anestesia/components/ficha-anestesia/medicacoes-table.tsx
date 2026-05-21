@@ -15,7 +15,8 @@ type Props = {
 function createItem(): MedicacaoItem {
   return {
     id: globalThis.crypto?.randomUUID?.() ?? `med-${Date.now()}`,
-    descricao: "",
+    medicamento: "",
+    dose: "",
     hora: "",
     via: "",
     infContinua: false,
@@ -50,7 +51,8 @@ export function MedicacoesTable({ data, onChange }: Props) {
           <thead className="bg-muted/30">
             <tr>
               <th className="px-3 py-2 text-left font-medium">Nº</th>
-              <th className="px-3 py-2 text-left font-medium">Descrição</th>
+              <th className="px-3 py-2 text-left font-medium">Medicamento</th>
+              <th className="px-3 py-2 text-left font-medium">Dose</th>
               <th className="px-3 py-2 text-left font-medium">Hora</th>
               <th className="px-3 py-2 text-left font-medium">Via</th>
               <th className="px-3 py-2 text-left font-medium">Inf. Cont.</th>
@@ -63,8 +65,15 @@ export function MedicacoesTable({ data, onChange }: Props) {
                 <td className="px-3 py-2">
                   <Input
                     className={compactInputClassName}
-                    value={item.descricao}
-                    onChange={(event) => updateItem(item.id, { descricao: event.target.value })}
+                    value={item.medicamento}
+                    onChange={(event) => updateItem(item.id, { medicamento: event.target.value })}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <Input
+                    className={compactInputClassName}
+                    value={item.dose}
+                    onChange={(event) => updateItem(item.id, { dose: event.target.value })}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -95,7 +104,7 @@ export function MedicacoesTable({ data, onChange }: Props) {
               </tr>
             ))}
             <tr>
-              <td colSpan={5} className="px-3 py-3">
+              <td colSpan={6} className="px-3 py-3">
                 <button
                   type="button"
                   className="w-full rounded-lg border border-dashed px-3 py-3 text-left text-sm text-muted-foreground hover:bg-muted/20"
