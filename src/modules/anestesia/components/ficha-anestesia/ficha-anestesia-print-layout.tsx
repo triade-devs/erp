@@ -4,9 +4,12 @@ import { forwardRef } from "react";
 import type { FichaAnestesiaData, PreAvaliacaoData } from "../../types";
 import {
   buildTimeLabels,
+  buildVitalsSeriesPath,
   calcularIMC,
   classificarIMC,
   formatarIMC,
+  getVitalsChartY,
+  normalizeTimelineValues,
   syncVitalsWithStartHour,
 } from "../../services/session";
 
@@ -104,6 +107,257 @@ const monitoracaoLabels: Record<string, string> = {
   capnografia: "Capnografia",
 };
 
+const CHART_W = 900;
+const CHART_H = 260;
+const PAD_LEFT = 32;
+const PAD_RIGHT = 12;
+const PAD_TOP = 12;
+const PAD_BOTTOM = 24;
+
+function printYPos(value: number, min: number, max: number): number {
+  const plotH = CHART_H - PAD_TOP - PAD_BOTTOM;
+  return PAD_TOP + plotH - ((value - min) / (max - min)) * plotH;
+}
+
+function buildPrintPath(values: string[], count: number, min: number, max: number): string {
+  const plotW = CHART_W - PAD_LEFT - PAD_RIGHT;
+  const step = count > 1 ? plotW / (count - 1) : 0;
+  const pts: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const v = parseFloat(values[i] ?? "");
+    if (!isNaN(v)) {
+      const x = PAD_LEFT + i * step;
+      const y = printYPos(v, min, max);
+      pts.push(`${pts.length === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+  }
+  return pts.join(" ");
+}
+
+interface PrintVitalsChartProps {
+  syncedVitals: ReturnType<typeof syncVitalsWithStartHour>;
+  timeLabels: string[];
+}
+
+function PrintVitalsChart({ syncedVitals, timeLabels }: PrintVitalsChartProps) {
+  const count = timeLabels.length;
+  const plotW = CHART_W - PAD_LEFT - PAD_RIGHT;
+  const step = count > 1 ? plotW / (count - 1) : 0;
+  const yMin = 20;
+  const yMax = 220;
+
+  const series = [
+    { key: "pasSis" as const, color: "#dc2626", label: "PA SIS" },
+    { key: "paDia" as const, color: "#f97316", label: "PA DIA" },
+    { key: "pam" as const, color: "#eab308", label: "PAM" },
+    { key: "fc" as const, color: "#2563eb", label: "FC" },
+    { key: "fr" as const, color: "#16a34a", label: "FR" },
+  ];
+
+  const yTicks = [20, 60, 100, 140, 180, 220];
+
+  return (
+    <svg
+      viewBox={`0 0 ${CHART_W} ${CHART_H + 20}`}
+      width="100%"
+      style={{ display: "block", fontFamily: "sans-serif" }}
+    >
+      {/* Y grid lines */}
+      {yTicks.map((val) => {
+        const y = printYPos(val, yMin, yMax);
+        return (
+          <g key={val}>
+            <line
+              x1={PAD_LEFT}
+              y1={y}
+              x2={CHART_W - PAD_RIGHT}
+              y2={y}
+              stroke="#e5e7eb"
+              strokeWidth="0.5"
+            />
+            <text x={PAD_LEFT - 2} y={y + 3} textAnchor="end" fontSize="8" fill="#6b7280">
+              {val}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* X axis ticks */}
+      {timeLabels.map((label, i) => {
+        const x = PAD_LEFT + i * step;
+        return (
+          <g key={i}>
+            <line
+              x1={x}
+              y1={PAD_TOP}
+              x2={x}
+              y2={CHART_H - PAD_BOTTOM}
+              stroke="#f3f4f6"
+              strokeWidth="0.5"
+            />
+            <text
+              x={x}
+              y={CHART_H - PAD_BOTTOM + 10}
+              textAnchor="middle"
+              fontSize="7"
+              fill="#6b7280"
+            >
+              {label}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Data points + lines */}
+      {series.map(({ key, color, label }) => {
+        const values = syncedVitals.map((slot) => slot[key] ?? "");
+        const d = buildPrintPath(values, count, yMin, yMax);
+        const dots = syncedVitals
+          .map((slot, i) => {
+            const v = parseFloat(slot[key] ?? "");
+            if (isNaN(v)) return null;
+            return { x: PAD_LEFT + i * step, y: printYPos(v, yMin, yMax), v };
+          })
+          .filter(Boolean) as { x: number; y: number; v: number }[];
+
+        return (
+          <g key={key}>
+            {d && <path d={d} fill="none" stroke={color} strokeWidth="1.2" />}
+            {dots.map((pt, i) => (
+              <g key={i}>
+                <circle cx={pt.x} cy={pt.y} r="2.5" fill={color} />
+                <text x={pt.x} y={pt.y - 4} textAnchor="middle" fontSize="6" fill={color}>
+                  {pt.v}
+                </text>
+              </g>
+            ))}
+          </g>
+        );
+      })}
+
+      {/* Legend */}
+      {series.map(({ color, label }, i) => (
+        <g key={label} transform={`translate(${PAD_LEFT + i * 100}, ${CHART_H + 4})`}>
+          <line x1={0} y1={7} x2={14} y2={7} stroke={color} strokeWidth="1.5" />
+          <text x={17} y={10} fontSize="8" fill="#374151">
+            {label}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+interface PrintMonitorChartProps {
+  values: string[];
+  timeLabels: string[];
+  yMin: number;
+  yMax: number;
+  color: string;
+  label: string;
+  posicao?: string;
+}
+
+function PrintMonitorChart({
+  values,
+  timeLabels,
+  yMin,
+  yMax,
+  color,
+  label,
+  posicao,
+}: PrintMonitorChartProps) {
+  const count = timeLabels.length;
+  const plotW = CHART_W - PAD_LEFT - PAD_RIGHT;
+  const step = count > 1 ? plotW / (count - 1) : 0;
+  const yTicks = [
+    yMin,
+    Math.round(yMin + (yMax - yMin) * 0.25),
+    Math.round(yMin + (yMax - yMin) * 0.5),
+    Math.round(yMin + (yMax - yMin) * 0.75),
+    yMax,
+  ];
+
+  const d = buildPrintPath(values, count, yMin, yMax);
+  const dots = values
+    .map((v, i) => {
+      const n = parseFloat(v);
+      if (isNaN(n)) return null;
+      return { x: PAD_LEFT + i * step, y: printYPos(n, yMin, yMax), v: n };
+    })
+    .filter(Boolean) as { x: number; y: number; v: number }[];
+
+  return (
+    <div>
+      {posicao && (
+        <p style={{ fontSize: "9px", color: "#374151", marginBottom: "4px" }}>
+          <strong>Posição:</strong> {posicao}
+        </p>
+      )}
+      <svg
+        viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+        width="100%"
+        style={{ display: "block", fontFamily: "sans-serif" }}
+      >
+        {yTicks.map((val) => {
+          const y = printYPos(val, yMin, yMax);
+          return (
+            <g key={val}>
+              <line
+                x1={PAD_LEFT}
+                y1={y}
+                x2={CHART_W - PAD_RIGHT}
+                y2={y}
+                stroke="#e5e7eb"
+                strokeWidth="0.5"
+              />
+              <text x={PAD_LEFT - 2} y={y + 3} textAnchor="end" fontSize="8" fill="#6b7280">
+                {val}
+              </text>
+            </g>
+          );
+        })}
+        {timeLabels.map((lbl, i) => {
+          const x = PAD_LEFT + i * step;
+          return (
+            <g key={i}>
+              <line
+                x1={x}
+                y1={PAD_TOP}
+                x2={x}
+                y2={CHART_H - PAD_BOTTOM}
+                stroke="#f3f4f6"
+                strokeWidth="0.5"
+              />
+              <text
+                x={x}
+                y={CHART_H - PAD_BOTTOM + 10}
+                textAnchor="middle"
+                fontSize="7"
+                fill="#6b7280"
+              >
+                {lbl}
+              </text>
+            </g>
+          );
+        })}
+        {d && <path d={d} fill="none" stroke={color} strokeWidth="1.5" />}
+        {dots.map((pt, i) => (
+          <g key={i}>
+            <circle cx={pt.x} cy={pt.y} r="2.5" fill={color} />
+            <text x={pt.x} y={pt.y - 4} textAnchor="middle" fontSize="6" fill={color}>
+              {pt.v}
+            </text>
+          </g>
+        ))}
+        <text x={PAD_LEFT + 4} y={PAD_TOP + 10} fontSize="8" fontWeight="bold" fill={color}>
+          {label}
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
   function FichaAnestesiaPrintLayout({ data, preAvaliacao }, ref) {
     const today = data.data
@@ -132,6 +386,8 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
       { key: "diurese" as const, label: "Diurese" },
       { key: "pvc" as const, label: "PVC" },
       { key: "ritmo" as const, label: "Ritmo" },
+      { key: "bis" as const, label: "BIS" },
+      { key: "pai" as const, label: "PAI" },
     ];
 
     const accessFields = [
@@ -350,17 +606,19 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
           {/* Grade de Sinais Vitais */}
           <SectionCard>
             <SectionHeader title="Grade de Sinais Vitais" />
-            <div className="overflow-x-auto">
+            <PrintVitalsChart syncedVitals={syncedVitals} timeLabels={timeLabels} />
+            {/* Métricas extras em tabela compacta */}
+            <div className="mt-1 overflow-x-auto">
               <table className="w-full border-collapse text-[9px]">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="border border-gray-300 px-1 py-1 text-left font-bold text-gray-600">
+                    <th className="border border-gray-300 px-1 py-0.5 text-left font-bold text-gray-600">
                       Parâmetro
                     </th>
                     {timeLabels.map((label) => (
                       <th
                         key={label}
-                        className="border border-gray-300 px-1 py-1 text-center font-bold text-gray-600"
+                        className="border border-gray-300 px-1 py-0.5 text-center font-bold text-gray-600"
                       >
                         {label}
                       </th>
@@ -368,41 +626,15 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                   </tr>
                 </thead>
                 <tbody>
-                  {(
-                    [
-                      { key: "pasSis" as const, label: "PA SIS" },
-                      { key: "paDia" as const, label: "PA DIA" },
-                      { key: "pam" as const, label: "PAM" },
-                      { key: "fc" as const, label: "FC" },
-                      { key: "fr" as const, label: "FR" },
-                    ] as const
-                  ).map((row, rowIndex) => (
-                    <tr key={row.key} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="border border-gray-300 px-1 py-1 font-semibold text-gray-700">
-                        {row.label}
-                      </td>
-                      {syncedVitals.map((slot, index) => (
-                        <td
-                          key={index}
-                          className="border border-gray-300 px-1 py-1 text-center text-gray-900"
-                        >
-                          {slot[row.key] || ""}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
                   {extraMetrics.map((metric, rowIndex) => (
-                    <tr
-                      key={metric.key}
-                      className={(rowIndex + 5) % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    >
-                      <td className="border border-gray-300 px-1 py-1 font-semibold text-gray-700">
+                    <tr key={metric.key} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="border border-gray-300 px-1 py-0.5 font-semibold text-gray-700">
                         {metric.label}
                       </td>
                       {timeLabels.map((label, index) => (
                         <td
                           key={label}
-                          className="border border-gray-300 px-1 py-1 text-center text-gray-900"
+                          className="border border-gray-300 px-1 py-0.5 text-center text-gray-900"
                         >
                           {data[metric.key][index] ?? ""}
                         </td>
@@ -413,6 +645,38 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
               </table>
             </div>
           </SectionCard>
+
+          {/* Oximetria (SpO2) */}
+          {data.monitoracao.oximetria && (
+            <SectionCard>
+              <SectionHeader title="Oximetria — SpO₂ (%)" />
+              <PrintMonitorChart
+                values={normalizeTimelineValues(data.spo2, timeLabels.length)}
+                timeLabels={timeLabels}
+                yMin={60}
+                yMax={100}
+                color="#0ea5e9"
+                label="SpO₂ %"
+                posicao={data.oximetriaPosicao}
+              />
+            </SectionCard>
+          )}
+
+          {/* Capnografia (EtCO2) */}
+          {data.monitoracao.capnografia && (
+            <SectionCard>
+              <SectionHeader title="Capnografia — EtCO₂ (mmHg)" />
+              <PrintMonitorChart
+                values={normalizeTimelineValues(data.etco2, timeLabels.length)}
+                timeLabels={timeLabels}
+                yMin={0}
+                yMax={80}
+                color="#a855f7"
+                label="EtCO₂ mmHg"
+                posicao={data.etco2Posicao}
+              />
+            </SectionCard>
+          )}
 
           {/* Acessos Vasculares */}
           <SectionCard>
