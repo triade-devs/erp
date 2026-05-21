@@ -92,10 +92,13 @@ export function defaultFichaAnestesia(
     tecnica: {
       geral: false,
       raqui: false,
+      raquiDescricao: "",
       sedacao: false,
       peridural: false,
+      periduralDescricao: "",
       caudal: false,
       bloqueioplexo: false,
+      bloqueioplexoDescricao: "",
     },
     inicioAnestesia: "",
     inicioCirurgia: "",

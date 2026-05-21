@@ -58,10 +58,13 @@ export const fichaAnestesiaSchema = z.object({
   tecnica: z.object({
     geral: z.boolean(),
     raqui: z.boolean(),
+    raquiDescricao: z.string().default(""),
     sedacao: z.boolean(),
     peridural: z.boolean(),
+    periduralDescricao: z.string().default(""),
     caudal: z.boolean(),
     bloqueioplexo: z.boolean(),
+    bloqueioplexoDescricao: z.string().default(""),
   }),
   inicioAnestesia: z.string(),
   inicioCirurgia: z.string(),

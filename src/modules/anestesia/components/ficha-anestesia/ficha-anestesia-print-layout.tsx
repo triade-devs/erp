@@ -221,13 +221,19 @@ export const FichaAnestesiaPrintLayout = forwardRef<HTMLDivElement, Props>(
                     Técnica Anestésica
                   </p>
                   <div className="space-y-1">
-                    {Object.entries(tecnicaLabels).map(([key, label]) => (
-                      <PrintCheckbox
-                        key={key}
-                        checked={data.tecnica[key as keyof typeof data.tecnica]}
-                        label={label}
-                      />
-                    ))}
+                    {Object.entries(tecnicaLabels).map(([key, label]) => {
+                      const checked = data.tecnica[key as keyof typeof data.tecnica] === true;
+                      const obsKey = `${key}Descricao` as keyof typeof data.tecnica;
+                      const obs = data.tecnica[obsKey] as string | undefined;
+                      return (
+                        <div key={key}>
+                          <PrintCheckbox checked={checked} label={label} />
+                          {checked && obs && (
+                            <p className="ml-4 text-[8px] italic text-gray-600">{obs}</p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <div>

@@ -22,12 +22,12 @@ const estadoAdmissaoOptions = [
 ] as const;
 
 const tecnicaOptions = [
-  { key: "geral", label: "Geral" },
-  { key: "raqui", label: "Raquianestesia" },
-  { key: "sedacao", label: "Sedação" },
-  { key: "peridural", label: "Peridural" },
-  { key: "caudal", label: "Caudal" },
-  { key: "bloqueioplexo", label: "Bloqueio de Plexo" },
+  { key: "geral", label: "Geral", descricaoKey: null },
+  { key: "raqui", label: "Raquianestesia", descricaoKey: "raquiDescricao" },
+  { key: "sedacao", label: "Sedação", descricaoKey: null },
+  { key: "peridural", label: "Peridural", descricaoKey: "periduralDescricao" },
+  { key: "caudal", label: "Caudal", descricaoKey: null },
+  { key: "bloqueioplexo", label: "Bloqueio de Plexo", descricaoKey: "bloqueioplexoDescricao" },
 ] as const;
 
 export function MedicacaoTecnicaSection({ data, onChange }: Props) {
@@ -117,20 +117,32 @@ export function MedicacaoTecnicaSection({ data, onChange }: Props) {
           <Label>Técnica anestésica</Label>
           <div className="grid gap-3 sm:grid-cols-2">
             {tecnicaOptions.map((item) => (
-              <label
-                key={item.key}
-                className="flex items-center gap-3 rounded-lg border p-3 text-sm"
-              >
-                <Checkbox
-                  checked={data.tecnica[item.key]}
-                  onCheckedChange={(checked) =>
-                    onChange({
-                      tecnica: { ...data.tecnica, [item.key]: checked === true },
-                    })
-                  }
-                />
-                {item.label}
-              </label>
+              <div key={item.key} className="space-y-2">
+                <label className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+                  <Checkbox
+                    checked={data.tecnica[item.key]}
+                    onCheckedChange={(checked) =>
+                      onChange({
+                        tecnica: { ...data.tecnica, [item.key]: checked === true },
+                      })
+                    }
+                  />
+                  {item.label}
+                </label>
+                {item.descricaoKey && data.tecnica[item.key] && (
+                  <Textarea
+                    className="text-sm"
+                    rows={2}
+                    placeholder={`Detalhes sobre ${item.label.toLowerCase()}...`}
+                    value={data.tecnica[item.descricaoKey]}
+                    onChange={(e) =>
+                      onChange({
+                        tecnica: { ...data.tecnica, [item.descricaoKey!]: e.target.value },
+                      })
+                    }
+                  />
+                )}
+              </div>
             ))}
           </div>
         </div>

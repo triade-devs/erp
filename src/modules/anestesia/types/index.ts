@@ -93,10 +93,13 @@ export type FichaAnestesiaData = {
   tecnica: {
     geral: boolean;
     raqui: boolean;
+    raquiDescricao: string;
     sedacao: boolean;
     peridural: boolean;
+    periduralDescricao: string;
     caudal: boolean;
     bloqueioplexo: boolean;
+    bloqueioplexoDescricao: string;
   };
   inicioAnestesia: string;
   inicioCirurgia: string;

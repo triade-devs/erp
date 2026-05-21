@@ -121,8 +121,9 @@ export const ResumoPrintLayout = forwardRef<HTMLDivElement, Props>(function Resu
   const hasAlerts = hasVAD || !!asaValue || hasEmergencia || !!alergiasText;
 
   const tecnicaAtiva = Object.entries(fichaAnestesia.tecnica)
-    .filter(([, v]) => v)
-    .map(([k]) => tecnicaLabels[k] ?? k);
+    .filter(([, v]) => v === true)
+    .map(([k]) => tecnicaLabels[k] ?? k)
+    .filter(Boolean);
 
   const ventilacaoAtiva = Object.entries(fichaAnestesia.ventilacao)
     .filter(([, v]) => v)
