@@ -131,6 +131,8 @@ export type FichaAnestesiaData = {
   diurese: string[];
   pvc: string[];
   ritmo: string[];
+  bis: string[];
+  pai: string[];
   acessoPeriferico: { ativo: boolean; calibre: string; local: string }[];
   acessoIntraosseo: { ativo: boolean; calibre: string; local: string };
   acessoVenosoCentral: { ativo: boolean; calibre: string; local: string };

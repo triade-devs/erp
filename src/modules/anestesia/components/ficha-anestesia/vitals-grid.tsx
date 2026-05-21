@@ -61,7 +61,7 @@ export function VitalsGrid({ data, onChange }: Props) {
   };
 
   const updateMetricArray = (
-    key: "spo2" | "temp" | "diurese" | "pvc" | "ritmo",
+    key: "spo2" | "temp" | "diurese" | "pvc" | "ritmo" | "bis" | "pai",
     index: number,
     value: string,
   ) => {
@@ -249,6 +249,8 @@ export function VitalsGrid({ data, onChange }: Props) {
               { key: "diurese", label: "Diurese" },
               { key: "pvc", label: "PVC" },
               { key: "ritmo", label: "Ritmo" },
+              { key: "bis", label: "BIS" },
+              { key: "pai", label: "PAI" },
             ] as const
           ).map((metric) => (
             <div key={metric.key} className="vitals-grid items-center gap-2">

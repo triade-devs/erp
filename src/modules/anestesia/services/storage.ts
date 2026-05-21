@@ -57,6 +57,12 @@ export function parseStoredSessions(raw: string | null): AnestesiaSession[] {
               ritmo: normalizeTimelineValues(
                 Array.isArray(fichaAnestesia.ritmo) ? fichaAnestesia.ritmo : [],
               ),
+              bis: normalizeTimelineValues(
+                Array.isArray(fichaAnestesia.bis) ? fichaAnestesia.bis : [],
+              ),
+              pai: normalizeTimelineValues(
+                Array.isArray(fichaAnestesia.pai) ? fichaAnestesia.pai : [],
+              ),
             },
           };
         })
