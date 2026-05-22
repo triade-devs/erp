@@ -10,16 +10,23 @@ import { bulkToggleModuleForCompaniesAction } from "../bulk-toggle-module-for-co
 
 // Enable path:
 //   rpc is_platform_admin → auth.getUser → companies.select → company_modules.upsert
-//   → permissions.select.eq → roles.select.eq → role_permissions.upsert
+//   → permissions.select.eq → role_permissions.update({ is_active: true }).in
+//   → roles.select.eq → role_permissions.upsert
 // Disable path:
 //   rpc is_platform_admin → auth.getUser → company_modules.delete.eq
-//   → permissions.select.eq → role_permissions.delete.in
+//   → permissions.select.eq → role_permissions.update({ is_active: false }).in
 
 function makeEnableMock({
   isPlatformAdmin = true,
   companies = [{ id: "c1" }, { id: "c2" }],
   upsertError = null as { message: string } | null,
+  modulePerms = [] as Array<{ code: string; action: string }>,
+  systemRoles = [] as Array<{ id: string; code: string }>,
 } = {}) {
+  const rolePermsUpdateIn = vi.fn().mockResolvedValue({ data: null, error: null });
+  const rolePermsUpdateFn = vi.fn().mockReturnValue({ in: rolePermsUpdateIn });
+  const rolePermsUpsert = vi.fn().mockResolvedValue({ error: null });
+
   return {
     rpc: vi.fn().mockResolvedValue({ data: isPlatformAdmin, error: null }),
     auth: {
@@ -35,23 +42,32 @@ function makeEnableMock({
       if (table === "permissions")
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+            eq: vi.fn().mockResolvedValue({ data: modulePerms, error: null }),
           }),
         };
       if (table === "roles")
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+            eq: vi.fn().mockResolvedValue({ data: systemRoles, error: null }),
           }),
         };
       if (table === "role_permissions")
-        return { upsert: vi.fn().mockResolvedValue({ error: null }) };
+        return { update: rolePermsUpdateFn, upsert: rolePermsUpsert };
       return {};
     }),
+    rolePermsUpdateFn,
+    rolePermsUpdateIn,
+    rolePermsUpsert,
   };
 }
 
-function makeDisableMock({ deleteError = null as { message: string } | null } = {}) {
+function makeDisableMock({
+  deleteError = null as { message: string } | null,
+  permsToDeactivate = [{ code: "kb:article:read" }] as Array<{ code: string }>,
+} = {}) {
+  const rolePermsUpdateIn = vi.fn().mockResolvedValue({ data: null, error: null });
+  const rolePermsUpdateFn = vi.fn().mockReturnValue({ in: rolePermsUpdateIn });
+
   return {
     rpc: vi.fn().mockResolvedValue({ data: true, error: null }),
     auth: {
@@ -67,17 +83,14 @@ function makeDisableMock({ deleteError = null as { message: string } | null } = 
       if (table === "permissions")
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [{ code: "kb:article:read" }], error: null }),
+            eq: vi.fn().mockResolvedValue({ data: permsToDeactivate, error: null }),
           }),
         };
-      if (table === "role_permissions")
-        return {
-          delete: vi.fn().mockReturnValue({
-            in: vi.fn().mockResolvedValue({ error: null }),
-          }),
-        };
+      if (table === "role_permissions") return { update: rolePermsUpdateFn };
       return {};
     }),
+    rolePermsUpdateFn,
+    rolePermsUpdateIn,
   };
 }
 
@@ -100,6 +113,58 @@ describe("bulkToggleModuleForCompaniesAction", () => {
     vi.mocked(createClient).mockResolvedValue(makeEnableMock({ isPlatformAdmin: false }) as never);
     await expect(bulkToggleModuleForCompaniesAction("knowledge-base", true)).rejects.toThrow(
       "Acesso negado",
+    );
+  });
+
+  it("disable: marca is_active=false em role_permissions globalmente", async () => {
+    const mock = makeDisableMock({
+      permsToDeactivate: [{ code: "inventory:product:read" }, { code: "inventory:product:create" }],
+    });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    const result = await bulkToggleModuleForCompaniesAction("inventory", false);
+
+    expect(result.ok).toBe(true);
+    expect(mock.rolePermsUpdateFn).toHaveBeenCalledWith({ is_active: false });
+    expect(mock.rolePermsUpdateIn).toHaveBeenCalledWith(
+      "permission_code",
+      expect.arrayContaining(["inventory:product:read", "inventory:product:create"]),
+    );
+  });
+
+  it("enable: marca is_active=true em role_permissions globalmente antes do upsert", async () => {
+    const mock = makeEnableMock({
+      modulePerms: [
+        { code: "inventory:product:read", action: "read" },
+        { code: "inventory:product:create", action: "create" },
+      ],
+    });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    const result = await bulkToggleModuleForCompaniesAction("inventory", true);
+
+    expect(result.ok).toBe(true);
+    expect(mock.rolePermsUpdateFn).toHaveBeenCalledWith({ is_active: true });
+    expect(mock.rolePermsUpdateIn).toHaveBeenCalledWith(
+      "permission_code",
+      expect.arrayContaining(["inventory:product:read", "inventory:product:create"]),
+    );
+  });
+
+  it("enable: upsert das perms-padrão inclui is_active=true", async () => {
+    const mock = makeEnableMock({
+      systemRoles: [{ id: "role-owner", code: "owner" }],
+      modulePerms: [{ code: "inventory:product:read", action: "read" }],
+    });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    await bulkToggleModuleForCompaniesAction("inventory", true);
+
+    expect(mock.rolePermsUpsert).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ permission_code: "inventory:product:read", is_active: true }),
+      ]),
+      expect.objectContaining({ onConflict: "role_id,permission_code" }),
     );
   });
 });
