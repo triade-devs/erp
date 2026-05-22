@@ -2,6 +2,8 @@ export type MenuItem = {
   label: string;
   href: string;
   icon?: string;
+  /** Agrupa o item sob um label de seção na sidebar */
+  group?: string;
   roles?: string[];
   requiresModule?: string;
   requiresPermission?: string;
@@ -12,9 +14,10 @@ export type MenuItem = {
 export const MODULES_MENU: MenuItem[] = [
   { label: "Início", href: "/", icon: "home" },
   {
-    label: "Estoque",
+    label: "Produtos",
     href: "/inventory",
     icon: "package",
+    group: "Estoque",
     requiresSlug: true,
     requiresPermission: "inventory:product:read",
   },
@@ -22,6 +25,7 @@ export const MODULES_MENU: MenuItem[] = [
     label: "Movimentações",
     href: "/inventory/movements",
     icon: "arrow-left-right",
+    group: "Estoque",
     requiresSlug: true,
     requiresPermission: "movements:movement:read",
   },
@@ -29,6 +33,7 @@ export const MODULES_MENU: MenuItem[] = [
     label: "Auditoria",
     href: "/audit",
     icon: "shield-check",
+    group: "Empresa",
     requiresSlug: true,
     requiresPermission: "core:audit:read",
   },
@@ -36,6 +41,7 @@ export const MODULES_MENU: MenuItem[] = [
     label: "Manual",
     href: "/manual",
     icon: "book-open",
+    group: "Empresa",
     requiresSlug: true,
     requiresPermission: "kb:article:read",
   },
@@ -50,14 +56,15 @@ export const MODULES_MENU: MenuItem[] = [
     label: "Configurações",
     href: "/settings/general",
     icon: "settings",
+    group: "Empresa",
     requiresSlug: true,
     requiresPermission: "core:company:update",
   },
 ];
 
 export const ADMIN_MENU: MenuItem[] = [
-  { label: "Empresas", href: "/admin/companies", icon: "building-2" },
-  { label: "Auditoria Global", href: "/admin/audit", icon: "activity" },
-  { label: "Módulos", href: "/admin/platform/modules", icon: "puzzle" },
-  { label: "Roles", href: "/admin/platform/roles", icon: "shield" },
+  { label: "Empresas", href: "/admin/companies", icon: "building-2", group: "Gestão" },
+  { label: "Auditoria Global", href: "/admin/audit", icon: "activity", group: "Gestão" },
+  { label: "Módulos", href: "/admin/platform/modules", icon: "puzzle", group: "Sistema" },
+  { label: "Roles", href: "/admin/platform/roles", icon: "shield", group: "Sistema" },
 ];
