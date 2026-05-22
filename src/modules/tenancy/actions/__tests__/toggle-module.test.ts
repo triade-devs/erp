@@ -18,7 +18,7 @@ type ToggleMockOptions = {
   deleteModuleError?: { message: string } | null;
   systemRoles?: Array<{ id: string; code: string }>;
   permissions?: Array<{ code: string }>;
-  permsToRemove?: Array<{ code: string }>;
+  permsToDeactivate?: Array<{ code: string }>;
   companyRoles?: Array<{ id: string }>;
 };
 
@@ -105,17 +105,17 @@ function makeEnableMock({
 //   company_modules.delete().eq("company_id").eq("module_code") — sem return, só checa error
 //   permissions.select("code").eq("module_code", moduleCode)    — uma eq, resolve array
 //   roles.select("id").eq("company_id", companyId)              — uma eq, resolve array
-//   role_permissions.delete().in("role_id", roleIds).in("permission_code", codes) — sem return
+//   role_permissions.update({ is_active: false }).in("role_id", roleIds).in("permission_code", codes) — sem return
 // -------------------------------------------------------------------
 function makeDisableMock({
   isPlatformAdmin = true,
   rpcError = null,
   deleteModuleError = null,
-  permsToRemove = [{ code: "inventory:product:read" }],
+  permsToDeactivate = [{ code: "inventory:product:read" }],
   companyRoles = [{ id: "role-owner" }, { id: "role-manager" }],
 }: Pick<
   ToggleMockOptions,
-  "isPlatformAdmin" | "rpcError" | "deleteModuleError" | "permsToRemove" | "companyRoles"
+  "isPlatformAdmin" | "rpcError" | "deleteModuleError" | "permsToDeactivate" | "companyRoles"
 > = {}) {
   // company_modules: .delete().eq().eq() — terminal
   const modulesDeleteEq2 = vi
@@ -127,7 +127,7 @@ function makeDisableMock({
   const modulesDeleteFn = vi.fn().mockReturnValue({ eq: modulesDeleteEq1 });
 
   // permissions: .select("code").eq("module_code", moduleCode) — uma eq, resolve array
-  const permsEqDisable = vi.fn().mockResolvedValue({ data: permsToRemove, error: null });
+  const permsEqDisable = vi.fn().mockResolvedValue({ data: permsToDeactivate, error: null });
   const permsSelectDisable = vi.fn().mockReturnValue({ eq: permsEqDisable });
 
   // roles: .select("id").eq("company_id", companyId) — uma eq, resolve array
@@ -259,7 +259,7 @@ describe("toggleModuleAction", () => {
     const mock = makeDisableMock({
       isPlatformAdmin: true,
       companyRoles: [{ id: "role-a" }, { id: "role-b" }],
-      permsToRemove: [{ code: "inventory:product:read" }],
+      permsToDeactivate: [{ code: "inventory:product:read" }],
     });
     await callToggle(mock, "company-1", "inventory", false);
 
