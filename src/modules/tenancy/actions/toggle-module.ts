@@ -29,7 +29,33 @@ export async function toggleModuleAction(
     });
     if (error) return { ok: false, message: error.message };
 
-    // Distribui permissões do módulo nas roles-sistema existentes
+    // Reativa perms previamente desativadas (preserva customizações tenant
+    // após ciclo disable→enable do módulo).
+    const { data: companyRoles } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("company_id", companyId);
+
+    const allRoleIds = (companyRoles ?? []).map((r) => r.id);
+
+    const { data: modulePerms } = await supabase
+      .from("permissions")
+      .select("code")
+      .eq("module_code", moduleCode);
+
+    const modulePermCodes = (modulePerms ?? []).map((p) => p.code);
+
+    if (allRoleIds.length && modulePermCodes.length) {
+      const { error: updErr } = await supabase
+        .from("role_permissions")
+        .update({ is_active: true })
+        .in("role_id", allRoleIds)
+        .in("permission_code", modulePermCodes);
+      if (updErr) return { ok: false, message: updErr.message };
+    }
+
+    // Distribui perms-padrão nas roles-sistema (idempotente; cobre o caso de
+    // habilitar o módulo pela primeira vez para a empresa).
     const { data: systemRoles } = await supabase
       .from("roles")
       .select("id, code")
@@ -59,7 +85,7 @@ export async function toggleModuleAction(
 
       if (perms?.length) {
         await supabase.from("role_permissions").upsert(
-          perms.map((p) => ({ role_id: role.id, permission_code: p.code })),
+          perms.map((p) => ({ role_id: role.id, permission_code: p.code, is_active: true })),
           { onConflict: "role_id,permission_code", ignoreDuplicates: true },
         );
       }
