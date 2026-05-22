@@ -73,13 +73,14 @@ export async function toggleModuleAction(
 
     if (error) return { ok: false, message: error.message };
 
-    // Remove permissões do módulo de todas as roles da empresa
-    const { data: permsToRemove } = await supabase
+    // Desativa logicamente permissões do módulo nas roles da empresa.
+    // Não deleta: preserva customizações tenant para quando módulo for reativado.
+    const { data: permsToDeactivate } = await supabase
       .from("permissions")
       .select("code")
       .eq("module_code", moduleCode);
 
-    if (permsToRemove?.length) {
+    if (permsToDeactivate?.length) {
       const { data: companyRoles } = await supabase
         .from("roles")
         .select("id")
@@ -87,14 +88,15 @@ export async function toggleModuleAction(
 
       const roleIds = (companyRoles ?? []).map((r) => r.id);
       if (roleIds.length) {
-        await supabase
+        const { error: updErr } = await supabase
           .from("role_permissions")
-          .delete()
+          .update({ is_active: false })
           .in("role_id", roleIds)
           .in(
             "permission_code",
-            permsToRemove.map((p) => p.code),
+            permsToDeactivate.map((p) => p.code),
           );
+        if (updErr) return { ok: false, message: updErr.message };
       }
     }
   }

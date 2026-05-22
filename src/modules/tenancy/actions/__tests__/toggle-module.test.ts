@@ -134,10 +134,10 @@ function makeDisableMock({
   const rolesEqCompany = vi.fn().mockResolvedValue({ data: companyRoles, error: null });
   const rolesSelectCompany = vi.fn().mockReturnValue({ eq: rolesEqCompany });
 
-  // role_permissions: .delete().in("role_id").in("permission_code") — sem return
-  const rolePermsDeleteIn2 = vi.fn().mockResolvedValue({ data: null, error: null });
-  const rolePermsDeleteIn1 = vi.fn().mockReturnValue({ in: rolePermsDeleteIn2 });
-  const rolePermsDeleteFn = vi.fn().mockReturnValue({ in: rolePermsDeleteIn1 });
+  // role_permissions: .update({ is_active: false }).in("role_id").in("permission_code") — sem return
+  const rolePermsUpdateIn2 = vi.fn().mockResolvedValue({ data: null, error: null });
+  const rolePermsUpdateIn1 = vi.fn().mockReturnValue({ in: rolePermsUpdateIn2 });
+  const rolePermsUpdateFn = vi.fn().mockReturnValue({ in: rolePermsUpdateIn1 });
 
   return {
     auth: {
@@ -155,7 +155,7 @@ function makeDisableMock({
         return { select: rolesSelectCompany };
       }
       if (table === "role_permissions") {
-        return { delete: rolePermsDeleteFn };
+        return { update: rolePermsUpdateFn };
       }
       // fallback para tabelas não esperadas — joga erro para detectar acessos inesperados
       return vi.fn().mockReturnValue({
@@ -171,7 +171,8 @@ function makeDisableMock({
     // Helpers expostos para inspecionar nos testes
     modulesDeleteFn,
     permsEqDisable,
-    rolePermsDeleteIn2,
+    rolePermsUpdateFn,
+    rolePermsUpdateIn2,
   };
 }
 
@@ -254,7 +255,7 @@ describe("toggleModuleAction", () => {
     expect(mock.modulesDeleteFn).toHaveBeenCalled();
   });
 
-  it("ao desabilitar módulo chama delete em role_permissions com os ids corretos", async () => {
+  it("ao desabilitar módulo chama update com is_active=false em role_permissions", async () => {
     const mock = makeDisableMock({
       isPlatformAdmin: true,
       companyRoles: [{ id: "role-a" }, { id: "role-b" }],
@@ -264,8 +265,10 @@ describe("toggleModuleAction", () => {
 
     expect(mock.permsEqDisable).toHaveBeenCalledWith("module_code", "inventory");
 
-    // Verifica que o segundo .in() foi chamado com os permission_codes corretos
-    expect(mock.rolePermsDeleteIn2).toHaveBeenCalledWith(
+    // update foi chamado com payload de desativação
+    expect(mock.rolePermsUpdateFn).toHaveBeenCalledWith({ is_active: false });
+    // segundo .in() recebe permission_codes corretos
+    expect(mock.rolePermsUpdateIn2).toHaveBeenCalledWith(
       "permission_code",
       expect.arrayContaining(["inventory:product:read"]),
     );
