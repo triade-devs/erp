@@ -37,7 +37,6 @@ export async function getCurrentUser() {
       id,
       company_id,
       status,
-      is_owner,
       company:companies ( slug, name ),
       membership_roles (
         role:roles ( code )
@@ -55,14 +54,16 @@ export async function getCurrentUser() {
       }
     ).membership_roles;
 
+    const roleCodes = (membershipRoles ?? []).map((mr) => mr.role?.code ?? "").filter(Boolean);
+
     return {
       id: m.id,
       companyId: m.company_id,
       companySlug: company?.slug ?? "",
       companyName: company?.name ?? "",
       status: m.status,
-      isOwner: m.is_owner,
-      roles: (membershipRoles ?? []).map((mr) => mr.role?.code ?? "").filter(Boolean),
+      isOwner: roleCodes.includes("owner"),
+      roles: roleCodes,
     };
   });
 

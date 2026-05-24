@@ -1110,8 +1110,8 @@ export type Database = {
           id: string;
           invited_at: string | null;
           invited_by: string | null;
-          is_owner: boolean;
           joined_at: string | null;
+          legacy_is_owner: boolean;
           status: Database["public"]["Enums"]["membership_status"];
           updated_at: string;
           user_id: string;
@@ -1122,8 +1122,8 @@ export type Database = {
           id?: string;
           invited_at?: string | null;
           invited_by?: string | null;
-          is_owner?: boolean;
           joined_at?: string | null;
+          legacy_is_owner?: boolean;
           status?: Database["public"]["Enums"]["membership_status"];
           updated_at?: string;
           user_id: string;
@@ -1134,8 +1134,8 @@ export type Database = {
           id?: string;
           invited_at?: string | null;
           invited_by?: string | null;
-          is_owner?: boolean;
           joined_at?: string | null;
+          legacy_is_owner?: boolean;
           status?: Database["public"]["Enums"]["membership_status"];
           updated_at?: string;
           user_id?: string;
@@ -1677,6 +1677,10 @@ export type Database = {
       };
       has_permission: {
         Args: { p_company: string; p_permission: string };
+        Returns: boolean;
+      };
+      is_membership_owner: {
+        Args: { p_membership_id: string };
         Returns: boolean;
       };
       is_platform_admin: { Args: never; Returns: boolean };
