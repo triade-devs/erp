@@ -23,7 +23,7 @@ export async function transferMemberAction(
 
   const { data: source, error: srcErr } = await supabase
     .from("memberships")
-    .select("id, user_id, is_owner, membership_roles(role_id)")
+    .select("id, user_id, membership_roles(role_id)")
     .eq("id", membershipId)
     .eq("company_id", sourceCompanyId)
     .maybeSingle();
