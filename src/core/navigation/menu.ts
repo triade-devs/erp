@@ -60,4 +60,10 @@ export const ADMIN_MENU: MenuItem[] = [
   { label: "Auditoria Global", href: "/admin/audit", icon: "activity", group: "Gestão" },
   { label: "Módulos", href: "/admin/platform/modules", icon: "puzzle", group: "Sistema" },
   { label: "Roles", href: "/admin/platform/roles", icon: "shield", group: "Sistema" },
+  {
+    label: "Templates de Role",
+    href: "/admin/platform/role-templates",
+    icon: "layout-template",
+    group: "Sistema",
+  },
 ];
