@@ -1439,6 +1439,36 @@ export type Database = {
           },
         ];
       };
+      role_templates: {
+        Row: {
+          code: string;
+          created_at: string;
+          description: string | null;
+          is_system: boolean;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          description?: string | null;
+          is_system?: boolean;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          description?: string | null;
+          is_system?: boolean;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       roles: {
         Row: {
           code: string;
@@ -1448,6 +1478,8 @@ export type Database = {
           id: string;
           is_system: boolean;
           name: string;
+          template_code: string | null;
+          template_synced_at: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1458,6 +1490,8 @@ export type Database = {
           id?: string;
           is_system?: boolean;
           name: string;
+          template_code?: string | null;
+          template_synced_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1468,6 +1502,8 @@ export type Database = {
           id?: string;
           is_system?: boolean;
           name?: string;
+          template_code?: string | null;
+          template_synced_at?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -1477,6 +1513,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "companies";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "roles_template_code_fkey";
+            columns: ["template_code"];
+            isOneToOne: false;
+            referencedRelation: "role_templates";
+            referencedColumns: ["code"];
           },
         ];
       };
@@ -1561,6 +1604,39 @@ export type Database = {
           },
         ];
       };
+      template_permissions: {
+        Row: {
+          added_at: string;
+          permission_code: string;
+          template_code: string;
+        };
+        Insert: {
+          added_at?: string;
+          permission_code: string;
+          template_code: string;
+        };
+        Update: {
+          added_at?: string;
+          permission_code?: string;
+          template_code?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "template_permissions_permission_code_fkey";
+            columns: ["permission_code"];
+            isOneToOne: false;
+            referencedRelation: "permissions";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "template_permissions_template_code_fkey";
+            columns: ["template_code"];
+            isOneToOne: false;
+            referencedRelation: "role_templates";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1574,6 +1650,14 @@ export type Database = {
         Args: { p_permission: string; p_user_id: string };
         Returns: boolean;
       };
+      apply_template_to_company: {
+        Args: { p_company: string; p_force?: boolean; p_template_code: string };
+        Returns: {
+          perms_added: number;
+          perms_removed: number;
+          role_id: string;
+        }[];
+      };
       bootstrap_company_rbac: {
         Args: { p_company: string };
         Returns: undefined;
@@ -1583,6 +1667,10 @@ export type Database = {
         Returns: string;
       };
       get_user_id_by_email: { Args: { p_email: string }; Returns: string };
+      grant_module_to_all_companies: {
+        Args: { p_module_code: string; p_role_to_perms: Json };
+        Returns: undefined;
+      };
       has_medical_patient_access: {
         Args: { p_company: string; p_patient: string };
         Returns: boolean;
