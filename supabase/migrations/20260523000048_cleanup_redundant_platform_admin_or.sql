@@ -1,7 +1,7 @@
 -- 20260523000048_cleanup_redundant_platform_admin_or.sql
 -- PR #B cleanup: após has_permission() absorver is_platform_admin(),
 -- o padrão 'public.is_platform_admin() OR public.has_permission(...)'
--- vira redundante. Esta migration recria 15 policies sem o OR.
+-- vira redundante. Esta migration recria 13 policies sem o OR.
 --
 -- Critério para inclusão nesta migration: policy combina is_platform_admin
 -- com has_permission via OR. Policies que usam is_platform_admin sozinho
