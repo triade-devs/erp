@@ -40,26 +40,44 @@ export async function bulkToggleModuleForCompaniesAction(
       if (error) return { ok: false, message: error.message };
     }
 
-    // Distribui permissões do módulo nas roles-sistema de todas as empresas
-    const [{ data: allPerms }, { data: systemRoles }] = await Promise.all([
-      supabase.from("permissions").select("code, action").eq("module_code", moduleCode),
-      supabase.from("roles").select("id, code").eq("is_system", true),
-    ]);
+    const { data: modulePerms } = await supabase
+      .from("permissions")
+      .select("code, action")
+      .eq("module_code", moduleCode);
+
+    const modulePermCodes = (modulePerms ?? []).map((p) => p.code);
+
+    // Reativa globalmente perms previamente desativadas (preserva customizações
+    // tenant após ciclo disable→enable global do módulo).
+    if (modulePermCodes.length) {
+      const { error: updErr } = await supabase
+        .from("role_permissions")
+        .update({ is_active: true })
+        .in("permission_code", modulePermCodes);
+      if (updErr) return { ok: false, message: updErr.message };
+    }
+
+    // Distribui perms-padrão nas roles-sistema (idempotente)
+    const { data: systemRoles } = await supabase
+      .from("roles")
+      .select("id, code")
+      .eq("is_system", true);
 
     const permsByAction = (actions: string[]) =>
-      (allPerms ?? []).filter((p) => actions.includes(p.action)).map((p) => p.code);
+      (modulePerms ?? []).filter((p) => actions.includes(p.action)).map((p) => p.code);
 
     const ownerPerms = permsByAction(OWNER_ACTIONS);
     const managerPerms = permsByAction(MANAGER_ACTIONS);
     const operatorPerms = permsByAction(OPERATOR_ACTIONS);
 
-    const rpRows: { role_id: string; permission_code: string }[] = [];
+    const rpRows: { role_id: string; permission_code: string; is_active: boolean }[] = [];
     for (const role of systemRoles ?? []) {
       let perms: string[] = [];
       if (role.code === "owner") perms = ownerPerms;
       else if (role.code === "manager") perms = managerPerms;
       else if (role.code === "operator") perms = operatorPerms;
-      for (const perm of perms) rpRows.push({ role_id: role.id, permission_code: perm });
+      for (const perm of perms)
+        rpRows.push({ role_id: role.id, permission_code: perm, is_active: true });
     }
 
     if (rpRows.length > 0) {
@@ -72,19 +90,19 @@ export async function bulkToggleModuleForCompaniesAction(
     const { error } = await supabase.from("company_modules").delete().eq("module_code", moduleCode);
     if (error) return { ok: false, message: error.message };
 
-    // Remove permissões do módulo de todas as roles de todas as empresas
-    const { data: permsToRemove } = await supabase
+    // Soft-deactivate global de role_permissions do módulo em todas as empresas
+    const { data: permsToDeactivate } = await supabase
       .from("permissions")
       .select("code")
       .eq("module_code", moduleCode);
 
-    if (permsToRemove?.length) {
-      const permCodes = permsToRemove.map((p) => p.code);
-      const { error: delErr } = await supabase
+    if (permsToDeactivate?.length) {
+      const permCodes = permsToDeactivate.map((p) => p.code);
+      const { error: updErr } = await supabase
         .from("role_permissions")
-        .delete()
+        .update({ is_active: false })
         .in("permission_code", permCodes);
-      if (delErr) return { ok: false, message: delErr.message };
+      if (updErr) return { ok: false, message: updErr.message };
     }
   }
 
