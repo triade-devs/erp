@@ -55,6 +55,27 @@ export type { RoleWithCompany } from "./queries/list-all-roles";
 export { getSystemRolePermissions } from "./queries/get-system-role-permissions";
 export type { SystemRoleMatrix, SystemRolePermission } from "./queries/get-system-role-permissions";
 
+// Templates (PR #D3)
+export { listRoleTemplates } from "./queries/list-role-templates";
+export type { RoleTemplateSummary } from "./queries/list-role-templates";
+export { getTemplateWithPermissions } from "./queries/get-template-with-permissions";
+export type {
+  TemplateDetail,
+  TemplateModulePerms,
+  TemplatePermissionRow,
+} from "./queries/get-template-with-permissions";
+export { getTemplateApplyPreview } from "./queries/get-template-apply-preview";
+export type { ApplyPreview, ApplyPreviewRow } from "./queries/get-template-apply-preview";
+export { listRolesWithTemplateStatus } from "./queries/list-roles-with-template-status";
+export type { RoleWithTemplateStatus } from "./queries/list-roles-with-template-status";
+
+export { createRoleTemplateAction } from "./actions/create-role-template";
+export { updateRoleTemplateAction } from "./actions/update-role-template";
+export { updateTemplatePermissionsAction } from "./actions/update-template-permissions";
+export { deleteRoleTemplateAction } from "./actions/delete-role-template";
+export { applyTemplateToCompaniesAction } from "./actions/apply-template-to-companies";
+export { resetRoleFromTemplateAction } from "./actions/reset-role-from-template";
+
 // Services
 export { getActiveCompanyId } from "./services/active-company";
 
