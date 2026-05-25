@@ -24,7 +24,6 @@ export { bulkToggleModuleForCompaniesAction } from "./actions/bulk-toggle-module
 export { createPermissionAction } from "./actions/create-permission";
 export { deletePermissionAction } from "./actions/delete-permission";
 export { deleteModuleAction } from "./actions/delete-module";
-export { updateSystemRolePermissionsAction } from "./actions/update-system-role-permissions";
 
 // Queries
 export { getActiveCompanySlug } from "./queries/get-active-company-slug";
@@ -50,10 +49,26 @@ export type {
   ModuleWithPermissions,
   ModulePermission,
 } from "./queries/get-module-with-permissions";
-export { listAllRoles } from "./queries/list-all-roles";
-export type { RoleWithCompany } from "./queries/list-all-roles";
-export { getSystemRolePermissions } from "./queries/get-system-role-permissions";
-export type { SystemRoleMatrix, SystemRolePermission } from "./queries/get-system-role-permissions";
+// Templates (PR #D3)
+export { listRoleTemplates } from "./queries/list-role-templates";
+export type { RoleTemplateSummary } from "./queries/list-role-templates";
+export { getTemplateWithPermissions } from "./queries/get-template-with-permissions";
+export type {
+  TemplateDetail,
+  TemplateModulePerms,
+  TemplatePermissionRow,
+} from "./queries/get-template-with-permissions";
+export { getTemplateApplyPreview } from "./queries/get-template-apply-preview";
+export type { ApplyPreview, ApplyPreviewRow } from "./queries/get-template-apply-preview";
+export { listRolesWithTemplateStatus } from "./queries/list-roles-with-template-status";
+export type { RoleWithTemplateStatus } from "./queries/list-roles-with-template-status";
+
+export { createRoleTemplateAction } from "./actions/create-role-template";
+export { updateRoleTemplateAction } from "./actions/update-role-template";
+export { updateTemplatePermissionsAction } from "./actions/update-template-permissions";
+export { deleteRoleTemplateAction } from "./actions/delete-role-template";
+export { applyTemplateToCompaniesAction } from "./actions/apply-template-to-companies";
+export { resetRoleFromTemplateAction } from "./actions/reset-role-from-template";
 
 // Services
 export { getActiveCompanyId } from "./services/active-company";
@@ -69,8 +84,6 @@ export { CreateModuleForm } from "./components/create-module-form";
 export { EditModuleForm } from "./components/edit-module-form";
 export { ModulePermissionsTable } from "./components/module-permissions-table";
 export { DeleteModuleButton } from "./components/delete-module-button";
-export { AdminSystemRolesTab } from "./components/admin-system-roles-tab";
-export { AdminAllRolesTab } from "./components/admin-all-roles-tab";
 
 // Types
 export type { Company } from "./queries/list-my-companies";

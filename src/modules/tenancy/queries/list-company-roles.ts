@@ -8,6 +8,9 @@ export type CompanyRole = {
   name: string;
   description: string | null;
   isSystem: boolean;
+  templateCode: string | null;
+  syncedAt: string | null;
+  divergent: boolean;
 };
 
 export async function listCompanyRoles(companyId: string): Promise<CompanyRole[]> {
@@ -15,7 +18,7 @@ export async function listCompanyRoles(companyId: string): Promise<CompanyRole[]
 
   const { data, error } = await supabase
     .from("roles")
-    .select("id, code, name, description, is_system")
+    .select("id, code, name, description, is_system, template_code, template_synced_at")
     .eq("company_id", companyId)
     .order("is_system", { ascending: false })
     .order("name");
@@ -28,5 +31,8 @@ export async function listCompanyRoles(companyId: string): Promise<CompanyRole[]
     name: r.name,
     description: r.description ?? null,
     isSystem: r.is_system,
+    templateCode: r.template_code,
+    syncedAt: r.template_synced_at,
+    divergent: r.template_code !== null && r.template_synced_at === null,
   }));
 }

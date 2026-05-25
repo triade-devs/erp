@@ -1707,10 +1707,6 @@ export type Database = {
       };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
-      update_system_role_permissions: {
-        Args: { permission_codes: string[]; role_code: string };
-        Returns: undefined;
-      };
       user_company_ids: { Args: never; Returns: string[] };
     };
     Enums: {

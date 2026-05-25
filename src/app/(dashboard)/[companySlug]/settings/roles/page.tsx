@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteRoleButton } from "./delete-role-button";
+import { ResetTemplateButton } from "./reset-template-button";
 
 export const metadata = { title: "Roles — ERP" };
 
@@ -63,7 +64,8 @@ export default async function SettingsRolesPage({ params }: Props) {
               <TableHead>Código</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Tipo</TableHead>
-              {canManage && <TableHead className="w-[180px]">Ações</TableHead>}
+              <TableHead>Status</TableHead>
+              {canManage && <TableHead className="w-[260px]">Ações</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -83,20 +85,38 @@ export default async function SettingsRolesPage({ params }: Props) {
                     <Badge variant="outline">Custom</Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  {role.templateCode === null ? (
+                    <Badge variant="outline">sem template</Badge>
+                  ) : role.divergent ? (
+                    <Badge variant="destructive">Personalizada</Badge>
+                  ) : (
+                    <Badge>Sincronizada</Badge>
+                  )}
+                </TableCell>
                 {canManage && (
                   <TableCell>
-                    {!role.isSystem && (
-                      <div className="flex items-center gap-1">
-                        <Button asChild variant="ghost" size="sm">
-                          <Link href={`/${companySlug}/settings/roles/${role.id}`}>Editar</Link>
-                        </Button>
-                        <DeleteRoleButton
+                    <div className="flex flex-wrap items-center gap-1">
+                      {!role.isSystem && (
+                        <>
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/${companySlug}/settings/roles/${role.id}`}>Editar</Link>
+                          </Button>
+                          <DeleteRoleButton
+                            companyId={company.id}
+                            roleId={role.id}
+                            roleName={role.name}
+                          />
+                        </>
+                      )}
+                      {role.templateCode !== null && role.divergent && (
+                        <ResetTemplateButton
                           companyId={company.id}
                           roleId={role.id}
                           roleName={role.name}
                         />
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </TableCell>
                 )}
               </TableRow>
