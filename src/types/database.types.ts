@@ -1320,6 +1320,62 @@ export type Database = {
         };
         Relationships: [];
       };
+      platform_role_assignments: {
+        Row: {
+          granted_at: string;
+          granted_by: string | null;
+          role_code: string;
+          user_id: string;
+        };
+        Insert: {
+          granted_at?: string;
+          granted_by?: string | null;
+          role_code: string;
+          user_id: string;
+        };
+        Update: {
+          granted_at?: string;
+          granted_by?: string | null;
+          role_code?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "platform_role_assignments_role_code_fkey";
+            columns: ["role_code"];
+            isOneToOne: false;
+            referencedRelation: "platform_roles";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
+      platform_roles: {
+        Row: {
+          code: string;
+          created_at: string;
+          description: string | null;
+          name: string;
+          permissions: string[];
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          description?: string | null;
+          name: string;
+          permissions?: string[];
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          description?: string | null;
+          name?: string;
+          permissions?: string[];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       products: {
         Row: {
           company_id: string;
