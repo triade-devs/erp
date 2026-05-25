@@ -5,6 +5,7 @@ import {
   updateRoleAction,
   listRolePermissionMatrix,
   updateRolePermissionsAction,
+  listCompanyRoles,
 } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
@@ -42,7 +43,7 @@ export default async function EditRolePage({ params }: Props) {
   const supabase = await createClient();
   const { data: role, error } = await supabase
     .from("roles")
-    .select("id, code, name, description, is_system")
+    .select("id, code, name, description, is_system, parent_role_id")
     .eq("id", roleId)
     .eq("company_id", company.id)
     .maybeSingle();
@@ -53,6 +54,13 @@ export default async function EditRolePage({ params }: Props) {
   const backHref = `/${companySlug}/settings/roles`;
   const matrix = await listRolePermissionMatrix(company.id, role.id);
   const permAction = updateRolePermissionsAction.bind(null, company.id, role.id);
+
+  const allRoles = await listCompanyRoles(company.id);
+  const availableParents = allRoles.map((r) => ({
+    id: r.id,
+    name: r.name,
+    hierarchyLevel: r.hierarchyLevel,
+  }));
 
   return (
     <section className="max-w-2xl space-y-6">
@@ -92,7 +100,10 @@ export default async function EditRolePage({ params }: Props) {
                 defaultValues={{
                   name: role.name,
                   description: role.description ?? undefined,
+                  parentRoleId: role.parent_role_id ?? null,
                 }}
+                availableParents={availableParents}
+                currentRoleId={role.id}
               />
             </div>
           </TabsContent>
