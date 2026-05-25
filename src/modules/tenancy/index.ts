@@ -50,11 +50,6 @@ export type {
   ModuleWithPermissions,
   ModulePermission,
 } from "./queries/get-module-with-permissions";
-export { listAllRoles } from "./queries/list-all-roles";
-export type { RoleWithCompany } from "./queries/list-all-roles";
-export { getSystemRolePermissions } from "./queries/get-system-role-permissions";
-export type { SystemRoleMatrix, SystemRolePermission } from "./queries/get-system-role-permissions";
-
 // Templates (PR #D3)
 export { listRoleTemplates } from "./queries/list-role-templates";
 export type { RoleTemplateSummary } from "./queries/list-role-templates";
@@ -90,8 +85,6 @@ export { CreateModuleForm } from "./components/create-module-form";
 export { EditModuleForm } from "./components/edit-module-form";
 export { ModulePermissionsTable } from "./components/module-permissions-table";
 export { DeleteModuleButton } from "./components/delete-module-button";
-export { AdminSystemRolesTab } from "./components/admin-system-roles-tab";
-export { AdminAllRolesTab } from "./components/admin-all-roles-tab";
 
 // Types
 export type { Company } from "./queries/list-my-companies";
