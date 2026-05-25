@@ -34,6 +34,8 @@ export { listModules } from "./queries/list-modules";
 export { listCompanyModules } from "./queries/list-company-modules";
 export { listCompanyMembers } from "./queries/list-company-members";
 export { listCompanyRoles } from "./queries/list-company-roles";
+export { listManageableRoles } from "./queries/list-manageable-roles";
+export type { ManageableRole } from "./queries/list-manageable-roles";
 export { listRolePermissionMatrix } from "./queries/list-role-permission-matrix";
 export type { ModulePermissions, PermissionRow } from "./queries/list-role-permission-matrix";
 export { searchUsersForCompanyAction } from "./actions/search-users-for-company";
