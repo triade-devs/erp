@@ -1502,6 +1502,7 @@ export type Database = {
           description: string | null;
           is_system: boolean;
           name: string;
+          parent_template_code: string | null;
           sort_order: number;
           updated_at: string;
         };
@@ -1511,6 +1512,7 @@ export type Database = {
           description?: string | null;
           is_system?: boolean;
           name: string;
+          parent_template_code?: string | null;
           sort_order?: number;
           updated_at?: string;
         };
@@ -1520,10 +1522,19 @@ export type Database = {
           description?: string | null;
           is_system?: boolean;
           name?: string;
+          parent_template_code?: string | null;
           sort_order?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "role_templates_parent_template_code_fkey";
+            columns: ["parent_template_code"];
+            isOneToOne: false;
+            referencedRelation: "role_templates";
+            referencedColumns: ["code"];
+          },
+        ];
       };
       roles: {
         Row: {
@@ -1531,9 +1542,11 @@ export type Database = {
           company_id: string;
           created_at: string;
           description: string | null;
+          hierarchy_level: number;
           id: string;
           is_system: boolean;
           name: string;
+          parent_role_id: string | null;
           template_code: string | null;
           template_synced_at: string | null;
           updated_at: string;
@@ -1543,9 +1556,11 @@ export type Database = {
           company_id: string;
           created_at?: string;
           description?: string | null;
+          hierarchy_level?: number;
           id?: string;
           is_system?: boolean;
           name: string;
+          parent_role_id?: string | null;
           template_code?: string | null;
           template_synced_at?: string | null;
           updated_at?: string;
@@ -1555,9 +1570,11 @@ export type Database = {
           company_id?: string;
           created_at?: string;
           description?: string | null;
+          hierarchy_level?: number;
           id?: string;
           is_system?: boolean;
           name?: string;
+          parent_role_id?: string | null;
           template_code?: string | null;
           template_synced_at?: string | null;
           updated_at?: string;
@@ -1568,6 +1585,13 @@ export type Database = {
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "roles_parent_role_id_fkey";
+            columns: ["parent_role_id"];
+            isOneToOne: false;
+            referencedRelation: "roles";
             referencedColumns: ["id"];
           },
           {
@@ -1717,6 +1741,10 @@ export type Database = {
       bootstrap_company_rbac: {
         Args: { p_company: string };
         Returns: undefined;
+      };
+      can_manage_role: {
+        Args: { p_company: string; p_target_role: string };
+        Returns: boolean;
       };
       consume_password_reset: {
         Args: { p_short_code: string; p_token_hash: string };

@@ -19,9 +19,14 @@ export async function updateRoleAction(
     return { ok: false, message: "Sem permissão para gerenciar roles" };
   }
 
+  const parentRoleIdRaw = formData.get("parent_role_id");
+  const parentRoleId =
+    typeof parentRoleIdRaw === "string" && parentRoleIdRaw.length > 0 ? parentRoleIdRaw : null;
+
   const parsed = updateRoleSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") || undefined,
+    parent_role_id: parentRoleId,
   });
 
   if (!parsed.success) {
@@ -48,7 +53,12 @@ export async function updateRoleAction(
 
   const { error } = await supabase
     .from("roles")
-    .update({ name, description: description ?? null, updated_at: new Date().toISOString() })
+    .update({
+      name,
+      description: description ?? null,
+      parent_role_id: parsed.data.parent_role_id ?? null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", roleId);
 
   if (error) return { ok: false, message: error.message };
