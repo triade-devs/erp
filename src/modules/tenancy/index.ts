@@ -24,7 +24,6 @@ export { bulkToggleModuleForCompaniesAction } from "./actions/bulk-toggle-module
 export { createPermissionAction } from "./actions/create-permission";
 export { deletePermissionAction } from "./actions/delete-permission";
 export { deleteModuleAction } from "./actions/delete-module";
-export { updateSystemRolePermissionsAction } from "./actions/update-system-role-permissions";
 
 // Queries
 export { getActiveCompanySlug } from "./queries/get-active-company-slug";
