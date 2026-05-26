@@ -1901,6 +1901,15 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_role_scopes: {
+        Args: {
+          p_company_id: string;
+          p_dimension_code: string;
+          p_role_id: string;
+          p_scope_values: string[];
+        };
+        Returns: undefined;
+      };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
       user_company_ids: { Args: never; Returns: string[] };
