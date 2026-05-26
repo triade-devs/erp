@@ -30,6 +30,14 @@ export const MODULES_MENU: MenuItem[] = [
     requiresPermission: "movements:movement:read",
   },
   {
+    label: "Depósitos",
+    href: "/settings/warehouses",
+    icon: "warehouse",
+    group: "Estoque",
+    requiresSlug: true,
+    requiresPermission: "core:inventory:manage",
+  },
+  {
     label: "Auditoria",
     href: "/audit",
     icon: "shield-check",

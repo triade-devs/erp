@@ -1,12 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-
-export type Warehouse = {
-  id: string;
-  name: string;
-  isActive: boolean;
-};
+import type { Warehouse } from "../types";
 
 export async function listWarehouses(companyId: string): Promise<Warehouse[]> {
   const supabase = await createClient();
@@ -14,7 +9,6 @@ export async function listWarehouses(companyId: string): Promise<Warehouse[]> {
     .from("warehouses")
     .select("id, name, is_active")
     .eq("company_id", companyId)
-    .eq("is_active", true)
     .order("name");
 
   if (error) throw error;

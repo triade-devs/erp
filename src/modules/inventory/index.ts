@@ -12,7 +12,7 @@ export { listProducts } from "./queries/list-products";
 export { getProduct } from "./queries/get-product";
 export { listMovements } from "./queries/list-movements";
 export { getInventoryStats } from "./queries/get-inventory-stats";
-export { listWarehouses, type Warehouse } from "./queries/list-warehouses";
+export { listWarehouses } from "./queries/list-warehouses";
 export type { InventoryStats } from "./queries/get-inventory-stats";
 
 export {
@@ -42,4 +42,5 @@ export type {
   MovementWithProduct,
   MovementType,
   PaginatedResult,
+  Warehouse,
 } from "./types";
