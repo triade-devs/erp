@@ -9,7 +9,12 @@ import {
   updateRoleAction,
   updateRolePermissionsAction,
 } from "@/modules/tenancy";
-import { ForbiddenError, requirePermission } from "@/modules/authz";
+import {
+  ForbiddenError,
+  listFieldCatalog,
+  listRoleFieldRules,
+  requirePermission,
+} from "@/modules/authz";
 import { AppError } from "@/lib/errors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleForm } from "../role-form";
 import { PermissionMatrix } from "./permission-matrix";
 import { RoleScopesForm } from "./role-scopes-form";
+import { RoleFieldRulesForm } from "./role-field-rules-form";
 
 export const metadata = { title: "Editar Role — ERP" };
 
@@ -42,12 +48,15 @@ export default async function EditRolePage({ params }: Props) {
     throw e;
   }
 
-  const [allRoles, matrix, roleScopes, warehouses] = await Promise.all([
-    listCompanyRoles(company.id),
-    listRolePermissionMatrix(company.id, roleId),
-    listRoleScopes(roleId),
-    listWarehouses(company.id),
-  ]);
+  const [allRoles, matrix, roleScopes, warehouses, catalog, currentRules] =
+    await Promise.all([
+      listCompanyRoles(company.id),
+      listRolePermissionMatrix(company.id, roleId),
+      listRoleScopes(roleId),
+      listWarehouses(company.id),
+      listFieldCatalog(),
+      listRoleFieldRules(roleId),
+    ]);
 
   const role = allRoles.find((item) => item.id === roleId);
   if (!role) notFound();
@@ -84,6 +93,7 @@ export default async function EditRolePage({ params }: Props) {
           {!role.isSystem && <TabsTrigger value="info">Informações</TabsTrigger>}
           <TabsTrigger value="permissions">Permissões</TabsTrigger>
           <TabsTrigger value="scopes">Escopo</TabsTrigger>
+          <TabsTrigger value="fields">Campos</TabsTrigger>
         </TabsList>
 
         {!role.isSystem && (
@@ -132,6 +142,15 @@ export default async function EditRolePage({ params }: Props) {
             roleId={role.id}
             warehouses={warehouses}
             selectedWarehouseIds={selectedWarehouseIds}
+          />
+        </TabsContent>
+
+        <TabsContent value="fields" className="mt-4">
+          <RoleFieldRulesForm
+            companyId={company.id}
+            roleId={role.id}
+            catalog={catalog}
+            currentRules={currentRules}
           />
         </TabsContent>
       </Tabs>
