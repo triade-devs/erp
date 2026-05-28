@@ -17,6 +17,7 @@ import {
 import { createProductAction } from "../actions/create-product";
 import type { Product } from "../types";
 import type { ActionResult } from "@/lib/errors";
+import { useFieldMode } from "@/modules/authz/client";
 
 const UNITS = ["UN", "KG", "L", "CX", "M"] as const;
 const initial: ActionResult = { ok: false };
@@ -34,6 +35,9 @@ export function ProductForm({ product, updateAction }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
+
+  const costMode = useFieldMode("products", "cost_price");
+  const saleMode = useFieldMode("products", "sale_price");
 
   useEffect(() => {
     if (!hasMountedRef.current) {
@@ -109,7 +113,8 @@ export function ProductForm({ product, updateAction }: Props) {
         defaultValue={String(product?.min_stock ?? 0)}
         error={fieldErrors?.minStock?.[0]}
       />
-      <Field
+      <MaskedField
+        mode={costMode}
         label="Preço de custo (R$)"
         name="costPrice"
         type="number"
@@ -117,7 +122,8 @@ export function ProductForm({ product, updateAction }: Props) {
         defaultValue={String(product?.cost_price ?? 0)}
         error={fieldErrors?.costPrice?.[0]}
       />
-      <Field
+      <MaskedField
+        mode={saleMode}
         label="Preço de venda (R$)"
         name="salePrice"
         type="number"
@@ -144,6 +150,7 @@ type FieldProps = {
   step?: string;
   defaultValue?: string;
   placeholder?: string;
+  disabledOverride?: boolean;
 };
 
 function Field({
@@ -155,6 +162,7 @@ function Field({
   step,
   defaultValue,
   placeholder,
+  disabledOverride,
 }: FieldProps) {
   return (
     <div className="space-y-2">
@@ -167,14 +175,22 @@ function Field({
         name={name}
         type={type}
         step={step}
-        required={required}
+        required={required && !disabledOverride}
         defaultValue={defaultValue}
         placeholder={placeholder}
         aria-invalid={!!error}
+        readOnly={disabledOverride}
+        disabled={disabledOverride}
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
+}
+
+function MaskedField(props: FieldProps & { mode: "hidden" | "readonly" | "editable" }) {
+  if (props.mode === "hidden") return null;
+  const { mode, ...rest } = props;
+  return <Field {...rest} disabledOverride={mode === "readonly"} />;
 }
 
 function SubmitButton({ isEditing }: { isEditing: boolean }) {
