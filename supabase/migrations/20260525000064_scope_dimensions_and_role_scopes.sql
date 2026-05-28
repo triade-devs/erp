@@ -98,7 +98,7 @@ begin
 end $$;
 
 comment on function public.user_scope_values(uuid, text) is
-  'Retorna os valores de scope acessíveis ao usuário atual em uma dimensão de uma empresa. Se uma role não tem scopes nessa dimensão, acesso é irrestrito ('*'). User com múltiplas roles = união.';
+  'Retorna os valores de scope acessíveis ao usuário atual em uma dimensão de uma empresa. Se uma role não tem scopes nessa dimensão, acesso é irrestrito (''*''). User com múltiplas roles = união.';
 
 create or replace function public.user_has_scope(p_company uuid, p_dimension text, p_value text)
 returns boolean language sql stable security definer set search_path = public as $$
