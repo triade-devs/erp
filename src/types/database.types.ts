@@ -1433,6 +1433,7 @@ export type Database = {
           stock: number
           unit: string
           updated_at: string
+          warehouse_id: string | null
         }
         Insert: {
           company_id: string
@@ -1449,6 +1450,7 @@ export type Database = {
           stock?: number
           unit?: string
           updated_at?: string
+          warehouse_id?: string | null
         }
         Update: {
           company_id?: string
@@ -1465,6 +1467,7 @@ export type Database = {
           stock?: number
           unit?: string
           updated_at?: string
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -1472,6 +1475,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -1568,6 +1578,42 @@ export type Database = {
           },
           {
             foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_scopes: {
+        Row: {
+          dimension_code: string
+          granted_at: string
+          role_id: string
+          scope_value: string
+        }
+        Insert: {
+          dimension_code: string
+          granted_at?: string
+          role_id: string
+          scope_value: string
+        }
+        Update: {
+          dimension_code?: string
+          granted_at?: string
+          role_id?: string
+          scope_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_scopes_dimension_code_fkey"
+            columns: ["dimension_code"]
+            isOneToOne: false
+            referencedRelation: "scope_dimensions"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "role_scopes_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
@@ -1683,6 +1729,30 @@ export type Database = {
           },
         ]
       }
+      scope_dimensions: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          name: string
+          resolver_fn: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          name: string
+          resolver_fn?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          name?: string
+          resolver_fn?: string | null
+        }
+        Relationships: []
+      }
       short_code_attempts: {
         Row: {
           attempts: number
@@ -1797,6 +1867,44 @@ export type Database = {
           },
         ]
       }
+      warehouses: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1869,12 +1977,29 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_role_scopes: {
+        Args: {
+          p_company_id: string
+          p_dimension_code: string
+          p_role_id: string
+          p_scope_values: string[]
+        }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       user_company_ids: { Args: never; Returns: string[] }
       user_field_mode: {
         Args: { p_column: string; p_company: string; p_table: string }
         Returns: string
+      }
+      user_has_scope: {
+        Args: { p_company: string; p_dimension: string; p_value: string }
+        Returns: boolean
+      }
+      user_scope_values: {
+        Args: { p_company: string; p_dimension: string }
+        Returns: string[]
       }
       visible_columns: {
         Args: { p_company: string; p_table: string }
