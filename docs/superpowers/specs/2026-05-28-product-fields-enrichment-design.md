@@ -8,7 +8,7 @@
 
 ## Contexto
 
-O formulário atual de produtos possui: SKU, Nome, Descrição, Unidade, Estoque Mínimo, Preço de Custo e Preço de Venda. Esta spec adiciona campos que enriquecem o cadastro e estruturam a gestão de estoque: código de barras EAN, classificação hierárquica (Departamento → Categoria → Marca), fornecedor, localização física e um módulo completo de fornecedores.
+O formulário atual de produtos possui: SKU, Nome, Descrição, Unidade, Estoque Mínimo, Preço de Custo e Preço de Venda. Esta spec propõe a adição de novos campos para atender demandas operacionais reais identificadas no uso do sistema: rastreabilidade de fornecedores, organização do catálogo por classificação hierárquica, identificação por código de barras e referência de localização física no estoque.
 
 ---
 
@@ -24,6 +24,10 @@ O formulário atual de produtos possui: SKU, Nome, Descrição, Unidade, Estoque
 ---
 
 ## Seção 1 — Modelo de Dados
+
+### Motivação
+
+À medida que o catálogo de produtos cresce, surgem necessidades que vão além do cadastro básico. Produtos precisam ser associados a fornecedores para rastrear variações de preço e origem ao longo do tempo. A classificação hierárquica permite organizar e navegar o catálogo de forma estruturada. O código de barras EAN facilita a conferência de mercadorias na entrada do estoque. A localização física ajuda operadores a encontrar itens sem depender de memória.
 
 ### Tabela `product_classifications` (nova)
 
@@ -83,6 +87,10 @@ create table public.suppliers (
 
 ## Seção 2 — Regras de Validação
 
+### Motivação
+
+Garantir consistência nos dados cadastrados é fundamental para que buscas, relatórios e integrações funcionem de forma confiável. Campos em UPPERCASE evitam duplicidades causadas por variações de caixa (ex: "coca-cola" vs "Coca-Cola" vs "COCA-COLA"). Limites de caracteres protegem o layout da interface e definem um padrão claro de preenchimento. A validação em dois níveis — input e Zod — garante feedback imediato ao usuário e segurança na camada de servidor.
+
 ### Input-level (componente React)
 
 | Campo             | Comportamento                                                        |
@@ -131,6 +139,10 @@ export const productSchema = z.object({
 
 ## Seção 3 — Utilitário de Formatação de Preço
 
+### Motivação
+
+O campo de preço atual usa `type="number"` nativo do browser, que apresenta comportamento inconsistente entre sistemas operacionais e não oferece feedback visual formatado ao usuário. Um utilitário centralizado de formatação resolve dois problemas: padroniza a experiência de entrada de valores monetários em todo o projeto, e garante que o valor enviado ao banco esteja sempre no formato decimal correto independente do que o usuário digitou.
+
 **Arquivo:** `src/lib/price-formatter.ts`
 
 ### Comportamento (on-blur)
@@ -178,6 +190,10 @@ usePriceInput(initialValue?: string): {
 ---
 
 ## Seção 4 — Módulo de Fornecedores
+
+### Motivação
+
+A relação entre produto e fornecedor é central para a gestão de estoque: um mesmo produto pode ser comprado de fornecedores diferentes ao longo do tempo, cada um com sua faixa de preço. Sem essa rastreabilidade, fica difícil analisar variações de custo, calcular margem por período ou identificar qual fornecedor oferece melhor condição. Criar o módulo de fornecedores como uma entidade própria — com CRUD dedicado, permissões e menu — garante que essa informação seja gerenciada de forma consistente e reutilizada em outros módulos futuros (compras, financeiro, relatórios).
 
 ### Estrutura de arquivos
 
@@ -240,6 +256,10 @@ Contém apenas **Nome** (obrigatório) e **CNPJ** (opcional). Ao salvar, fecha o
 ---
 
 ## Seção 5 — Sistema de Classificação
+
+### Motivação
+
+Quando o catálogo de produtos cresce, uma lista plana se torna difícil de navegar e analisar. A classificação hierárquica em três níveis (Departamento → Categoria → Marca) permite organizar os produtos de forma que faça sentido para o negócio — seja uma distribuidora de alimentos, uma ferreteria ou um mercado. Por ser configurada por empresa, cada tenant define sua própria estrutura sem interferir nos demais. A ordenação da listagem de produtos por classificação é uma consequência direta: o usuário vê os produtos agrupados de forma lógica, facilitando conferências e análises de estoque.
 
 ### Hierarquia
 
