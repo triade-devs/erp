@@ -49,21 +49,21 @@ create index if not exists idx_warehouses_active on public.warehouses(is_active)
 alter table public.warehouses enable row level security;
 
 -- Leitura: qualquer membro ativo da empresa
-create policy if not exists "warehouses_select" on public.warehouses
+create policy "warehouses_select" on public.warehouses
   for select using (company_id in (select public.user_company_ids()));
 
 -- Criação: requer permissão core:inventory:manage
-create policy if not exists "warehouses_insert" on public.warehouses
+create policy "warehouses_insert" on public.warehouses
   for insert with check (public.has_permission(company_id, 'core:inventory:manage'));
 
 -- Atualização: requer permissão core:inventory:manage (USING + WITH CHECK para evitar escalação)
-create policy if not exists "warehouses_update" on public.warehouses
+create policy "warehouses_update" on public.warehouses
   for update
   using (public.has_permission(company_id, 'core:inventory:manage'))
   with check (public.has_permission(company_id, 'core:inventory:manage'));
 
 -- Exclusão (soft delete via is_active = false): requer permissão core:inventory:manage
-create policy if not exists "warehouses_delete" on public.warehouses
+create policy "warehouses_delete" on public.warehouses
   for delete using (public.has_permission(company_id, 'core:inventory:manage'));
 
 -- ─── Comments ────────────────────────────────────────────────────────────────
