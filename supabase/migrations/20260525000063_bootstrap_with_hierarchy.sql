@@ -46,9 +46,9 @@ begin
   from public.role_templates tpl
   join public.roles parent_role
     on parent_role.code = tpl.parent_template_code
-    and parent_role.company_id = target.company_id
   where target.template_code = tpl.code
     and target.company_id = p_company
+    and parent_role.company_id = target.company_id
     and tpl.parent_template_code is not null
     and target.parent_role_id is distinct from parent_role.id;
 end $$;
