@@ -21,6 +21,7 @@ export type {
 } from "./queries/list-role-field-rules";
 export { getUserFieldModes } from "./queries/get-user-field-modes";
 export type { UserFieldModes } from "./queries/get-user-field-modes";
+export type { FieldModesMap } from "./components/permissions-provider";
 export { updateRoleFieldRulesAction } from "./actions/update-role-field-rules";
 export type { FieldRuleInput } from "./actions/update-role-field-rules";
 export { listVisibleColumns } from "./services/field-rules";
