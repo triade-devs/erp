@@ -2,19 +2,19 @@
 
 **Data:** 2026-05-28
 **Branch:** feat/product-fields-enrichment
-**Status:** Aprovado — aguardando plano de implementação
+**Status:** Implementado — 2026-06-02
 
 ---
 
 ## Contexto
 
-O formulário atual de produtos possui: SKU, Nome, Descrição, Unidade, Estoque Mínimo, Preço de Custo e Preço de Venda. Esta spec propõe a adição de novos campos para atender demandas operacionais reais identificadas no uso do sistema: rastreabilidade de fornecedores, organização do catálogo por classificação hierárquica, identificação por código de barras e referência de localização física no estoque.
+O formulário atual de produtos possui: SKU, Nome, Descrição, Unidade, Estoque Mínimo, Preço de Custo e Preço de Venda. Esta spec propõe a adição de novos campos para atender demandas operacionais reais identificadas no uso do sistema: rastreabilidade de fornecedores, organização do catálogo por classificação hierárquica, identificação por código de barras, referência de localização física no estoque e classificação fiscal por NCM.
 
 ---
 
 ## Escopo
 
-- Novos campos na tabela `products`
+- Novos campos na tabela `products` (incluindo `ncm` — classificação fiscal obrigatória)
 - Nova tabela `product_classifications` (hierarquia por empresa)
 - Novo módulo `suppliers` (tabela + CRUD + permissões + menu)
 - Utilitário de formatação de preço (`src/lib/price-formatter.ts`)
@@ -27,7 +27,7 @@ O formulário atual de produtos possui: SKU, Nome, Descrição, Unidade, Estoque
 
 ### Motivação
 
-À medida que o catálogo de produtos cresce, surgem necessidades que vão além do cadastro básico. Produtos precisam ser associados a fornecedores para rastrear variações de preço e origem ao longo do tempo. A classificação hierárquica permite organizar e navegar o catálogo de forma estruturada. O código de barras EAN facilita a conferência de mercadorias na entrada do estoque. A localização física ajuda operadores a encontrar itens sem depender de memória.
+À medida que o catálogo de produtos cresce, surgem necessidades que vão além do cadastro básico. Produtos precisam ser associados a fornecedores para rastrear variações de preço e origem ao longo do tempo. A classificação hierárquica permite organizar e navegar o catálogo de forma estruturada. O código de barras EAN facilita a conferência de mercadorias na entrada do estoque. A localização física ajuda operadores a encontrar itens sem depender de memória. O NCM (Nomenclatura Comum do Mercosul) é a classificação fiscal obrigatória de cada mercadoria — base para emissão de nota fiscal, apuração de impostos e futura integração com serviços externos de consulta/validação fiscal.
 
 ### Tabela `product_classifications` (nova)
 
@@ -69,12 +69,21 @@ create table public.suppliers (
 
 ### Alterações em `products`
 
-| Campo               | Tipo    | Obrigatório | Observação                                                   |
-| ------------------- | ------- | ----------- | ------------------------------------------------------------ |
-| `barcode`           | text    | Não         | EAN-8 (8 dígitos) ou EAN-13 (13 dígitos), unique por empresa |
-| `location`          | text    | Não         | UPPERCASE, max 40. Ex: "PRATELEIRA 3"                        |
-| `classification_id` | uuid FK | Não         | Aponta para o nível mais específico selecionado              |
-| `supplier_id`       | uuid FK | Sim         | NOT NULL — sistema ainda em desenvolvimento                  |
+| Campo               | Tipo    | Obrigatório | Observação                                                                    |
+| ------------------- | ------- | ----------- | ----------------------------------------------------------------------------- |
+| `barcode`           | text    | Não         | EAN-8 (8 dígitos) ou EAN-13 (13 dígitos), unique por empresa                  |
+| `location`          | text    | Não         | UPPERCASE, max 40. Ex: "PRATELEIRA 3"                                         |
+| `classification_id` | uuid FK | Não         | Aponta para o nível mais específico selecionado                               |
+| `supplier_id`       | uuid FK | Sim         | NOT NULL — sistema ainda em desenvolvimento                                   |
+| `ncm`               | text    | Sim         | NCM (8 dígitos), formato `XXXX.XX.XX`. NOT NULL — base para integração fiscal |
+
+**Migration do NCM (NOT NULL em tabela existente):** como `products` já existe e `ncm` é obrigatório, a coluna é adicionada em três passos para não quebrar linhas antigas:
+
+1. `alter table products add column ncm text;` (nullable)
+2. `update products set ncm = '0000.00.00' where ncm is null;` (backfill com placeholder sentinela)
+3. `alter table products alter column ncm set not null;`
+
+O placeholder `0000.00.00` é um NCM inválido proposital: sinaliza produtos pré-existentes que precisam de correção manual (ou via futura integração de consulta fiscal).
 
 **Ajustes em campos existentes:**
 
@@ -93,16 +102,17 @@ Garantir consistência nos dados cadastrados é fundamental para que buscas, rel
 
 ### Input-level (componente React)
 
-| Campo             | Comportamento                                                        |
-| ----------------- | -------------------------------------------------------------------- |
-| SKU               | `toUpperCase()` em tempo real, bloqueia especiais exceto `-`, max 20 |
-| Barcode           | Só dígitos, max 13                                                   |
-| Nome              | `toUpperCase()` em tempo real, max 60                                |
-| Descrição         | Livre, max 100                                                       |
-| Localização       | `toUpperCase()` em tempo real, max 40                                |
-| Classificações    | `toUpperCase()` nos cadastros, selects encadeados no form            |
-| Estoque mínimo    | Só inteiros, sem decimais                                            |
-| Preço custo/venda | Formatador on-blur (ver Seção 3)                                     |
+| Campo             | Comportamento                                                               |
+| ----------------- | --------------------------------------------------------------------------- |
+| SKU               | `toUpperCase()` em tempo real, bloqueia especiais exceto `-`, max 20        |
+| Barcode           | Só dígitos, max 13                                                          |
+| NCM               | Máscara `XXXX.XX.XX` — só dígitos, insere os pontos automaticamente, max 10 |
+| Nome              | `toUpperCase()` em tempo real, max 60                                       |
+| Descrição         | Livre, max 100                                                              |
+| Localização       | `toUpperCase()` em tempo real, max 40                                       |
+| Classificações    | `toUpperCase()` nos cadastros, selects encadeados no form                   |
+| Estoque mínimo    | Só inteiros, sem decimais                                                   |
+| Preço custo/venda | Formatador on-blur (ver Seção 3)                                            |
 
 ### Schema Zod (`src/modules/inventory/schemas/index.ts`)
 
@@ -117,6 +127,7 @@ export const productSchema = z.object({
     .string()
     .regex(/^[0-9]{8}$|^[0-9]{13}$/)
     .optional(),
+  ncm: z.string().regex(/^[0-9]{4}\.[0-9]{2}\.[0-9]{2}$/, "NCM deve estar no formato XXXX.XX.XX"),
   name: z.string().min(2).max(60),
   description: z.string().min(1).max(100),
   unit: z.enum(["UN", "KG", "L", "CX", "M"]),
@@ -132,7 +143,7 @@ export const productSchema = z.object({
 
 **Campos obrigatórios no formulário:**
 
-- SKU, Nome, Descrição, Unidade, Preço de Custo, Preço de Venda, Fornecedor
+- SKU, Nome, Descrição, Unidade, Preço de Custo, Preço de Venda, Fornecedor, NCM
 - Opcionais: Barcode, Classificações, Estoque Mínimo, Localização
 
 ---
@@ -311,3 +322,4 @@ Todas as novas tabelas seguem o padrão do projeto:
 - Relatórios agrupados por fornecedor ou classificação
 - Importação de produtos via CSV
 - Integração com leitor de código de barras
+- **Integração com serviço externo de consulta/validação de NCM** (evolução futura — possivelmente um serviço próprio). Esta spec entrega apenas o campo `ncm` com validação de formato; a consulta/autopreenchimento e a validação contra a tabela oficial da NCM serão tratadas em spec separada.

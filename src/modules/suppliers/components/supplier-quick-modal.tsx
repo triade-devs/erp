@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createSupplierAction } from "../actions/create-supplier";
-import type { Supplier } from "../types";
 import type { ActionResult } from "@/lib/errors";
 
 const initial: ActionResult = { ok: false };
@@ -16,7 +15,7 @@ const initial: ActionResult = { ok: false };
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (supplier: Supplier) => void;
+  onCreated: (supplier: { id: string; name: string }) => void;
 };
 
 export function SupplierQuickModal({ open, onOpenChange, onCreated }: Props) {

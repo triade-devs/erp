@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ProductForm, listClassifications } from "@/modules/inventory";
-import { listSuppliers } from "@/modules/suppliers";
+import { listSuppliers, SupplierQuickModal } from "@/modules/suppliers";
 import { resolveCompany } from "@/modules/tenancy";
 
 export const metadata = { title: "Novo Produto — ERP" };
@@ -32,7 +32,11 @@ export default async function NewProductPage({ params }: Props) {
       </header>
 
       <div className="rounded-lg border bg-card p-6">
-        <ProductForm suppliers={suppliers} classifications={classifications} />
+        <ProductForm
+          suppliers={suppliers}
+          classifications={classifications}
+          QuickModal={SupplierQuickModal}
+        />
       </div>
     </section>
   );

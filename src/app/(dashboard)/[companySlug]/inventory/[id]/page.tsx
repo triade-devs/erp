@@ -11,7 +11,7 @@ import {
 } from "@/modules/inventory";
 import { ProductForm } from "@/modules/inventory";
 import { MovementTable } from "@/modules/inventory";
-import { listSuppliers } from "@/modules/suppliers";
+import { listSuppliers, SupplierQuickModal } from "@/modules/suppliers";
 import { formatCurrency } from "@/lib/utils";
 import { resolveCompany } from "@/modules/tenancy";
 import { Can } from "@/modules/authz";
@@ -85,6 +85,7 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
             updateAction={updateAction}
             suppliers={suppliers}
             classifications={classifications}
+            QuickModal={SupplierQuickModal}
           />
         </div>
       </Can>

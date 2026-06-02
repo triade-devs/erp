@@ -16,11 +16,17 @@ import {
 } from "@/components/ui/select";
 import { createProductAction } from "../actions/create-product";
 import { usePriceInput } from "@/lib/price-formatter";
-import { SupplierQuickModal } from "@/modules/suppliers";
 import type { Product } from "../types";
 import type { ActionResult } from "@/lib/errors";
 import type { Classification } from "../queries/list-classifications";
-import type { Supplier } from "@/modules/suppliers";
+
+export type SupplierOption = { id: string; name: string };
+
+type QuickModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (supplier: SupplierOption) => void;
+};
 
 const UNITS = ["UN", "KG", "L", "CX", "M"] as const;
 const initial: ActionResult = { ok: false };
@@ -28,8 +34,10 @@ const initial: ActionResult = { ok: false };
 type Props = {
   product?: Product;
   updateAction?: (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
-  suppliers?: { id: string; name: string }[];
+  suppliers?: SupplierOption[];
   classifications?: Classification[];
+  /** Componente de modal de cadastro rápido de fornecedor — injetado pela página (server component). */
+  QuickModal?: React.ComponentType<QuickModalProps>;
 };
 
 export function ProductForm({
@@ -37,6 +45,7 @@ export function ProductForm({
   updateAction,
   suppliers = [],
   classifications = [],
+  QuickModal,
 }: Props) {
   const action = updateAction ?? createProductAction;
   const [state, formAction] = useActionState(action, initial);
@@ -107,7 +116,7 @@ export function ProductForm({
     if (state.message) toast.error(state.message);
   }, [state]);
 
-  function handleSupplierCreated(newSupplier: Supplier) {
+  function handleSupplierCreated(newSupplier: SupplierOption) {
     setSupplierList((prev) => [...prev, { id: newSupplier.id, name: newSupplier.name }]);
     setSelectedSupplierId(newSupplier.id);
   }
@@ -364,11 +373,13 @@ export function ProductForm({
         </div>
       </form>
 
-      <SupplierQuickModal
-        open={quickModalOpen}
-        onOpenChange={setQuickModalOpen}
-        onCreated={handleSupplierCreated}
-      />
+      {QuickModal && (
+        <QuickModal
+          open={quickModalOpen}
+          onOpenChange={setQuickModalOpen}
+          onCreated={handleSupplierCreated}
+        />
+      )}
     </>
   );
 }
