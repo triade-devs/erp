@@ -56,8 +56,9 @@ export function SupplierQuickModal({ open, onOpenChange, onCreated }: Props) {
               name="name"
               required
               placeholder="NOME DO FORNECEDOR"
+              maxLength={30}
               onChange={(e) => {
-                e.target.value = e.target.value.toUpperCase();
+                e.target.value = e.target.value.toUpperCase().slice(0, 30);
               }}
               aria-invalid={!!fieldErrors?.name}
             />

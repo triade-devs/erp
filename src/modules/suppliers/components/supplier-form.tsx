@@ -59,8 +59,9 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         defaultValue={supplier?.name}
         error={fieldErrors?.name?.[0]}
         placeholder="NOME DO FORNECEDOR"
+        maxLength={30}
         onChange={(e) => {
-          e.target.value = e.target.value.toUpperCase();
+          e.target.value = e.target.value.toUpperCase().slice(0, 30);
         }}
       />
 
@@ -83,6 +84,7 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         defaultValue={supplier?.email ?? ""}
         error={fieldErrors?.email?.[0]}
         placeholder="contato@fornecedor.com"
+        maxLength={50}
       />
 
       <div className="flex justify-end gap-2 md:col-span-2">
@@ -182,6 +184,7 @@ type FieldProps = {
   error?: string;
   defaultValue?: string;
   placeholder?: string;
+  maxLength?: number;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 };
 
@@ -193,6 +196,7 @@ function Field({
   error,
   defaultValue,
   placeholder,
+  maxLength,
   onChange,
 }: FieldProps) {
   return (
@@ -208,6 +212,7 @@ function Field({
         required={required}
         defaultValue={defaultValue}
         placeholder={placeholder}
+        maxLength={maxLength}
         aria-invalid={!!error}
         onChange={onChange}
       />
