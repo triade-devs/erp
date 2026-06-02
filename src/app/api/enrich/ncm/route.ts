@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { env } from "@/core/config/env";
 
 export async function GET(request: Request) {
-  if (!env.ENRICHMENT_NCM_URL) {
+  if (!env.ENRICHMENT_URL) {
     return NextResponse.json({ error: "Serviço não configurado" }, { status: 503 });
   }
 
@@ -16,14 +16,14 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q") ?? "";
+  const q = searchParams.get("q");
   const codigo = searchParams.get("codigo");
 
   const path = codigo
     ? `/ncm/${encodeURIComponent(codigo)}`
-    : `/ncm/busca?q=${encodeURIComponent(q)}`;
+    : `/ncm/busca?q=${encodeURIComponent(q ?? "")}`;
 
-  const upstream = await fetch(`${env.ENRICHMENT_NCM_URL}${path}`, {
+  const upstream = await fetch(`${env.ENRICHMENT_URL}${path}`, {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
 
