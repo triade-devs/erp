@@ -12,6 +12,10 @@ export { getInventoryStats } from "./queries/get-inventory-stats";
 export type { InventoryStats } from "./queries/get-inventory-stats";
 export { listClassifications } from "./queries/list-classifications";
 export type { Classification } from "./queries/list-classifications";
+export {
+  createClassificationAction,
+  deleteClassificationAction,
+} from "./actions/manage-classification";
 
 export { ProductTable } from "./components/product-table";
 export { ProductForm } from "./components/product-form";

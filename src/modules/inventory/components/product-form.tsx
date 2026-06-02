@@ -255,7 +255,17 @@ export function ProductForm({
 
         {/* Classificações encadeadas */}
         <div className="space-y-2">
-          <Label>Departamento</Label>
+          <div className="flex items-center justify-between">
+            <Label>Departamento</Label>
+            {departments.length === 0 && (
+              <a
+                href="../../settings/classifications"
+                className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Cadastrar classificações
+              </a>
+            )}
+          </div>
           <Select
             value={selectedDeptId}
             onValueChange={(v) => {
@@ -263,9 +273,12 @@ export function ProductForm({
               setSelectedCatId("");
               setSelectedBrandId("");
             }}
+            disabled={departments.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Nenhum" />
+              <SelectValue
+                placeholder={departments.length === 0 ? "Nenhum departamento cadastrado" : "Nenhum"}
+              />
             </SelectTrigger>
             <SelectContent>
               {departments.map((d) => (
@@ -277,47 +290,64 @@ export function ProductForm({
           </Select>
         </div>
 
-        {selectedDeptId && (
-          <div className="space-y-2">
-            <Label>Categoria</Label>
-            <Select
-              value={selectedCatId}
-              onValueChange={(v) => {
-                setSelectedCatId(v);
-                setSelectedBrandId("");
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Nenhuma" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label>Categoria</Label>
+          <Select
+            value={selectedCatId}
+            onValueChange={(v) => {
+              setSelectedCatId(v);
+              setSelectedBrandId("");
+            }}
+            disabled={!selectedDeptId || categories.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  !selectedDeptId
+                    ? "Selecione um departamento"
+                    : categories.length === 0
+                      ? "Sem categorias neste depto"
+                      : "Nenhuma"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {selectedCatId && (
-          <div className="space-y-2">
-            <Label>Marca</Label>
-            <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Nenhuma" />
-              </SelectTrigger>
-              <SelectContent>
-                {brands.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label>Marca</Label>
+          <Select
+            value={selectedBrandId}
+            onValueChange={setSelectedBrandId}
+            disabled={!selectedCatId || brands.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  !selectedCatId
+                    ? "Selecione uma categoria"
+                    : brands.length === 0
+                      ? "Sem marcas nesta categoria"
+                      : "Nenhuma"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {brands.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* classificationId hidden */}
         <input type="hidden" name="classificationId" value={classificationId} />
