@@ -7,7 +7,8 @@ export async function listProducts(
   companyId: string,
   raw: Record<string, unknown>,
 ): Promise<PaginatedResult<Product>> {
-  const { q, page, pageSize, onlyActive, sortBy, sortDir } = listProductsSchema.parse(raw);
+  const { q, page, pageSize, onlyActive, sortBy, sortDir, classificationId } =
+    listProductsSchema.parse(raw);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -21,6 +22,7 @@ export async function listProducts(
 
   if (onlyActive) query = query.eq("is_active", true);
   if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);
+  if (classificationId) query = query.eq("classification_id", classificationId);
 
   const { data, count, error } = await query;
   if (error) throw new Error(error.message);

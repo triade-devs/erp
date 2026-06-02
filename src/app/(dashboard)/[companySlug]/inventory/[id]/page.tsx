@@ -7,9 +7,11 @@ import {
   updateProductAction,
   deactivateProductAction,
   listMovements,
+  listClassifications,
 } from "@/modules/inventory";
 import { ProductForm } from "@/modules/inventory";
 import { MovementTable } from "@/modules/inventory";
+import { listSuppliers } from "@/modules/suppliers";
 import { formatCurrency } from "@/lib/utils";
 import { resolveCompany } from "@/modules/tenancy";
 import { Can } from "@/modules/authz";
@@ -30,9 +32,11 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
   const sortBy = resolvedSearch.sortBy ?? "created_at";
   const sortDir: "asc" | "desc" = resolvedSearch.sortDir === "asc" ? "asc" : "desc";
 
-  const [product, movements] = await Promise.all([
+  const [product, movements, suppliers, classifications] = await Promise.all([
     getProduct(id, company.id),
     listMovements(company.id, { productId: id, pageSize: 10, page, sortBy, sortDir }),
+    listSuppliers(company.id, { onlyActive: true }),
+    listClassifications(company.id),
   ]);
 
   if (!product) notFound();
@@ -76,7 +80,12 @@ export default async function ProductDetailPage({ params, searchParams }: Props)
       <Can permission="inventory:product:update">
         <div className="rounded-lg border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold">Editar produto</h2>
-          <ProductForm product={product} updateAction={updateAction} />
+          <ProductForm
+            product={product}
+            updateAction={updateAction}
+            suppliers={suppliers}
+            classifications={classifications}
+          />
         </div>
       </Can>
 
