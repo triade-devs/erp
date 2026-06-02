@@ -21,13 +21,47 @@ const initial: ActionResult = { ok: false };
 
 type DocType = "cnpj" | "cpf";
 
+// Países mais comuns no comércio com o Brasil
+const COUNTRIES = [
+  { value: "Brasil", label: "🇧🇷 Brasil" },
+  { value: "Argentina", label: "🇦🇷 Argentina" },
+  { value: "Alemanha", label: "🇩🇪 Alemanha" },
+  { value: "China", label: "🇨🇳 China" },
+  { value: "Coreia do Sul", label: "🇰🇷 Coreia do Sul" },
+  { value: "Espanha", label: "🇪🇸 Espanha" },
+  { value: "Estados Unidos", label: "🇺🇸 Estados Unidos" },
+  { value: "França", label: "🇫🇷 França" },
+  { value: "Itália", label: "🇮🇹 Itália" },
+  { value: "Japão", label: "🇯🇵 Japão" },
+  { value: "México", label: "🇲🇽 México" },
+  { value: "Portugal", label: "🇵🇹 Portugal" },
+  { value: "Reino Unido", label: "🇬🇧 Reino Unido" },
+  { value: "Outro", label: "🌍 Outro" },
+] as const;
+
+// DDIs mais comuns
+const DDI_LIST = [
+  { value: "+55", label: "+55 🇧🇷" },
+  { value: "+1", label: "+1  🇺🇸" },
+  { value: "+44", label: "+44 🇬🇧" },
+  { value: "+49", label: "+49 🇩🇪" },
+  { value: "+33", label: "+33 🇫🇷" },
+  { value: "+39", label: "+39 🇮🇹" },
+  { value: "+34", label: "+34 🇪🇸" },
+  { value: "+351", label: "+351 🇵🇹" },
+  { value: "+54", label: "+54 🇦🇷" },
+  { value: "+52", label: "+52 🇲🇽" },
+  { value: "+81", label: "+81 🇯🇵" },
+  { value: "+82", label: "+82 🇰🇷" },
+  { value: "+86", label: "+86 🇨🇳" },
+] as const;
+
 type Props = {
   supplier?: Supplier;
   updateAction?: (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
 };
 
 export function SupplierForm({ supplier, updateAction }: Props) {
-  // createSupplierAction retorna data extra (id,name) que o form de edição ignora
   const action = (updateAction ?? createSupplierAction) as (
     prev: ActionResult,
     formData: FormData,
@@ -36,6 +70,9 @@ export function SupplierForm({ supplier, updateAction }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
+
+  const [country, setCountry] = useState(supplier?.country ?? "Brasil");
+  const isBrazil = country === "Brasil";
 
   useEffect(() => {
     if (!hasMountedRef.current) {
@@ -52,6 +89,7 @@ export function SupplierForm({ supplier, updateAction }: Props) {
 
   return (
     <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {/* Nome */}
       <Field
         label="Nome"
         name="name"
@@ -59,24 +97,48 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         defaultValue={supplier?.name}
         error={fieldErrors?.name?.[0]}
         placeholder="NOME DO FORNECEDOR"
-        maxLength={30}
+        maxLength={60}
         onChange={(e) => {
-          e.target.value = e.target.value.toUpperCase().slice(0, 30);
+          e.target.value = e.target.value.toUpperCase().slice(0, 60);
         }}
       />
 
-      <DocumentField defaultValue={supplier?.document ?? ""} error={fieldErrors?.document?.[0]} />
+      {/* País */}
+      <CountryField
+        value={country}
+        defaultValue={supplier?.country ?? "Brasil"}
+        onChange={setCountry}
+      />
 
+      {/* Estado e Cidade */}
       <Field
-        label="Telefone"
-        name="phone"
-        defaultValue={supplier?.phone ?? ""}
-        error={fieldErrors?.phone?.[0]}
-        placeholder="(00) 00000-0000"
-        onChange={(e) => {
-          e.target.value = formatPhone(e.target.value);
-        }}
+        label="Estado / Província"
+        name="state"
+        defaultValue={supplier?.state ?? ""}
+        placeholder={isBrazil ? "SP" : "California"}
+        maxLength={60}
       />
+      <Field
+        label="Cidade"
+        name="city"
+        defaultValue={supplier?.city ?? ""}
+        placeholder={isBrazil ? "São Paulo" : "Los Angeles"}
+        maxLength={60}
+      />
+
+      {/* Documento — só para Brasil */}
+      {isBrazil && (
+        <DocumentField defaultValue={supplier?.document ?? ""} error={fieldErrors?.document?.[0]} />
+      )}
+
+      {/* Telefone */}
+      <PhoneField
+        defaultPhone={supplier?.phone ?? ""}
+        isBrazil={isBrazil}
+        error={fieldErrors?.phone?.[0]}
+      />
+
+      {/* E-mail */}
       <Field
         label="E-mail"
         name="email"
@@ -91,6 +153,63 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         <SubmitButton isEditing={!!supplier} />
       </div>
     </form>
+  );
+}
+
+// ─── CountryField ─────────────────────────────────────────────────────────────
+
+function CountryField({
+  value,
+  defaultValue,
+  onChange,
+}: {
+  value: string;
+  defaultValue: string;
+  onChange: (v: string) => void;
+}) {
+  const [isOther, setIsOther] = useState(
+    () => !COUNTRIES.some((c) => c.value === defaultValue && c.value !== "Outro"),
+  );
+
+  function handleSelect(v: string) {
+    if (v === "Outro") {
+      setIsOther(true);
+      onChange("Outro");
+    } else {
+      setIsOther(false);
+      onChange(v);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>País</Label>
+      <Select
+        name={isOther ? undefined : "country"}
+        value={isOther ? "Outro" : value}
+        onValueChange={handleSelect}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione o país" />
+        </SelectTrigger>
+        <SelectContent>
+          {COUNTRIES.map((c) => (
+            <SelectItem key={c.value} value={c.value}>
+              {c.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {isOther && (
+        <Input
+          name="country"
+          placeholder="Nome do país"
+          defaultValue={defaultValue !== "Outro" ? defaultValue : ""}
+          maxLength={60}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+    </div>
   );
 }
 
@@ -118,19 +237,11 @@ function formatCpf(digits: string): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
-function formatPhone(raw: string): string {
-  const d = raw.replace(/\D/g, "").slice(0, 11);
-  if (d.length <= 2) return d.length ? `(${d}` : "";
-  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-}
-
 function DocumentField({ defaultValue, error }: { defaultValue: string; error?: string }) {
   const [docType, setDocType] = useState<DocType>(() =>
     defaultValue ? detectDocType(defaultValue) : "cnpj",
   );
-  const [value, setValue] = useState(() => defaultValue ?? "");
+  const [value, setValue] = useState(defaultValue);
 
   function handleDocTypeChange(type: DocType) {
     setDocType(type);
@@ -141,9 +252,6 @@ function DocumentField({ defaultValue, error }: { defaultValue: string; error?: 
     const digits = e.target.value.replace(/\D/g, "");
     setValue(docType === "cnpj" ? formatCnpj(digits) : formatCpf(digits));
   }
-
-  const maxLength = docType === "cnpj" ? 18 : 14;
-  const placeholder = docType === "cnpj" ? "00.000.000/0001-00" : "000.000.000-00";
 
   return (
     <div className="space-y-2">
@@ -163,12 +271,83 @@ function DocumentField({ defaultValue, error }: { defaultValue: string; error?: 
           inputMode="numeric"
           value={value}
           onChange={handleChange}
-          placeholder={placeholder}
-          maxLength={maxLength}
+          placeholder={docType === "cnpj" ? "00.000.000/0001-00" : "000.000.000-00"}
+          maxLength={docType === "cnpj" ? 18 : 14}
           aria-invalid={!!error}
           className="flex-1"
         />
       </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+// ─── PhoneField ───────────────────────────────────────────────────────────────
+
+function formatBrPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+function splitPhone(full: string): { ddi: string; number: string } {
+  if (!full) return { ddi: "+55", number: "" };
+  const match = full.match(/^(\+\d{1,4})\s?(.*)/);
+  if (match) return { ddi: match[1]!, number: match[2] ?? "" };
+  return { ddi: "+55", number: full };
+}
+
+function PhoneField({
+  defaultPhone,
+  isBrazil,
+  error,
+}: {
+  defaultPhone: string;
+  isBrazil: boolean;
+  error?: string;
+}) {
+  const { ddi: initDdi, number: initNumber } = splitPhone(defaultPhone);
+  const [ddi, setDdi] = useState(initDdi);
+  const [number, setNumber] = useState(initNumber);
+
+  const fullPhone = isBrazil ? number : `${ddi} ${number}`.trim();
+
+  function handleBrChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setNumber(formatBrPhone(e.target.value));
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Telefone</Label>
+      <div className="flex gap-2">
+        {!isBrazil && (
+          <Select value={ddi} onValueChange={setDdi}>
+            <SelectTrigger className="w-28 shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DDI_LIST.map((d) => (
+                <SelectItem key={d.value} value={d.value}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <Input
+          inputMode="tel"
+          value={number}
+          onChange={isBrazil ? handleBrChange : (e) => setNumber(e.target.value)}
+          placeholder={isBrazil ? "(00) 00000-0000" : "555 234-5678"}
+          maxLength={isBrazil ? 15 : 20}
+          aria-invalid={!!error}
+          className="flex-1"
+        />
+      </div>
+      {/* campo hidden com o valor completo */}
+      <input type="hidden" name="phone" value={fullPhone} />
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );

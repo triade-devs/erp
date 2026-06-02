@@ -1904,7 +1904,9 @@ export type Database = {
       };
       suppliers: {
         Row: {
+          city: string | null;
           company_id: string;
+          country: string | null;
           created_at: string;
           created_by: string | null;
           document: string | null;
@@ -1913,10 +1915,13 @@ export type Database = {
           is_active: boolean;
           name: string;
           phone: string | null;
+          state: string | null;
           updated_at: string;
         };
         Insert: {
+          city?: string | null;
           company_id: string;
+          country?: string | null;
           created_at?: string;
           created_by?: string | null;
           document?: string | null;
@@ -1925,10 +1930,13 @@ export type Database = {
           is_active?: boolean;
           name: string;
           phone?: string | null;
+          state?: string | null;
           updated_at?: string;
         };
         Update: {
+          city?: string | null;
           company_id?: string;
+          country?: string | null;
           created_at?: string;
           created_by?: string | null;
           document?: string | null;
@@ -1937,6 +1945,7 @@ export type Database = {
           is_active?: boolean;
           name?: string;
           phone?: string | null;
+          state?: string | null;
           updated_at?: string;
         };
         Relationships: [

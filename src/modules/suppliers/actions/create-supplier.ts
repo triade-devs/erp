@@ -37,8 +37,11 @@ export async function createSupplierAction(
     .from("suppliers")
     .insert({
       name: parsed.data.name.toUpperCase(),
-      document: parsed.data.document ?? null,
-      phone: parsed.data.phone ?? null,
+      country: parsed.data.country || null,
+      state: parsed.data.state || null,
+      city: parsed.data.city || null,
+      document: parsed.data.document || null,
+      phone: parsed.data.phone || null,
       email: parsed.data.email || null,
       is_active: parsed.data.isActive,
       company_id: companyId,
