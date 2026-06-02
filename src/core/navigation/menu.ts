@@ -30,6 +30,14 @@ export const MODULES_MENU: MenuItem[] = [
     requiresPermission: "movements:movement:read",
   },
   {
+    label: "Fornecedores",
+    href: "/suppliers",
+    icon: "truck",
+    group: "Estoque",
+    requiresSlug: true,
+    requiresPermission: "suppliers:supplier:read",
+  },
+  {
     label: "Auditoria",
     href: "/audit",
     icon: "shield-check",
