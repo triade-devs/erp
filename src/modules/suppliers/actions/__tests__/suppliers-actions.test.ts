@@ -32,10 +32,17 @@ function makeFormData(fields: Record<string, string>): FormData {
 }
 
 function makeSupabaseMock({ userId = "user-xyz", insertError = null as unknown } = {}) {
+  const insertChain = {
+    select: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({
+      data: { id: "new-supplier-id", name: "FORNECEDOR X" },
+      error: insertError,
+    }),
+  };
   return {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: userId } } }) },
     from: vi.fn(() => ({
-      insert: vi.fn().mockResolvedValue({ error: insertError }),
+      insert: vi.fn().mockReturnValue(insertChain),
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({ error: null }),

@@ -10,12 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { createSupplierAction } from "../actions/create-supplier";
 import type { ActionResult } from "@/lib/errors";
 
-const initial: ActionResult = { ok: false };
+type CreatedSupplier = { id: string; name: string };
+const initial: ActionResult<CreatedSupplier> = { ok: false };
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (supplier: { id: string; name: string }) => void;
+  onCreated: (supplier: CreatedSupplier) => void;
 };
 
 export function SupplierQuickModal({ open, onOpenChange, onCreated }: Props) {
@@ -33,6 +34,7 @@ export function SupplierQuickModal({ open, onOpenChange, onCreated }: Props) {
       toast.success("Fornecedor cadastrado.");
       formRef.current?.reset();
       onOpenChange(false);
+      if (state.data) onCreated(state.data);
       return;
     }
     if (state.message) toast.error(state.message);

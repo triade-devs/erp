@@ -18,7 +18,11 @@ export async function updateSystemRolePermissionsAction(
 
   const permissionCodes = formData.getAll("permission_code") as string[];
 
-  const { error } = await supabase.rpc("update_system_role_permissions", {
+  type AnyRpc = (
+    fn: string,
+    args?: Record<string, unknown>,
+  ) => Promise<{ error: { message: string } | null }>;
+  const { error } = await (supabase.rpc as unknown as AnyRpc)("update_system_role_permissions", {
     role_code: roleCode,
     permission_codes: permissionCodes,
   });

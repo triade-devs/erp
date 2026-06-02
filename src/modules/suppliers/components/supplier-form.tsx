@@ -18,7 +18,11 @@ type Props = {
 };
 
 export function SupplierForm({ supplier, updateAction }: Props) {
-  const action = updateAction ?? createSupplierAction;
+  // createSupplierAction retorna data extra (id,name) que o form de edição ignora
+  const action = (updateAction ?? createSupplierAction) as (
+    prev: ActionResult,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   const [state, formAction] = useActionState(action, initial);
   const formRef = useRef<HTMLFormElement>(null);
   const hasMountedRef = useRef(false);

@@ -8,9 +8,9 @@ import { supplierSchema } from "../schemas";
 import type { ActionResult } from "@/lib/errors";
 
 export async function createSupplierAction(
-  _prev: ActionResult,
+  _prev: ActionResult<{ id: string; name: string }>,
   formData: FormData,
-): Promise<ActionResult> {
+): Promise<ActionResult<{ id: string; name: string }>> {
   const parsed = supplierSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
@@ -33,18 +33,22 @@ export async function createSupplierAction(
     throw e;
   }
 
-  const { error } = await supabase.from("suppliers").insert({
-    name: parsed.data.name.toUpperCase(),
-    document: parsed.data.document ?? null,
-    phone: parsed.data.phone ?? null,
-    email: parsed.data.email || null,
-    is_active: parsed.data.isActive,
-    company_id: companyId,
-    created_by: user.id,
-  });
+  const { data: inserted, error } = await supabase
+    .from("suppliers")
+    .insert({
+      name: parsed.data.name.toUpperCase(),
+      document: parsed.data.document ?? null,
+      phone: parsed.data.phone ?? null,
+      email: parsed.data.email || null,
+      is_active: parsed.data.isActive,
+      company_id: companyId,
+      created_by: user.id,
+    })
+    .select("id, name")
+    .single();
 
   if (error) return { ok: false, message: error.message };
 
   revalidatePath("/", "layout");
-  return { ok: true, message: "Fornecedor cadastrado com sucesso" };
+  return { ok: true, message: "Fornecedor cadastrado com sucesso", data: inserted };
 }

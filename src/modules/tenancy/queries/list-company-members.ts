@@ -22,7 +22,7 @@ export async function listCompanyMembers(companyId: string): Promise<CompanyMemb
       id,
       user_id,
       status,
-      is_owner,
+      legacy_is_owner,
       joined_at,
       membership_roles (
         roles ( id, name, code )
@@ -49,7 +49,7 @@ export async function listCompanyMembers(companyId: string): Promise<CompanyMemb
     userId: row.user_id,
     fullName: profileMap.get(row.user_id) ?? "—",
     status: row.status,
-    isOwner: row.is_owner,
+    isOwner: row.legacy_is_owner,
     joinedAt: row.joined_at,
     roles: (row.membership_roles ?? [])
       .map((mr) => mr.roles)

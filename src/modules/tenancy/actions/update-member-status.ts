@@ -29,7 +29,7 @@ export async function updateMemberStatusAction(
 
   const { data: membership, error: fetchError } = await supabase
     .from("memberships")
-    .select("id, user_id, is_owner")
+    .select("id, user_id, legacy_is_owner")
     .eq("id", membershipId)
     .eq("company_id", companyId)
     .maybeSingle();
@@ -37,7 +37,7 @@ export async function updateMemberStatusAction(
   if (fetchError) return { ok: false, message: fetchError.message };
   if (!membership) return { ok: false, message: "Membro não encontrado" };
 
-  if (membership.is_owner && (status === "suspended" || status === "removed")) {
+  if (membership.legacy_is_owner && (status === "suspended" || status === "removed")) {
     return { ok: false, message: "Não é possível suspender ou remover o proprietário da empresa" };
   }
 

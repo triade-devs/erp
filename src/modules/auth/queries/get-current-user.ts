@@ -35,9 +35,10 @@ export async function getCurrentUser() {
     .select(
       `
       id,
+      user_id,
       company_id,
       status,
-      is_owner,
+      legacy_is_owner,
       company:companies ( slug, name ),
       membership_roles (
         role:roles ( code )
@@ -48,21 +49,23 @@ export async function getCurrentUser() {
     .eq("status", "active");
 
   const memberships: CompanyMembership[] = (rawMemberships ?? []).map((m) => {
-    const company = (m as unknown as { company: { slug: string; name: string } | null }).company;
-    const membershipRoles = (
-      m as unknown as {
-        membership_roles: Array<{ role: { code: string } | null }>;
-      }
-    ).membership_roles;
+    const row = m as unknown as {
+      id: string;
+      company_id: string;
+      status: string;
+      legacy_is_owner: boolean;
+      company: { slug: string; name: string } | null;
+      membership_roles: Array<{ role: { code: string } | null }>;
+    };
 
     return {
-      id: m.id,
-      companyId: m.company_id,
-      companySlug: company?.slug ?? "",
-      companyName: company?.name ?? "",
-      status: m.status,
-      isOwner: m.is_owner,
-      roles: (membershipRoles ?? []).map((mr) => mr.role?.code ?? "").filter(Boolean),
+      id: row.id,
+      companyId: row.company_id,
+      companySlug: row.company?.slug ?? "",
+      companyName: row.company?.name ?? "",
+      status: row.status as CompanyMembership["status"],
+      isOwner: row.legacy_is_owner,
+      roles: (row.membership_roles ?? []).map((mr) => mr.role?.code ?? "").filter(Boolean),
     };
   });
 
