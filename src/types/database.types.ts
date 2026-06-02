@@ -1904,6 +1904,7 @@ export type Database = {
       };
       suppliers: {
         Row: {
+          cep: string | null;
           city: string | null;
           company_id: string;
           country: string | null;
@@ -1919,6 +1920,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          cep?: string | null;
           city?: string | null;
           company_id: string;
           country?: string | null;
@@ -1934,6 +1936,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          cep?: string | null;
           city?: string | null;
           company_id?: string;
           country?: string | null;

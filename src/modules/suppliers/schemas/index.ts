@@ -8,6 +8,7 @@ export const supplierSchema = z.object({
   country: z.string().max(60).optional().nullable(),
   state: z.string().max(60, "Máximo 60 caracteres").optional().nullable(),
   city: z.string().max(60, "Máximo 60 caracteres").optional().nullable(),
+  cep: z.string().max(9, "CEP inválido").optional().nullable(),
   // documento só é validado quando Brasil
   document: z
     .string()

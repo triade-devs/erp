@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { createProductAction } from "../actions/create-product";
 import { usePriceInput } from "@/lib/price-formatter";
+import { searchNcm, lookupBarcode, type NcmItem } from "@/lib/enrichment-client";
 import type { Product } from "../types";
 import type { ActionResult } from "@/lib/errors";
 import type { Classification } from "../queries/list-classifications";
@@ -52,6 +53,10 @@ export function ProductForm({
   const formRef = useRef<HTMLFormElement>(null);
   const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
+
+  // Nome e descrição controlados (autocomplete NCM/EAN pode sugerir)
+  const [name, setName] = useState(product?.name ?? "");
+  const [description, setDescription] = useState(product?.description ?? "");
 
   // Suppliers (pode crescer com quick-modal)
   const [supplierList, setSupplierList] = useState(suppliers);
@@ -109,7 +114,11 @@ export function ProductForm({
       return;
     }
     if (state.ok) {
-      if (!product) formRef.current?.reset();
+      if (!product) {
+        formRef.current?.reset();
+        setName("");
+        setDescription("");
+      }
       toast.success(state.message ?? "Salvo com sucesso.");
       return;
     }
@@ -119,6 +128,20 @@ export function ProductForm({
   function handleSupplierCreated(newSupplier: SupplierOption) {
     setSupplierList((prev) => [...prev, { id: newSupplier.id, name: newSupplier.name }]);
     setSelectedSupplierId(newSupplier.id);
+  }
+
+  // Preenche descrição apenas se estiver vazia (não sobrescreve o que o usuário digitou)
+  function suggestDescription(text: string) {
+    if (!text) return;
+    setDescription((cur) => cur || text.slice(0, 100));
+  }
+
+  function handleBarcodeResult(data: { name: string; brand: string }) {
+    const suggested = [data.name, data.brand].filter(Boolean).join(" ").trim();
+    if (suggested) {
+      setName((cur) => cur || suggested.toUpperCase().slice(0, 60));
+      suggestDescription(suggested);
+    }
   }
 
   return (
@@ -140,35 +163,32 @@ export function ProductForm({
           }}
         />
 
-        {/* NCM */}
-        <NcmField defaultValue={product?.ncm} error={fieldErrors?.ncm?.[0]} />
+        {/* NCM com autocomplete */}
+        <NcmAutocompleteField
+          defaultValue={product?.ncm}
+          error={fieldErrors?.ncm?.[0]}
+          onPickDescription={suggestDescription}
+        />
 
-        {/* Nome */}
+        {/* Nome (controlado) */}
         <Field
           label="Nome"
           name="name"
           required
-          defaultValue={product?.name}
+          value={name}
           error={fieldErrors?.name?.[0]}
           placeholder="NOME DO PRODUTO"
-          onChange={(e) => {
-            e.target.value = e.target.value.toUpperCase().slice(0, 60);
-          }}
+          onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 60))}
         />
 
-        {/* Barcode */}
-        <Field
-          label="Código de barras (EAN)"
-          name="barcode"
+        {/* Barcode com autocomplete */}
+        <BarcodeField
           defaultValue={product?.barcode ?? ""}
           error={fieldErrors?.barcode?.[0]}
-          placeholder="EAN-8 ou EAN-13"
-          onChange={(e) => {
-            e.target.value = e.target.value.replace(/\D/g, "").slice(0, 13);
-          }}
+          onResult={handleBarcodeResult}
         />
 
-        {/* Descrição */}
+        {/* Descrição (controlada) */}
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">
             Descrição <span className="text-red-500">*</span>
@@ -178,7 +198,8 @@ export function ProductForm({
             name="description"
             rows={2}
             required
-            defaultValue={product?.description ?? ""}
+            value={description}
+            onChange={(e) => setDescription(e.target.value.slice(0, 100))}
             placeholder="Descrição do produto (máx. 100 caracteres)"
             maxLength={100}
           />
@@ -422,11 +443,46 @@ function formatNcm(value: string): string {
   return [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join(".");
 }
 
-function NcmField({ defaultValue, error }: { defaultValue?: string | null; error?: string }) {
+function NcmAutocompleteField({
+  defaultValue,
+  error,
+  onPickDescription,
+}: {
+  defaultValue?: string | null;
+  error?: string;
+  onPickDescription: (description: string) => void;
+}) {
   const [value, setValue] = useState(() => formatNcm(defaultValue ?? ""));
+  const [results, setResults] = useState<NcmItem[]>([]);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const masked = formatNcm(e.target.value);
+    setValue(masked);
+    const digits = masked.replace(/\D/g, "");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (digits.length < 2) {
+      setResults([]);
+      setOpen(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      const items = await searchNcm(digits);
+      setResults(items);
+      setOpen(items.length > 0);
+    }, 300);
+  }
+
+  function pick(item: NcmItem) {
+    setValue(formatNcm(item.code));
+    onPickDescription(item.description);
+    setOpen(false);
+    setResults([]);
+  }
 
   return (
-    <div className="space-y-2">
+    <div className="relative space-y-2">
       <Label htmlFor="ncm">
         NCM <span className="text-red-500">*</span>
       </Label>
@@ -435,9 +491,72 @@ function NcmField({ defaultValue, error }: { defaultValue?: string | null; error
         name="ncm"
         required
         inputMode="numeric"
+        autoComplete="off"
         value={value}
-        onChange={(e) => setValue(formatNcm(e.target.value))}
+        onChange={handleChange}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onFocus={() => results.length > 0 && setOpen(true)}
         placeholder="0000.00.00"
+        aria-invalid={!!error}
+      />
+      {open && (
+        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover shadow-md">
+          {results.map((item) => (
+            <li key={item.code}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(item)}
+                className="flex w-full flex-col gap-0.5 px-3 py-2 text-left text-sm hover:bg-accent"
+              >
+                <span className="font-mono text-xs">{item.code}</span>
+                <span className="truncate text-xs text-muted-foreground">{item.description}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function BarcodeField({
+  defaultValue,
+  error,
+  onResult,
+}: {
+  defaultValue: string;
+  error?: string;
+  onResult: (data: { name: string; brand: string }) => void;
+}) {
+  const [value, setValue] = useState(defaultValue);
+  const [loading, setLoading] = useState(false);
+
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 13);
+    setValue(digits);
+    if (digits.length === 8 || digits.length === 13) {
+      setLoading(true);
+      const data = await lookupBarcode(digits);
+      setLoading(false);
+      if (data) onResult({ name: data.name, brand: data.brand });
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label htmlFor="barcode">Código de barras (EAN)</Label>
+        {loading && <span className="text-xs text-muted-foreground">Buscando produto...</span>}
+      </div>
+      <Input
+        id="barcode"
+        name="barcode"
+        inputMode="numeric"
+        value={value}
+        onChange={handleChange}
+        placeholder="EAN-8 ou EAN-13"
         aria-invalid={!!error}
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -452,6 +571,7 @@ type FieldProps = {
   required?: boolean;
   error?: string;
   step?: string;
+  value?: string;
   defaultValue?: string;
   placeholder?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
@@ -464,10 +584,12 @@ function Field({
   required,
   error,
   step,
+  value,
   defaultValue,
   placeholder,
   onChange,
 }: FieldProps) {
+  const controlled = value !== undefined;
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>
@@ -480,7 +602,8 @@ function Field({
         type={type}
         step={step}
         required={required}
-        defaultValue={defaultValue}
+        value={controlled ? value : undefined}
+        defaultValue={controlled ? undefined : defaultValue}
         placeholder={placeholder}
         aria-invalid={!!error}
         onChange={onChange}

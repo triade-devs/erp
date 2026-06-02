@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createSupplierAction } from "../actions/create-supplier";
+import { lookupCep, lookupEmpresa } from "@/lib/enrichment-client";
 import type { Supplier } from "../types";
 import type { ActionResult } from "@/lib/errors";
 
@@ -71,7 +73,16 @@ export function SupplierForm({ supplier, updateAction }: Props) {
   const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
 
+  // Campos controlados (autocomplete CNPJ/CEP preenche estes)
   const [country, setCountry] = useState(supplier?.country ?? "Brasil");
+  const [name, setName] = useState(supplier?.name ?? "");
+  const [stateUf, setStateUf] = useState(supplier?.state ?? "");
+  const [city, setCity] = useState(supplier?.city ?? "");
+
+  // Status da consulta de CNPJ (situação cadastral)
+  const [cnpjActive, setCnpjActive] = useState<boolean | null>(null);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+
   const isBrazil = country === "Brasil";
 
   useEffect(() => {
@@ -80,12 +91,40 @@ export function SupplierForm({ supplier, updateAction }: Props) {
       return;
     }
     if (state.ok) {
-      if (!supplier) formRef.current?.reset();
+      if (!supplier) {
+        formRef.current?.reset();
+        setName("");
+        setStateUf("");
+        setCity("");
+        setCnpjActive(null);
+      }
       toast.success(state.message ?? "Salvo com sucesso.");
       return;
     }
     if (state.message) toast.error(state.message);
   }, [state]);
+
+  async function handleCnpjComplete(digits: string) {
+    setCnpjLoading(true);
+    setCnpjActive(null);
+    const data = await lookupEmpresa(digits);
+    setCnpjLoading(false);
+    if (data) {
+      if (data.name) setName(data.name.toUpperCase().slice(0, 60));
+      if (data.city) setCity(data.city);
+      if (data.state) setStateUf(data.state);
+      setCnpjActive(data.isActive);
+    }
+  }
+
+  async function handleCepComplete(digits: string) {
+    const data = await lookupCep(digits);
+    if (data) {
+      if (data.city) setCity(data.city);
+      if (data.state) setStateUf(data.state);
+      setCountry("Brasil");
+    }
+  }
 
   return (
     <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -94,13 +133,11 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         label="Nome"
         name="name"
         required
-        defaultValue={supplier?.name}
+        value={name}
         error={fieldErrors?.name?.[0]}
         placeholder="NOME DO FORNECEDOR"
         maxLength={60}
-        onChange={(e) => {
-          e.target.value = e.target.value.toUpperCase().slice(0, 60);
-        }}
+        onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 60))}
       />
 
       {/* País */}
@@ -110,26 +147,37 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         onChange={setCountry}
       />
 
+      {/* Documento — só para Brasil (com autocomplete via CNPJ) */}
+      {isBrazil && (
+        <DocumentField
+          defaultValue={supplier?.document ?? ""}
+          error={fieldErrors?.document?.[0]}
+          onCnpjComplete={handleCnpjComplete}
+          cnpjActive={cnpjActive}
+          cnpjLoading={cnpjLoading}
+        />
+      )}
+
+      {/* CEP — só para Brasil (autopreenche cidade/estado) */}
+      {isBrazil && <CepField defaultValue={supplier?.cep ?? ""} onComplete={handleCepComplete} />}
+
       {/* Estado e Cidade */}
       <Field
         label="Estado / Província"
         name="state"
-        defaultValue={supplier?.state ?? ""}
+        value={stateUf}
         placeholder={isBrazil ? "SP" : "California"}
         maxLength={60}
+        onChange={(e) => setStateUf(e.target.value)}
       />
       <Field
         label="Cidade"
         name="city"
-        defaultValue={supplier?.city ?? ""}
+        value={city}
         placeholder={isBrazil ? "São Paulo" : "Los Angeles"}
         maxLength={60}
+        onChange={(e) => setCity(e.target.value)}
       />
-
-      {/* Documento — só para Brasil */}
-      {isBrazil && (
-        <DocumentField defaultValue={supplier?.document ?? ""} error={fieldErrors?.document?.[0]} />
-      )}
 
       {/* Telefone */}
       <PhoneField
@@ -213,6 +261,45 @@ function CountryField({
   );
 }
 
+// ─── CepField ─────────────────────────────────────────────────────────────────
+
+function formatCep(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
+function CepField({
+  defaultValue,
+  onComplete,
+}: {
+  defaultValue: string;
+  onComplete: (digits: string) => void;
+}) {
+  const [value, setValue] = useState(() => formatCep(defaultValue));
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+    setValue(formatCep(digits));
+    if (digits.length === 8) onComplete(digits);
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="cep">CEP</Label>
+      <Input
+        id="cep"
+        name="cep"
+        inputMode="numeric"
+        value={value}
+        onChange={handleChange}
+        placeholder="00000-000"
+        maxLength={9}
+      />
+    </div>
+  );
+}
+
 // ─── DocumentField ────────────────────────────────────────────────────────────
 
 function detectDocType(value: string): DocType {
@@ -237,7 +324,19 @@ function formatCpf(digits: string): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
-function DocumentField({ defaultValue, error }: { defaultValue: string; error?: string }) {
+function DocumentField({
+  defaultValue,
+  error,
+  onCnpjComplete,
+  cnpjActive,
+  cnpjLoading,
+}: {
+  defaultValue: string;
+  error?: string;
+  onCnpjComplete: (digits: string) => void;
+  cnpjActive: boolean | null;
+  cnpjLoading: boolean;
+}) {
   const [docType, setDocType] = useState<DocType>(() =>
     defaultValue ? detectDocType(defaultValue) : "cnpj",
   );
@@ -251,11 +350,27 @@ function DocumentField({ defaultValue, error }: { defaultValue: string; error?: 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "");
     setValue(docType === "cnpj" ? formatCnpj(digits) : formatCpf(digits));
+    if (docType === "cnpj" && digits.length === 14) onCnpjComplete(digits);
   }
 
   return (
     <div className="space-y-2">
-      <Label>Documento</Label>
+      <div className="flex items-center justify-between">
+        <Label>Documento</Label>
+        {docType === "cnpj" && cnpjLoading && (
+          <span className="text-xs text-muted-foreground">Buscando empresa...</span>
+        )}
+        {docType === "cnpj" && !cnpjLoading && cnpjActive === true && (
+          <Badge variant="secondary" className="text-xs">
+            Situação: Ativa
+          </Badge>
+        )}
+        {docType === "cnpj" && !cnpjLoading && cnpjActive === false && (
+          <Badge variant="destructive" className="text-xs">
+            Situação: Inativa
+          </Badge>
+        )}
+      </div>
       <div className="flex gap-2">
         <Select value={docType} onValueChange={(v) => handleDocTypeChange(v as DocType)}>
           <SelectTrigger className="w-24 shrink-0">
@@ -346,7 +461,6 @@ function PhoneField({
           className="flex-1"
         />
       </div>
-      {/* campo hidden com o valor completo */}
       <input type="hidden" name="phone" value={fullPhone} />
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
@@ -361,6 +475,7 @@ type FieldProps = {
   type?: string;
   required?: boolean;
   error?: string;
+  value?: string;
   defaultValue?: string;
   placeholder?: string;
   maxLength?: number;
@@ -373,11 +488,14 @@ function Field({
   type = "text",
   required,
   error,
+  value,
   defaultValue,
   placeholder,
   maxLength,
   onChange,
 }: FieldProps) {
+  // Controlado quando `value` é fornecido; caso contrário, uncontrolled com defaultValue
+  const controlled = value !== undefined;
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>
@@ -389,7 +507,8 @@ function Field({
         name={name}
         type={type}
         required={required}
-        defaultValue={defaultValue}
+        value={controlled ? value : undefined}
+        defaultValue={controlled ? undefined : defaultValue}
         placeholder={placeholder}
         maxLength={maxLength}
         aria-invalid={!!error}

@@ -40,6 +40,7 @@ export async function createSupplierAction(
       country: parsed.data.country || null,
       state: parsed.data.state || null,
       city: parsed.data.city || null,
+      cep: parsed.data.cep || null,
       document: parsed.data.document || null,
       phone: parsed.data.phone || null,
       email: parsed.data.email || null,
