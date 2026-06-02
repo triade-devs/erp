@@ -1,16 +1,25 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createSupplierAction } from "../actions/create-supplier";
 import type { Supplier } from "../types";
 import type { ActionResult } from "@/lib/errors";
 
 const initial: ActionResult = { ok: false };
+
+type DocType = "cnpj" | "cpf";
 
 type Props = {
   supplier?: Supplier;
@@ -54,19 +63,18 @@ export function SupplierForm({ supplier, updateAction }: Props) {
           e.target.value = e.target.value.toUpperCase();
         }}
       />
-      <Field
-        label="CNPJ / CPF"
-        name="document"
-        defaultValue={supplier?.document ?? ""}
-        error={fieldErrors?.document?.[0]}
-        placeholder="00.000.000/0001-00"
-      />
+
+      <DocumentField defaultValue={supplier?.document ?? ""} error={fieldErrors?.document?.[0]} />
+
       <Field
         label="Telefone"
         name="phone"
         defaultValue={supplier?.phone ?? ""}
         error={fieldErrors?.phone?.[0]}
         placeholder="(00) 00000-0000"
+        onChange={(e) => {
+          e.target.value = formatPhone(e.target.value);
+        }}
       />
       <Field
         label="E-mail"
@@ -83,6 +91,88 @@ export function SupplierForm({ supplier, updateAction }: Props) {
     </form>
   );
 }
+
+// ─── DocumentField ────────────────────────────────────────────────────────────
+
+function detectDocType(value: string): DocType {
+  const digits = value.replace(/\D/g, "");
+  return digits.length <= 11 && !value.includes("/") ? "cpf" : "cnpj";
+}
+
+function formatCnpj(digits: string): string {
+  const d = digits.slice(0, 14);
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`;
+  if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+  if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
+function formatCpf(digits: string): string {
+  const d = digits.slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
+
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+function DocumentField({ defaultValue, error }: { defaultValue: string; error?: string }) {
+  const [docType, setDocType] = useState<DocType>(() =>
+    defaultValue ? detectDocType(defaultValue) : "cnpj",
+  );
+  const [value, setValue] = useState(() => defaultValue ?? "");
+
+  function handleDocTypeChange(type: DocType) {
+    setDocType(type);
+    setValue("");
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "");
+    setValue(docType === "cnpj" ? formatCnpj(digits) : formatCpf(digits));
+  }
+
+  const maxLength = docType === "cnpj" ? 18 : 14;
+  const placeholder = docType === "cnpj" ? "00.000.000/0001-00" : "000.000.000-00";
+
+  return (
+    <div className="space-y-2">
+      <Label>Documento</Label>
+      <div className="flex gap-2">
+        <Select value={docType} onValueChange={(v) => handleDocTypeChange(v as DocType)}>
+          <SelectTrigger className="w-24 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="cnpj">CNPJ</SelectItem>
+            <SelectItem value="cpf">CPF</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          name="document"
+          inputMode="numeric"
+          value={value}
+          onChange={handleChange}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          aria-invalid={!!error}
+          className="flex-1"
+        />
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Field ────────────────────────────────────────────────────────────────────
 
 type FieldProps = {
   label: string;

@@ -64,8 +64,30 @@ export function SupplierQuickModal({ open, onOpenChange, onCreated }: Props) {
             {fieldErrors?.name && <p className="text-sm text-red-600">{fieldErrors.name[0]}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="qm-document">CNPJ / CPF</Label>
-            <Input id="qm-document" name="document" placeholder="00.000.000/0001-00" />
+            <Label htmlFor="qm-document">CNPJ</Label>
+            <Input
+              id="qm-document"
+              name="document"
+              inputMode="numeric"
+              placeholder="00.000.000/0001-00"
+              maxLength={18}
+              onChange={(e) => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 14);
+                const parts = [
+                  d.slice(0, 2),
+                  d.slice(2, 5),
+                  d.slice(5, 8),
+                  d.slice(8, 12),
+                  d.slice(12),
+                ].filter(Boolean);
+                let formatted = parts[0] ?? "";
+                if (parts[1]) formatted += `.${parts[1]}`;
+                if (parts[2]) formatted += `.${parts[2]}`;
+                if (parts[3]) formatted += `/${parts[3]}`;
+                if (parts[4]) formatted += `-${parts[4]}`;
+                e.target.value = formatted;
+              }}
+            />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
