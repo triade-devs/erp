@@ -723,55 +723,112 @@ export type Database = {
         };
         Relationships: [];
       };
+      product_classifications: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          id: string;
+          level: string;
+          name: string;
+          parent_id: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          level: string;
+          name: string;
+          parent_id?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          level?: string;
+          name?: string;
+          parent_id?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_classifications_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_classifications_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "product_classifications";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       products: {
         Row: {
+          barcode: string | null;
+          classification_id: string | null;
           company_id: string;
           cost_price: number;
           created_at: string;
           created_by: string | null;
-          description: string | null;
+          description: string;
           id: string;
           is_active: boolean;
+          location: string | null;
           min_stock: number;
           name: string;
           ncm: string;
           sale_price: number;
           sku: string;
           stock: number;
+          supplier_id: string;
           unit: string;
           updated_at: string;
         };
         Insert: {
+          barcode?: string | null;
+          classification_id?: string | null;
           company_id: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
-          description?: string | null;
+          description?: string;
           id?: string;
           is_active?: boolean;
+          location?: string | null;
           min_stock?: number;
           name: string;
           ncm: string;
           sale_price?: number;
           sku: string;
           stock?: number;
+          supplier_id: string;
           unit?: string;
           updated_at?: string;
         };
         Update: {
+          barcode?: string | null;
+          classification_id?: string | null;
           company_id?: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
-          description?: string | null;
+          description?: string;
           id?: string;
           is_active?: boolean;
+          location?: string | null;
           min_stock?: number;
           name?: string;
           ncm?: string;
           sale_price?: number;
           sku?: string;
           stock?: number;
+          supplier_id?: string;
           unit?: string;
           updated_at?: string;
         };
@@ -781,6 +838,20 @@ export type Database = {
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_classification_id_fkey";
+            columns: ["classification_id"];
+            isOneToOne: false;
+            referencedRelation: "product_classifications";
             referencedColumns: ["id"];
           },
         ];
