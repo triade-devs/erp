@@ -761,6 +761,9 @@ function handleBarcodeResult(data: BarcodeData) {
 
 Substituir o bloco que vai do comentário `{/* SKU */}` até o fim do bloco `{/* Barcode com autocomplete */}` (linhas 150-189) por:
 
+> ⚠️ O bloco abaixo é JSX **dentro** do `<form>` existente — colar exatamente como está
+> (sem ponto-e-vírgula após os elementos; um `;` solto em JSX vira texto renderizado).
+
 ```tsx
 {
   /* Código de barras — primeiro campo (autocomplete EAN) */
@@ -815,6 +818,8 @@ Substituir o bloco que vai do comentário `{/* SKU */}` até o fim do bloco `{/*
 - [ ] **Step 6: Tornar o Select de Unidade controlado**
 
 Substituir o bloco `{/* Unidade */}` (linhas 211-226) por:
+
+> ⚠️ Mesmo cuidado do Step 5: JSX dentro do `<form>`, sem `;` no final.
 
 ```tsx
 {

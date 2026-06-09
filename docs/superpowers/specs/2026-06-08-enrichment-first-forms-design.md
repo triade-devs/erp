@@ -160,8 +160,9 @@ do badge de situação do CNPJ:
 ### 3.5 Testes (ERP)
 
 - Unit: parser de `quantity` → unidade (cobrir g/kg/ml/l/multipack/desconhecido).
-- Atualizar mocks em `inventory-actions.test.ts` e `suppliers-actions.test.ts` para os
-  campos novos de enrichment.
+- `inventory-actions.test.ts` e `suppliers-actions.test.ts` **não mockam** o
+  enrichment-client (verificado) — ficam inalterados; apenas rodar a suíte para
+  confirmar que nada quebrou.
 
 ---
 
@@ -179,7 +180,7 @@ do badge de situação do CNPJ:
 - `src/lib/enrichment-client.ts` — tipos novos + `lookupNcm`
 - `src/modules/suppliers/components/supplier-form.tsx` — reorder + autofill + controlados
 - `src/modules/inventory/components/product-form.tsx` — reorder + autofill + heurística + validação NCM
-- testes de inventory/suppliers + util de heurística de unidade
+- util de heurística de unidade (`quantity-parser`) + teste unit novo
 
 ## Não-objetivos (YAGNI)
 

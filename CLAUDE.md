@@ -18,9 +18,12 @@ npm run format       # Prettier
 npm run db:push      # Apply supabase/migrations to linked project
 npm run db:reset     # Reset local Supabase DB
 npm run db:types     # Regenerate src/types/database.types.ts from linked schema
+
+npm test             # Vitest (vitest run) — tests live in __tests__/ folders next to the code
+npm run test:watch   # Vitest watch mode
 ```
 
-There is no test runner configured yet. Husky + lint-staged run `eslint --fix` and `prettier --write` on staged files via the `pre-commit` hook.
+Tests use Vitest (`vitest.config.ts`, node environment, explicit imports from "vitest" — no globals). Husky + lint-staged run `eslint --fix` and `prettier --write` on staged files via the `pre-commit` hook.
 
 After pulling schema changes or editing `supabase/migrations/`, run `npm run db:push && npm run db:types` so `Database` types stay in sync — `lib/supabase/{server,client}.ts` are typed against this generated file.
 
