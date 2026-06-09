@@ -17,6 +17,9 @@ export type EmpresaData = {
   state: string;
   country: string;
   isActive: boolean;
+  cep: string;
+  phone: string;
+  email: string;
 };
 export type NcmItem = { code: string; description: string };
 export type BarcodeData = { ean: string; name: string; brand: string; category: string };
