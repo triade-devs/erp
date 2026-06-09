@@ -472,11 +472,14 @@ function NcmAutocompleteField({
   const [open, setOpen] = useState(false);
   const [validity, setValidity] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guarda contra respostas obsoletas quando o usuário redigita o NCM
+  const validationIdRef = useRef(0);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const masked = formatNcm(e.target.value);
     setValue(masked);
     const digits = masked.replace(/\D/g, "");
+    const reqId = ++validationIdRef.current;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (digits.length < 2) {
       setResults([]);
@@ -487,16 +490,19 @@ function NcmAutocompleteField({
     setValidity(digits.length === 8 ? "loading" : "idle");
     debounceRef.current = setTimeout(async () => {
       const items = await searchNcm(digits);
+      if (reqId !== validationIdRef.current) return; // resposta obsoleta
       setResults(items);
       setOpen(items.length > 0);
       if (digits.length === 8) {
         const found = await lookupNcm(masked);
+        if (reqId !== validationIdRef.current) return; // resposta obsoleta
         setValidity(found ? "valid" : "invalid");
       }
     }, 300);
   }
 
   function pick(item: NcmItem) {
+    validationIdRef.current++;
     setValue(formatNcm(item.code));
     onPickDescription(item.description);
     setOpen(false);
@@ -570,16 +576,21 @@ function BarcodeField({
 }) {
   const [value, setValue] = useState(defaultValue);
   const [loading, setLoading] = useState(false);
+  const lookupIdRef = useRef(0);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 13);
     setValue(digits);
-    if (digits.length === 8 || digits.length === 13) {
-      setLoading(true);
-      const data = await lookupBarcode(digits);
-      setLoading(false);
-      if (data) onResult(data);
+    const reqId = ++lookupIdRef.current;
+    if (digits.length !== 8 && digits.length !== 13) {
+      setLoading(false); // invalida lookup pendente e some com o indicador
+      return;
     }
+    setLoading(true);
+    const data = await lookupBarcode(digits);
+    if (reqId !== lookupIdRef.current) return; // resposta obsoleta (usuário continuou digitando)
+    setLoading(false);
+    if (data) onResult(data);
   }
 
   return (
