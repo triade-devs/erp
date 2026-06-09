@@ -80,13 +80,14 @@ export function SupplierForm({ supplier, updateAction }: Props) {
   const [city, setCity] = useState(supplier?.city ?? "");
   const [cep, setCep] = useState(supplier?.cep ?? "");
   const [email, setEmail] = useState(supplier?.email ?? "");
-  const initPhone = splitPhone(supplier?.phone ?? "");
-  const [ddi, setDdi] = useState(initPhone.ddi);
-  const [phoneNumber, setPhoneNumber] = useState(initPhone.number);
+  const [ddi, setDdi] = useState(() => splitPhone(supplier?.phone ?? "").ddi);
+  const [phoneNumber, setPhoneNumber] = useState(() => splitPhone(supplier?.phone ?? "").number);
 
   // Status da consulta de CNPJ (situação cadastral)
   const [cnpjActive, setCnpjActive] = useState<boolean | null>(null);
   const [cnpjLoading, setCnpjLoading] = useState(false);
+  // Guarda contra respostas obsoletas quando o usuário redigita o CNPJ
+  const cnpjLookupIdRef = useRef(0);
 
   const isBrazil = country === "Brasil";
 
@@ -114,11 +115,15 @@ export function SupplierForm({ supplier, updateAction }: Props) {
   }, [state]);
 
   async function handleCnpjComplete(digits: string) {
+    const reqId = ++cnpjLookupIdRef.current;
     setCnpjLoading(true);
     setCnpjActive(null);
     const data = await lookupEmpresa(digits);
-    setCnpjLoading(false);
-    if (!data) return;
+    if (reqId !== cnpjLookupIdRef.current) return; // resposta obsoleta
+    if (!data) {
+      setCnpjLoading(false);
+      return;
+    }
 
     if (data.name) setName(data.name.toUpperCase().slice(0, 60));
     if (data.email) setEmail(data.email);
@@ -132,6 +137,7 @@ export function SupplierForm({ supplier, updateAction }: Props) {
     if (data.cep) {
       setCep(data.cep);
       const viacep = await lookupCep(data.cep);
+      if (reqId !== cnpjLookupIdRef.current) return; // resposta obsoleta
       if (viacep) {
         if (viacep.city) setCity(viacep.city);
         if (viacep.state) setStateUf(viacep.state);
@@ -143,6 +149,7 @@ export function SupplierForm({ supplier, updateAction }: Props) {
       if (data.city) setCity(data.city);
       if (data.state) setStateUf(data.state);
     }
+    setCnpjLoading(false);
   }
 
   async function handleCepComplete(digits: string) {
