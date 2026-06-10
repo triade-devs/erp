@@ -48,15 +48,14 @@ export default async function EditRolePage({ params }: Props) {
     throw e;
   }
 
-  const [allRoles, matrix, roleScopes, warehouses, catalog, currentRules] =
-    await Promise.all([
-      listCompanyRoles(company.id),
-      listRolePermissionMatrix(company.id, roleId),
-      listRoleScopes(roleId),
-      listWarehouses(company.id),
-      listFieldCatalog(),
-      listRoleFieldRules(roleId),
-    ]);
+  const [allRoles, matrix, roleScopes, warehouses, catalog, currentRules] = await Promise.all([
+    listCompanyRoles(company.id),
+    listRolePermissionMatrix(company.id, roleId),
+    listRoleScopes(roleId),
+    listWarehouses(company.id),
+    listFieldCatalog(),
+    listRoleFieldRules(roleId),
+  ]);
 
   const role = allRoles.find((item) => item.id === roleId);
   if (!role) notFound();

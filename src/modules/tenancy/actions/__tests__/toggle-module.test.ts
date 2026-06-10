@@ -55,12 +55,10 @@ function makeEnableMock({
     );
 
   // roles: primeira chamada (todas) — .select("id").eq("company_id")
-  const rolesAllEq = vi
-    .fn()
-    .mockResolvedValue({
-      data: [{ id: "role-owner" }, { id: "role-manager" }, { id: "role-operator" }],
-      error: null,
-    });
+  const rolesAllEq = vi.fn().mockResolvedValue({
+    data: [{ id: "role-owner" }, { id: "role-manager" }, { id: "role-operator" }],
+    error: null,
+  });
   const rolesAllSelect = vi.fn().mockReturnValue({ eq: rolesAllEq });
 
   // roles: segunda chamada (system) — .select("id, code").eq("company_id").eq("is_system")

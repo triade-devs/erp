@@ -5,6 +5,7 @@
 **Goal:** Habilitar regras de mascaramento por campo (column-level) por role: cada coluna marcada em `field_catalog` pode ser `hidden`, `readonly` ou `editable` para uma role. Duas camadas: trigger BEFORE UPDATE em `products` (autoritativa, bloqueia escrita de coluna readonly/hidden) + máscara client-side (UX/perf). Inclui UI: aba "Campos" no role detail.
 
 **Architecture:**
+
 - 2 tabelas globais: `field_catalog` (catálogo de colunas mascaráveis) + `role_field_rules` (atribuições de modo por role/coluna).
 - Helpers SQL: `user_field_mode(company, table, column)` e `visible_columns(company, table)`.
 - Trigger `enforce_field_rules` (BEFORE UPDATE) em `products` — compara `to_jsonb(new)` vs `to_jsonb(old)` por coluna do catálogo e bloqueia com `P0403` se modo for `readonly`/`hidden`.
@@ -21,6 +22,7 @@
 **Depende de:** PRs #A–#G (`feat/roles-evolution`).
 
 **Não inclui:**
+
 - Triggers `enforce_field_rules` em tabelas além de `products` — adicionar conforme demanda (`movements`, `kb_articles`, etc.).
 - Field rules em CREATE (apenas UPDATE nesta PR; create-product não usa trigger — UX já pode pré-filtrar via `useFieldMode`).
 - Mascaramento server-side de SELECT em queries existentes — `selectVisible` é util genérico; integração em queries existe só em `list-products` como demonstração.
@@ -31,26 +33,26 @@
 
 ## File Structure
 
-| Arquivo | Responsabilidade | Ação |
-|---------|------------------|------|
-| `supabase/migrations/20260528000068_field_catalog_and_role_field_rules.sql` | Tabelas + RLS + seed catálogo inicial (cost_price, sale_price) | CREATE |
-| `supabase/migrations/20260528000069_field_mode_helpers.sql` | Helpers `user_field_mode` + `visible_columns` | CREATE |
-| `supabase/migrations/20260528000070_products_enforce_field_rules.sql` | Trigger BEFORE UPDATE em `products` + função `enforce_field_rules` | CREATE |
-| `src/types/database.types.ts` | Regen | REGENERATE |
-| `src/modules/authz/queries/list-field-catalog.ts` | Lista catálogo agrupado por módulo | CREATE |
-| `src/modules/authz/queries/list-role-field-rules.ts` | Lista rules de uma role | CREATE |
-| `src/modules/authz/queries/get-user-field-modes.ts` | Bootstrap dos modes pro PermissionsProvider | CREATE |
-| `src/modules/authz/actions/update-role-field-rules.ts` | Replace de rules de uma role | CREATE |
-| `src/modules/authz/services/field-rules.ts` | `selectVisible<T>()` util | CREATE |
-| `src/modules/authz/services/__tests__/field-rules.test.ts` | Unit | CREATE |
-| `src/modules/authz/hooks/use-field-mode.ts` | Hook leitura do contexto | CREATE |
-| `src/modules/authz/components/permissions-provider.tsx` | Aceita `fieldModes` prop + expõe via context | MODIFY |
-| `src/modules/authz/index.ts` | Barrel: novos exports | MODIFY |
-| `src/modules/authz/client.ts` | Barrel client: useFieldMode + updateRoleFieldRulesAction | MODIFY |
-| `src/app/(dashboard)/[companySlug]/layout.tsx` | Passa `fieldModes` pro provider | MODIFY |
-| `src/app/(dashboard)/[companySlug]/settings/roles/[roleId]/page.tsx` | Aba "Campos" | MODIFY |
-| `src/app/(dashboard)/[companySlug]/settings/roles/[roleId]/role-field-rules-form.tsx` | Form de field-rules | CREATE |
-| `src/modules/inventory/components/product-form.tsx` | `useFieldMode` em cost_price + sale_price | MODIFY |
+| Arquivo                                                                               | Responsabilidade                                                   | Ação       |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------- |
+| `supabase/migrations/20260528000068_field_catalog_and_role_field_rules.sql`           | Tabelas + RLS + seed catálogo inicial (cost_price, sale_price)     | CREATE     |
+| `supabase/migrations/20260528000069_field_mode_helpers.sql`                           | Helpers `user_field_mode` + `visible_columns`                      | CREATE     |
+| `supabase/migrations/20260528000070_products_enforce_field_rules.sql`                 | Trigger BEFORE UPDATE em `products` + função `enforce_field_rules` | CREATE     |
+| `src/types/database.types.ts`                                                         | Regen                                                              | REGENERATE |
+| `src/modules/authz/queries/list-field-catalog.ts`                                     | Lista catálogo agrupado por módulo                                 | CREATE     |
+| `src/modules/authz/queries/list-role-field-rules.ts`                                  | Lista rules de uma role                                            | CREATE     |
+| `src/modules/authz/queries/get-user-field-modes.ts`                                   | Bootstrap dos modes pro PermissionsProvider                        | CREATE     |
+| `src/modules/authz/actions/update-role-field-rules.ts`                                | Replace de rules de uma role                                       | CREATE     |
+| `src/modules/authz/services/field-rules.ts`                                           | `selectVisible<T>()` util                                          | CREATE     |
+| `src/modules/authz/services/__tests__/field-rules.test.ts`                            | Unit                                                               | CREATE     |
+| `src/modules/authz/hooks/use-field-mode.ts`                                           | Hook leitura do contexto                                           | CREATE     |
+| `src/modules/authz/components/permissions-provider.tsx`                               | Aceita `fieldModes` prop + expõe via context                       | MODIFY     |
+| `src/modules/authz/index.ts`                                                          | Barrel: novos exports                                              | MODIFY     |
+| `src/modules/authz/client.ts`                                                         | Barrel client: useFieldMode + updateRoleFieldRulesAction           | MODIFY     |
+| `src/app/(dashboard)/[companySlug]/layout.tsx`                                        | Passa `fieldModes` pro provider                                    | MODIFY     |
+| `src/app/(dashboard)/[companySlug]/settings/roles/[roleId]/page.tsx`                  | Aba "Campos"                                                       | MODIFY     |
+| `src/app/(dashboard)/[companySlug]/settings/roles/[roleId]/role-field-rules-form.tsx` | Form de field-rules                                                | CREATE     |
+| `src/modules/inventory/components/product-form.tsx`                                   | `useFieldMode` em cost_price + sale_price                          | MODIFY     |
 
 ---
 
@@ -69,6 +71,7 @@ git checkout -b feat/field-level-masking
 ## Task 1: Migration 068 — field_catalog + role_field_rules
 
 **Files:**
+
 - Create: `supabase/migrations/20260528000068_field_catalog_and_role_field_rules.sql`
 
 - [ ] **Step 1: Escrever migration**
@@ -194,6 +197,7 @@ products.cost_price + products.sale_price."
 ## Task 2: Migration 069 — helpers user_field_mode + visible_columns
 
 **Files:**
+
 - Create: `supabase/migrations/20260528000069_field_mode_helpers.sql`
 
 - [ ] **Step 1: Escrever migration**
@@ -284,6 +288,7 @@ tabela. Backward-compat: sem rule = editable. Platform admin = editable."
 ## Task 3: Migration 070 — trigger enforce_field_rules em products
 
 **Files:**
+
 - Create: `supabase/migrations/20260528000070_products_enforce_field_rules.sql`
 
 - [ ] **Step 1: Escrever migration**
@@ -371,6 +376,7 @@ trigger = autoridade."
 ## Task 4: Regen types
 
 **Files:**
+
 - Modify: `src/types/database.types.ts`
 
 - [ ] **Step 1: Regenerar via MCP `generate_typescript_types`**. Sobrescrever `src/types/database.types.ts`.
@@ -403,6 +409,7 @@ git commit -m "chore(types): regenerate database types for PR #H migrations"
 ## Task 5: Backend TS — queries + action + service
 
 **Files:**
+
 - Create: `src/modules/authz/queries/list-field-catalog.ts`
 - Create: `src/modules/authz/queries/list-role-field-rules.ts`
 - Create: `src/modules/authz/queries/get-user-field-modes.ts`
@@ -565,10 +572,7 @@ export async function updateRoleFieldRulesAction(
     .maybeSingle();
   if (!role) return { ok: false, message: "Role não encontrada" };
 
-  const { error: delErr } = await supabase
-    .from("role_field_rules")
-    .delete()
-    .eq("role_id", roleId);
+  const { error: delErr } = await supabase.from("role_field_rules").delete().eq("role_id", roleId);
   if (delErr) return { ok: false, message: delErr.message };
 
   const toInsert = rules
@@ -613,10 +617,7 @@ import { createClient } from "@/lib/supabase/server";
  * Sempre inclui 'id' como fallback (RPC pode retornar lista vazia se o
  * field_catalog não cobrir a tabela ou usuário tem tudo escondido).
  */
-export async function listVisibleColumns(
-  companyId: string,
-  tableName: string,
-): Promise<string[]> {
+export async function listVisibleColumns(companyId: string, tableName: string): Promise<string[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("visible_columns", {
     p_company: companyId,
@@ -721,6 +722,7 @@ visible_columns) + 3 unit tests."
 ## Task 6: Client provider + hook + layout integration
 
 **Files:**
+
 - Modify: `src/modules/authz/components/permissions-provider.tsx`
 - Create: `src/modules/authz/hooks/use-field-mode.ts`
 - Modify: `src/modules/authz/client.ts` (barrel)
@@ -867,6 +869,7 @@ getEffectivePermissions."
 ## Task 7: UI — aba "Campos" no role detail
 
 **Files:**
+
 - Modify: `src/app/(dashboard)/[companySlug]/settings/roles/[roleId]/page.tsx`
 - Create: `src/app/(dashboard)/[companySlug]/settings/roles/[roleId]/role-field-rules-form.tsx`
 
@@ -888,10 +891,7 @@ import { toast } from "sonner";
 import { updateRoleFieldRulesAction } from "@/modules/authz/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { FieldCatalogByModule, FieldMode, RoleFieldRulesByKey } from "@/modules/authz";
 
 type Props = {
@@ -970,7 +970,9 @@ export function RoleFieldRulesForm({ companyId, roleId, catalog, currentRules }:
                   </div>
                   <RadioGroup
                     value={current}
-                    onValueChange={(v) => setMode(entry.tableName, entry.columnName, v as FieldMode)}
+                    onValueChange={(v) =>
+                      setMode(entry.tableName, entry.columnName, v as FieldMode)
+                    }
                     className="flex gap-3"
                   >
                     {MODES.map((m) => (
@@ -1053,6 +1055,7 @@ por coluna. Replace-mode: editable = ausência de rule."
 ## Task 8: Product form usa useFieldMode
 
 **Files:**
+
 - Modify: `src/modules/inventory/components/product-form.tsx`
 
 ### Step 1: Editar `product-form.tsx`
@@ -1070,7 +1073,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { createProductAction } from "../actions/create-product";
 import type { Product } from "../types";
@@ -1132,8 +1139,15 @@ type FieldProps = {
 };
 
 function Field({
-  label, name, type = "text", required, error, step,
-  defaultValue, placeholder, disabledOverride,
+  label,
+  name,
+  type = "text",
+  required,
+  error,
+  step,
+  defaultValue,
+  placeholder,
+  disabledOverride,
 }: FieldProps) {
   return (
     <div className="space-y-2">

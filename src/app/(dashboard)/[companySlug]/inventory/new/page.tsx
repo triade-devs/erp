@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ProductForm } from "@/modules/inventory";
+import { ProductForm, listClassifications } from "@/modules/inventory";
+import { listSuppliers, SupplierQuickModal } from "@/modules/suppliers";
 import { resolveCompany } from "@/modules/tenancy";
 
 export const metadata = { title: "Novo Produto — ERP" };
@@ -11,8 +12,12 @@ type Props = {
 
 export default async function NewProductPage({ params }: Props) {
   const { companySlug } = await params;
-  // Resolve empresa apenas para validar acesso; company_id é injetado na action via cookie
-  await resolveCompany(companySlug);
+  const company = await resolveCompany(companySlug);
+
+  const [suppliers, classifications] = await Promise.all([
+    listSuppliers(company.id, { onlyActive: true }),
+    listClassifications(company.id),
+  ]);
 
   return (
     <section className="space-y-6">
@@ -27,7 +32,11 @@ export default async function NewProductPage({ params }: Props) {
       </header>
 
       <div className="rounded-lg border bg-card p-6">
-        <ProductForm />
+        <ProductForm
+          suppliers={suppliers}
+          classifications={classifications}
+          QuickModal={SupplierQuickModal}
+        />
       </div>
     </section>
   );

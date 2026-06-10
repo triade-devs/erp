@@ -37,10 +37,7 @@ export async function updateRoleFieldRulesAction(
     .maybeSingle();
   if (!role) return { ok: false, message: "Role não encontrada" };
 
-  const { error: delErr } = await supabase
-    .from("role_field_rules")
-    .delete()
-    .eq("role_id", roleId);
+  const { error: delErr } = await supabase.from("role_field_rules").delete().eq("role_id", roleId);
   if (delErr) return { ok: false, message: delErr.message };
 
   const toInsert = rules

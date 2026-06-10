@@ -154,7 +154,11 @@ export function WarehouseFormDialog({ companyId, mode, warehouse }: Props) {
                   {isActive ? "Disponível para novas operações." : "Mantido apenas para histórico."}
                 </p>
               </div>
-              <Switch checked={isActive} onCheckedChange={handleToggle} disabled={isPending || isToggling} />
+              <Switch
+                checked={isActive}
+                onCheckedChange={handleToggle}
+                disabled={isPending || isToggling}
+              />
             </div>
           )}
 

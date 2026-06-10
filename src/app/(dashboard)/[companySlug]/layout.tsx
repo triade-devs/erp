@@ -1,9 +1,5 @@
 import { resolveCompany } from "@/modules/tenancy";
-import {
-  getEffectivePermissions,
-  PermissionsProvider,
-  getUserFieldModes,
-} from "@/modules/authz";
+import { getEffectivePermissions, PermissionsProvider, getUserFieldModes } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
 import type { ReactNode } from "react";
 import type { UserFieldModes } from "@/modules/authz";

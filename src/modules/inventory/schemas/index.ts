@@ -4,17 +4,30 @@ export const productSchema = z.object({
   sku: z
     .string()
     .min(1, "SKU obrigatório")
-    .max(32, "Máximo 32 caracteres")
+    .max(20, "Máximo 20 caracteres")
     .regex(/^[A-Z0-9\-]+$/i, "SKU deve ser alfanumérico (letras, números e hífens)"),
-  name: z.string().min(2, "Mínimo 2 caracteres").max(120, "Máximo 120 caracteres"),
-  description: z.string().max(2000, "Máximo 2000 caracteres").optional().nullable(),
+  ncm: z
+    .string()
+    .min(1, "NCM obrigatório")
+    .regex(/^[0-9]{4}\.[0-9]{2}\.[0-9]{2}$/, "NCM deve estar no formato XXXX.XX.XX"),
+  barcode: z
+    .string()
+    .regex(/^[0-9]{8}$|^[0-9]{13}$/, "Use EAN-8 ou EAN-13")
+    .optional()
+    .or(z.literal("")),
+  name: z.string().min(2, "Mínimo 2 caracteres").max(60, "Máximo 60 caracteres"),
+  description: z.string().min(1, "Descrição obrigatória").max(100, "Máximo 100 caracteres"),
   unit: z.enum(["UN", "KG", "L", "CX", "M"], { required_error: "Selecione a unidade" }),
   costPrice: z.coerce.number({ invalid_type_error: "Valor inválido" }).nonnegative("Deve ser >= 0"),
   salePrice: z.coerce.number({ invalid_type_error: "Valor inválido" }).nonnegative("Deve ser >= 0"),
   minStock: z.coerce
     .number({ invalid_type_error: "Valor inválido" })
+    .int("Use um inteiro")
     .nonnegative("Deve ser >= 0")
     .default(0),
+  supplierId: z.string().uuid("Selecione um fornecedor"),
+  classificationId: z.string().uuid().optional().or(z.literal("")),
+  location: z.string().max(40, "Máximo 40 caracteres").optional().or(z.literal("")),
   isActive: z.coerce.boolean().default(true),
 });
 
@@ -35,6 +48,7 @@ export const listProductsSchema = z.object({
   onlyActive: z.coerce.boolean().default(true),
   sortBy: z.enum(["name", "sku", "stock", "cost_price", "sale_price"]).default("name"),
   sortDir: z.enum(["asc", "desc"]).default("asc"),
+  classificationId: z.string().uuid().optional(),
 });
 
 export const listMovementsSchema = z.object({

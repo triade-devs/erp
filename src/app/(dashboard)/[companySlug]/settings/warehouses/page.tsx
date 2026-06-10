@@ -45,7 +45,8 @@ export default async function WarehousesPage({ params }: Props) {
         <CardHeader>
           <CardTitle>Depósitos cadastrados</CardTitle>
           <CardDescription>
-            {warehouses.length} {warehouses.length === 1 ? "depósito registrado" : "depósitos registrados"}
+            {warehouses.length}{" "}
+            {warehouses.length === 1 ? "depósito registrado" : "depósitos registrados"}
           </CardDescription>
         </CardHeader>
         <CardContent>

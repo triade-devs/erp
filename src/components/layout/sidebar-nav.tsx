@@ -13,6 +13,7 @@ import {
   BookOpen,
   Puzzle,
   Shield,
+  Truck,
   LayoutTemplate,
   Warehouse,
   type LucideIcon,
@@ -31,6 +32,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "book-open": BookOpen,
   puzzle: Puzzle,
   shield: Shield,
+  truck: Truck,
   "layout-template": LayoutTemplate,
   warehouse: Warehouse,
 };

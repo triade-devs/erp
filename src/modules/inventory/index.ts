@@ -14,6 +14,12 @@ export { listMovements } from "./queries/list-movements";
 export { getInventoryStats } from "./queries/get-inventory-stats";
 export { listWarehouses } from "./queries/list-warehouses";
 export type { InventoryStats } from "./queries/get-inventory-stats";
+export { listClassifications } from "./queries/list-classifications";
+export type { Classification } from "./queries/list-classifications";
+export {
+  createClassificationAction,
+  deleteClassificationAction,
+} from "./actions/manage-classification";
 
 export {
   warehouseCreateSchema,

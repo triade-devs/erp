@@ -6,6 +6,8 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   CRON_SECRET: z.string().optional(),
+  // Serviço de enriquecimento — autocomplete desabilitado se ausente
+  ENRICHMENT_URL: z.string().url().optional(),
 });
 
 export const env = envSchema.parse({
@@ -14,4 +16,5 @@ export const env = envSchema.parse({
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   CRON_SECRET: process.env.CRON_SECRET,
+  ENRICHMENT_URL: process.env.ENRICHMENT_URL,
 });

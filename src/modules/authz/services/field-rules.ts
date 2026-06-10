@@ -9,10 +9,7 @@ import { createClient } from "@/lib/supabase/server";
  * Sempre inclui 'id' como fallback (RPC pode retornar lista vazia se o
  * field_catalog não cobrir a tabela ou usuário tem tudo escondido).
  */
-export async function listVisibleColumns(
-  companyId: string,
-  tableName: string,
-): Promise<string[]> {
+export async function listVisibleColumns(companyId: string, tableName: string): Promise<string[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("visible_columns", {
     p_company: companyId,

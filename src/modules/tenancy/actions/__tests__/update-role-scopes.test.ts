@@ -17,7 +17,11 @@ function makeSupabaseMock(options?: {
   rpcError?: { message: string } | null;
 }) {
   const roleMaybeSingle = vi.fn().mockResolvedValue({
-    data: options?.roleError ? null : (options && "roleData" in options ? (options.roleData ?? null) : { id: "role-1" }),
+    data: options?.roleError
+      ? null
+      : options && "roleData" in options
+        ? (options.roleData ?? null)
+        : { id: "role-1" },
     error: options?.roleError ?? null,
   });
   const roleEqCompany = vi.fn().mockReturnValue({ maybeSingle: roleMaybeSingle });
@@ -56,7 +60,10 @@ describe("updateRoleScopesAction", () => {
     const mock = makeSupabaseMock();
     vi.mocked(createClient).mockResolvedValue(mock as never);
 
-    const result = await updateRoleScopesAction("company-1", "role-1", "warehouse", ["wh-1", "wh-2"]);
+    const result = await updateRoleScopesAction("company-1", "role-1", "warehouse", [
+      "wh-1",
+      "wh-2",
+    ]);
 
     expect(result).toEqual({ ok: true, message: "Escopos atualizados com sucesso" });
     expect(mock.roleEqId).toHaveBeenCalledWith("id", "role-1");
