@@ -11,6 +11,7 @@ export function SettingsTabs({ slug }: { slug: string }) {
     { label: "Membros", href: `/${slug}/settings/members` },
     { label: "Roles", href: `/${slug}/settings/roles` },
     { label: "Classificações", href: `/${slug}/settings/classifications` },
+    { label: "Depósitos", href: `/${slug}/settings/warehouses` },
   ];
   return (
     <nav className="mb-6 flex gap-4 border-b">

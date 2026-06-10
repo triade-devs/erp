@@ -1851,6 +1851,125 @@ export type Database = {
         };
         Relationships: [];
       };
+      space_rentals: {
+        Row: {
+          booking_kind: Database["public"]["Enums"]["rental_kind"];
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          ends_at: string;
+          id: string;
+          notes: string | null;
+          period: unknown;
+          price: number;
+          renter_user_id: string;
+          space_id: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["rental_status"];
+          updated_at: string;
+        };
+        Insert: {
+          booking_kind: Database["public"]["Enums"]["rental_kind"];
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          ends_at: string;
+          id?: string;
+          notes?: string | null;
+          period?: unknown;
+          price?: number;
+          renter_user_id: string;
+          space_id: string;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["rental_status"];
+          updated_at?: string;
+        };
+        Update: {
+          booking_kind?: Database["public"]["Enums"]["rental_kind"];
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          ends_at?: string;
+          id?: string;
+          notes?: string | null;
+          period?: unknown;
+          price?: number;
+          renter_user_id?: string;
+          space_id?: string;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["rental_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "space_rentals_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "space_rentals_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "spaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      spaces: {
+        Row: {
+          booking_mode: Database["public"]["Enums"]["space_booking_mode"];
+          capacity: number | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          default_price: number;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          location: string | null;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          booking_mode?: Database["public"]["Enums"]["space_booking_mode"];
+          capacity?: number | null;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          default_price?: number;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          location?: string | null;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          booking_mode?: Database["public"]["Enums"]["space_booking_mode"];
+          capacity?: number | null;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          default_price?: number;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          location?: string | null;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "spaces_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stock_movements: {
         Row: {
           company_id: string;
@@ -2143,6 +2262,9 @@ export type Database = {
         | "other";
       membership_status: "invited" | "active" | "suspended";
       movement_type: "in" | "out" | "adjustment";
+      rental_kind: "daily" | "hourly";
+      rental_status: "confirmed" | "cancelled";
+      space_booking_mode: "daily" | "hourly" | "both";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2278,6 +2400,9 @@ export const Constants = {
       ],
       membership_status: ["invited", "active", "suspended"],
       movement_type: ["in", "out", "adjustment"],
+      rental_kind: ["daily", "hourly"],
+      rental_status: ["confirmed", "cancelled"],
+      space_booking_mode: ["daily", "hourly", "both"],
     },
   },
 } as const;

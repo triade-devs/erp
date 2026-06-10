@@ -20,6 +20,7 @@ import { searchNcm, lookupBarcode, type NcmItem } from "@/lib/enrichment-client"
 import type { Product } from "../types";
 import type { ActionResult } from "@/lib/errors";
 import type { Classification } from "../queries/list-classifications";
+import { useFieldMode } from "@/modules/authz/client";
 
 export type SupplierOption = { id: string; name: string };
 
@@ -53,6 +54,10 @@ export function ProductForm({
   const formRef = useRef<HTMLFormElement>(null);
   const hasMountedRef = useRef(false);
   const fieldErrors = state.ok ? undefined : state.fieldErrors;
+
+  // Field-level masking (PR #H): modos por campo conforme role
+  const costMode = useFieldMode("products", "cost_price");
+  const saleMode = useFieldMode("products", "sale_price");
 
   // Nome e descrição controlados (autocomplete NCM/EAN pode sugerir)
   const [name, setName] = useState(product?.name ?? "");
@@ -383,41 +388,53 @@ export function ProductForm({
           error={fieldErrors?.minStock?.[0]}
         />
 
-        {/* Preço de custo */}
-        <div className="space-y-2">
-          <Label htmlFor="costPrice-display">Preço de custo (R$)</Label>
-          <Input
-            id="costPrice-display"
-            inputMode="decimal"
-            value={costPriceInput.displayValue}
-            onChange={costPriceInput.handleChange}
-            onBlur={costPriceInput.handleBlur}
-            placeholder="0,00"
-            aria-invalid={!!fieldErrors?.costPrice}
-          />
-          <input type="hidden" name="costPrice" value={costPriceInput.decimalValue} />
-          {fieldErrors?.costPrice && (
-            <p className="text-sm text-red-600">{fieldErrors.costPrice[0]}</p>
-          )}
-        </div>
+        {/* Preço de custo — respeita field-level masking (PR #H) */}
+        {costMode !== "hidden" && (
+          <div className="space-y-2">
+            <Label htmlFor="costPrice-display">Preço de custo (R$)</Label>
+            <Input
+              id="costPrice-display"
+              inputMode="decimal"
+              value={costPriceInput.displayValue}
+              onChange={costPriceInput.handleChange}
+              onBlur={costPriceInput.handleBlur}
+              placeholder="0,00"
+              aria-invalid={!!fieldErrors?.costPrice}
+              readOnly={costMode === "readonly"}
+              disabled={costMode === "readonly"}
+            />
+            {costMode !== "readonly" && (
+              <input type="hidden" name="costPrice" value={costPriceInput.decimalValue} />
+            )}
+            {fieldErrors?.costPrice && (
+              <p className="text-sm text-red-600">{fieldErrors.costPrice[0]}</p>
+            )}
+          </div>
+        )}
 
-        {/* Preço de venda */}
-        <div className="space-y-2">
-          <Label htmlFor="salePrice-display">Preço de venda (R$)</Label>
-          <Input
-            id="salePrice-display"
-            inputMode="decimal"
-            value={salePriceInput.displayValue}
-            onChange={salePriceInput.handleChange}
-            onBlur={salePriceInput.handleBlur}
-            placeholder="0,00"
-            aria-invalid={!!fieldErrors?.salePrice}
-          />
-          <input type="hidden" name="salePrice" value={salePriceInput.decimalValue} />
-          {fieldErrors?.salePrice && (
-            <p className="text-sm text-red-600">{fieldErrors.salePrice[0]}</p>
-          )}
-        </div>
+        {/* Preço de venda — respeita field-level masking (PR #H) */}
+        {saleMode !== "hidden" && (
+          <div className="space-y-2">
+            <Label htmlFor="salePrice-display">Preço de venda (R$)</Label>
+            <Input
+              id="salePrice-display"
+              inputMode="decimal"
+              value={salePriceInput.displayValue}
+              onChange={salePriceInput.handleChange}
+              onBlur={salePriceInput.handleBlur}
+              placeholder="0,00"
+              aria-invalid={!!fieldErrors?.salePrice}
+              readOnly={saleMode === "readonly"}
+              disabled={saleMode === "readonly"}
+            />
+            {saleMode !== "readonly" && (
+              <input type="hidden" name="salePrice" value={salePriceInput.decimalValue} />
+            )}
+            {fieldErrors?.salePrice && (
+              <p className="text-sm text-red-600">{fieldErrors.salePrice[0]}</p>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 md:col-span-2">
           <SubmitButton isEditing={!!product} />
@@ -575,6 +592,7 @@ type FieldProps = {
   defaultValue?: string;
   placeholder?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  disabledOverride?: boolean;
 };
 
 function Field({
@@ -588,6 +606,7 @@ function Field({
   defaultValue,
   placeholder,
   onChange,
+  disabledOverride,
 }: FieldProps) {
   const controlled = value !== undefined;
   return (
@@ -601,12 +620,14 @@ function Field({
         name={name}
         type={type}
         step={step}
-        required={required}
+        required={required && !disabledOverride}
         value={controlled ? value : undefined}
         defaultValue={controlled ? undefined : defaultValue}
         placeholder={placeholder}
         aria-invalid={!!error}
         onChange={onChange}
+        readOnly={disabledOverride}
+        disabled={disabledOverride}
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

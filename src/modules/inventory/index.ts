@@ -4,11 +4,15 @@ export { updateProductAction } from "./actions/update-product";
 export { deactivateProductAction } from "./actions/deactivate-product";
 export { reactivateProductAction } from "./actions/reactivate-product";
 export { registerMovementAction } from "./actions/register-movement";
+export { createWarehouseAction } from "./actions/create-warehouse";
+export { updateWarehouseAction } from "./actions/update-warehouse";
+export { toggleWarehouseActiveAction } from "./actions/toggle-warehouse-active";
 
 export { listProducts } from "./queries/list-products";
 export { getProduct } from "./queries/get-product";
 export { listMovements } from "./queries/list-movements";
 export { getInventoryStats } from "./queries/get-inventory-stats";
+export { listWarehouses } from "./queries/list-warehouses";
 export type { InventoryStats } from "./queries/get-inventory-stats";
 export { listClassifications } from "./queries/list-classifications";
 export type { Classification } from "./queries/list-classifications";
@@ -16,6 +20,13 @@ export {
   createClassificationAction,
   deleteClassificationAction,
 } from "./actions/manage-classification";
+
+export {
+  warehouseCreateSchema,
+  warehouseUpdateSchema,
+  type WarehouseCreateInput,
+  type WarehouseUpdateInput,
+} from "./schemas/warehouse";
 
 export { ProductTable } from "./components/product-table";
 export { ProductForm } from "./components/product-form";
@@ -37,4 +48,5 @@ export type {
   MovementWithProduct,
   MovementType,
   PaginatedResult,
+  Warehouse,
 } from "./types";

@@ -13,6 +13,12 @@ export type MovementWithProduct = StockMovement & {
 
 export type MovementType = Database["public"]["Enums"]["movement_type"];
 
+export type Warehouse = {
+  id: string;
+  name: string;
+  isActive: boolean;
+};
+
 export interface PaginatedResult<T> {
   data: T[];
   total: number;

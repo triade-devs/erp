@@ -14,6 +14,8 @@ import {
   Puzzle,
   Shield,
   Truck,
+  LayoutTemplate,
+  Warehouse,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   puzzle: Puzzle,
   shield: Shield,
   truck: Truck,
+  "layout-template": LayoutTemplate,
+  warehouse: Warehouse,
 };
 
 type ResolvedItem = MenuItem & { resolvedHref: string };
