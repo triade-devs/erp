@@ -18,20 +18,21 @@
 - `update_system_role_permissions` dropada (056 ✓). Seeds presentes: 94 `template_permissions`,
   hierarquia de templates (061 ✓), 12 roles com `parent_role_id`, policies RLS de
   `warehouses`/`role_scopes`/`field_catalog`/`role_field_rules` criadas.
-- **Exceção — migration 054 (`kill_is_owner_policies`):** o rename
-  `is_owner → legacy_is_owner` foi **revertido manualmente em 2026-06-09** porque quebrava o
+- **Migration 054 (`kill_is_owner_policies`): totalmente aplicada.** Histórico do dia
+  2026-06-09: o rename `is_owner → legacy_is_owner` foi revertido de manhã porque quebrava o
   main em produção (`column memberships.is_owner does not exist` em
-  `get-current-user`/`list-company-members`). A coluna hoje chama-se `is_owner` de novo.
-  Os demais efeitos da 054 (backfill, `is_membership_owner`, policies novas) continuam aplicados,
-  e a 054 é replayável por construção (`on conflict do nothing`, `create or replace`,
-  `drop policy if exists`).
+  `get-current-user`/`list-company-members`), e **reaplicado no mesmo dia** por decisão do time,
+  para o banco ficar 100% alinhado a esta branch. A coluna chama-se `legacy_is_owner`.
+  ⚠️ Até o merge deste PR, o código do main (e branches derivadas, ex.: PR #56) quebra nas
+  rotas que leem `is_owner` — isso é esperado e se resolve com o merge.
 
 ## Procedimento no merge
 
 1. **Merge do PR #54** (código + arquivos de migration entram no main).
 
-2. **Repair do histórico** — registrar as 24 migrations já aplicadas, **deixando a 054 de fora**
-   (ela precisa rodar no push para refazer o rename junto com o código novo):
+2. **Repair do histórico** — registrar as **25** migrations já aplicadas (incluindo a 054,
+   que NÃO pode ser reexecutada: o rename `alter table ... rename column` não é idempotente
+   e falharia, pois a coluna já se chama `legacy_is_owner`):
 
    ```sql
    insert into supabase_migrations.schema_migrations (version, name) values
@@ -43,6 +44,7 @@
      ('20260523000051', 'role_templates_schema'),
      ('20260523000052', 'seed_templates_from_system_roles'),
      ('20260523000053', 'bootstrap_and_apply_template_rpc'),
+     ('20260524000054', 'kill_is_owner_policies'),
      ('20260524000055', 'fix_handle_new_user_drop_is_owner'),
      ('20260524000056', 'drop_obsolete_update_system_role_permissions'),
      ('20260525000057', 'platform_roles_schema'),
@@ -62,19 +64,24 @@
    on conflict (version) do nothing;
    ```
 
-3. **`supabase db push`** a partir do main pós-merge — deve aplicar **apenas a 054**
-   (refaz `is_owner → legacy_is_owner`; o código mergeado já não referencia `is_owner`).
+3. **`supabase db push`** a partir do main pós-merge — deve ser **no-op** (nenhuma migration
+   pendente). Se ele tentar aplicar algo das 046–070, o repair do passo 2 não foi feito.
 
 4. **`npm run db:types`** — regenerar `src/types/database.types.ts` (o main ganhou
    suppliers/spaces depois que esta branch divergiu; o types da branch está defasado).
 
 5. **Verificação pós-merge:**
-   - `select legacy_is_owner from memberships limit 1;` → funciona (rename refeito).
    - Login + `/[slug]/settings/members` e criação de produto funcionam em produção.
    - `supabase migration list` sem divergências entre local e remoto.
 
 ## Avisos
 
+- **⚠️ URGÊNCIA DE MERGE: enquanto este PR não mergear, o main em produção está quebrado** nas
+  rotas que leem `memberships.is_owner` (membros, e qualquer página que carregue o usuário
+  atual via `getCurrentUser`), pois a coluna no banco já se chama `legacy_is_owner`.
+  Rollback de emergência, se necessário:
+  `alter table public.memberships rename column legacy_is_owner to is_owner;`
+  (e desfazer depois, antes do merge).
 - **Não rodar `supabase db push` a partir do main ANTES do merge do PR #54** depois de feito o
   repair: o histórico remoto terá versões que não existem nos arquivos locais do main, e o CLI
   aborta pedindo repair.
