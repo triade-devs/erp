@@ -13,6 +13,8 @@ import {
   BookOpen,
   Puzzle,
   Shield,
+  LayoutTemplate,
+  Warehouse,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +31,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "book-open": BookOpen,
   puzzle: Puzzle,
   shield: Shield,
+  "layout-template": LayoutTemplate,
+  warehouse: Warehouse,
 };
 
 type ResolvedItem = MenuItem & { resolvedHref: string };

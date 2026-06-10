@@ -28,7 +28,11 @@ export async function listRolePermissionMatrix(
         .from("company_modules")
         .select("module_code, modules(name)")
         .eq("company_id", companyId),
-      supabase.from("role_permissions").select("permission_code").eq("role_id", roleId),
+      supabase
+        .from("role_permissions")
+        .select("permission_code")
+        .eq("role_id", roleId)
+        .eq("is_active", true),
     ]);
 
   if (modErr) throw modErr;

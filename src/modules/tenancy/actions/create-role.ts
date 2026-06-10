@@ -27,9 +27,14 @@ export async function createRoleAction(
     return { ok: false, message: "Sem permissão para gerenciar roles" };
   }
 
+  const parentRoleIdRaw = formData.get("parent_role_id");
+  const parentRoleId =
+    typeof parentRoleIdRaw === "string" && parentRoleIdRaw.length > 0 ? parentRoleIdRaw : null;
+
   const parsed = createRoleSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") || undefined,
+    parent_role_id: parentRoleId,
   });
 
   if (!parsed.success) {
@@ -52,6 +57,7 @@ export async function createRoleAction(
       name,
       description: description ?? null,
       is_system: false,
+      parent_role_id: parsed.data.parent_role_id ?? null,
     })
     .select("id")
     .single();

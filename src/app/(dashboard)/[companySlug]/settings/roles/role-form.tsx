@@ -1,26 +1,46 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { ActionResult } from "@/lib/errors";
+
+type ParentOption = { id: string; name: string; hierarchyLevel: number };
 
 type Props = {
   action: (_prev: ActionResult, formData: FormData) => Promise<ActionResult>;
   backHref: string;
   submitLabel: string;
-  defaultValues?: { name?: string; description?: string };
+  defaultValues?: { name?: string; description?: string; parentRoleId?: string | null };
+  availableParents: ParentOption[];
+  currentRoleId?: string;
 };
 
 const initialState: ActionResult = { ok: false };
+const NONE_VALUE = "__none__";
 
-export function RoleForm({ action, backHref, submitLabel, defaultValues }: Props) {
+export function RoleForm({
+  action,
+  backHref,
+  submitLabel,
+  defaultValues,
+  availableParents,
+  currentRoleId,
+}: Props) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const [parentValue, setParentValue] = useState<string>(defaultValues?.parentRoleId ?? NONE_VALUE);
 
   useEffect(() => {
     if (state.ok) {
@@ -60,6 +80,34 @@ export function RoleForm({ action, backHref, submitLabel, defaultValues }: Props
         {fieldErrors.description && (
           <p className="text-sm text-destructive">{fieldErrors.description[0]}</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <input
+          type="hidden"
+          name="parent_role_id"
+          value={parentValue === NONE_VALUE ? "" : parentValue}
+        />
+        <Label htmlFor="parent_role_id_select">Role superior (opcional)</Label>
+        <Select value={parentValue} onValueChange={setParentValue}>
+          <SelectTrigger id="parent_role_id_select">
+            <SelectValue placeholder="Sem hierarquia (flat)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE_VALUE}>Sem hierarquia (flat)</SelectItem>
+            {availableParents
+              .filter((p) => p.id !== currentRoleId)
+              .map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {"  ".repeat(p.hierarchyLevel)}
+                  {p.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Hierarquia controla quem gerencia quem. Não propaga permissões.
+        </p>
       </div>
 
       {!state.ok && state.message && <p className="text-sm text-destructive">{state.message}</p>}
