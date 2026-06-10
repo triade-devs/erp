@@ -1411,64 +1411,138 @@ export type Database = {
         };
         Relationships: [];
       };
+      product_classifications: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          id: string;
+          level: string;
+          name: string;
+          parent_id: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          level: string;
+          name: string;
+          parent_id?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          level?: string;
+          name?: string;
+          parent_id?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_classifications_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_classifications_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "product_classifications";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       products: {
         Row: {
+          barcode: string | null;
+          classification_id: string | null;
           company_id: string;
           cost_price: number;
           created_at: string;
           created_by: string | null;
-          description: string | null;
+          description: string;
           id: string;
           is_active: boolean;
+          location: string | null;
           min_stock: number;
           name: string;
+          ncm: string;
           sale_price: number;
           sku: string;
           stock: number;
+          supplier_id: string;
           unit: string;
           updated_at: string;
           warehouse_id: string | null;
         };
         Insert: {
+          barcode?: string | null;
+          classification_id?: string | null;
           company_id: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
-          description?: string | null;
+          description: string;
           id?: string;
           is_active?: boolean;
+          location?: string | null;
           min_stock?: number;
           name: string;
+          ncm: string;
           sale_price?: number;
           sku: string;
           stock?: number;
+          supplier_id: string;
           unit?: string;
           updated_at?: string;
           warehouse_id?: string | null;
         };
         Update: {
+          barcode?: string | null;
+          classification_id?: string | null;
           company_id?: string;
           cost_price?: number;
           created_at?: string;
           created_by?: string | null;
-          description?: string | null;
+          description?: string;
           id?: string;
           is_active?: boolean;
+          location?: string | null;
           min_stock?: number;
           name?: string;
+          ncm?: string;
           sale_price?: number;
           sku?: string;
           stock?: number;
+          supplier_id?: string;
           unit?: string;
           updated_at?: string;
           warehouse_id?: string | null;
         };
         Relationships: [
           {
+            foreignKeyName: "products_classification_id_fkey";
+            columns: ["classification_id"];
+            isOneToOne: false;
+            referencedRelation: "product_classifications";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "products_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
             referencedColumns: ["id"];
           },
           {
@@ -1786,7 +1860,7 @@ export type Database = {
           ends_at: string;
           id: string;
           notes: string | null;
-          period: string;
+          period: unknown;
           price: number;
           renter_user_id: string;
           space_id: string;
@@ -1802,6 +1876,7 @@ export type Database = {
           ends_at: string;
           id?: string;
           notes?: string | null;
+          period?: unknown;
           price?: number;
           renter_user_id: string;
           space_id: string;
@@ -1817,6 +1892,7 @@ export type Database = {
           ends_at?: string;
           id?: string;
           notes?: string | null;
+          period?: unknown;
           price?: number;
           renter_user_id?: string;
           space_id?: string;
@@ -1941,6 +2017,65 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      suppliers: {
+        Row: {
+          cep: string | null;
+          city: string | null;
+          company_id: string;
+          country: string | null;
+          created_at: string;
+          created_by: string | null;
+          document: string | null;
+          email: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          phone: string | null;
+          state: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          cep?: string | null;
+          city?: string | null;
+          company_id: string;
+          country?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          document?: string | null;
+          email?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          phone?: string | null;
+          state?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          cep?: string | null;
+          city?: string | null;
+          company_id?: string;
+          country?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          document?: string | null;
+          email?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          phone?: string | null;
+          state?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
             referencedColumns: ["id"];
           },
         ];
@@ -2118,9 +2253,6 @@ export type Database = {
       };
     };
     Enums: {
-      rental_kind: "daily" | "hourly";
-      rental_status: "confirmed" | "cancelled";
-      space_booking_mode: "daily" | "hourly" | "both";
       medical_assignment_relationship:
         | "primary_physician"
         | "physician"
@@ -2130,6 +2262,9 @@ export type Database = {
         | "other";
       membership_status: "invited" | "active" | "suspended";
       movement_type: "in" | "out" | "adjustment";
+      rental_kind: "daily" | "hourly";
+      rental_status: "confirmed" | "cancelled";
+      space_booking_mode: "daily" | "hourly" | "both";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2255,9 +2390,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      rental_kind: ["daily", "hourly"],
-      rental_status: ["confirmed", "cancelled"],
-      space_booking_mode: ["daily", "hourly", "both"],
       medical_assignment_relationship: [
         "primary_physician",
         "physician",
@@ -2268,6 +2400,9 @@ export const Constants = {
       ],
       membership_status: ["invited", "active", "suspended"],
       movement_type: ["in", "out", "adjustment"],
+      rental_kind: ["daily", "hourly"],
+      rental_status: ["confirmed", "cancelled"],
+      space_booking_mode: ["daily", "hourly", "both"],
     },
   },
 } as const;

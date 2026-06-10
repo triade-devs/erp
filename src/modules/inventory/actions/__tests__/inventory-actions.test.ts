@@ -78,11 +78,14 @@ function makeSupabaseMock({
 
 const validProductData = {
   sku: "PROD-001",
+  ncm: "8517.12.31",
   name: "Produto Teste",
+  description: "Produto de teste",
   unit: "UN",
   costPrice: "10",
   salePrice: "20",
   minStock: "0",
+  supplierId: "dddddddd-dddd-dddd-dddd-dddddddddddd",
 };
 
 const validMovementData = {
@@ -146,6 +149,49 @@ describe("createProductAction — isolamento por empresa", () => {
 
     expect(result.ok).toBe(false);
     // Zod falhou → requirePermission não deve ser chamado
+    expect(requirePermission).not.toHaveBeenCalled();
+  });
+
+  it("rejeita NCM com formato inválido (antes de checar permissão)", async () => {
+    vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock() as never);
+
+    const result = await createProductAction(
+      { ok: false },
+      makeFormData({ ...validProductData, ncm: "123" }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect((result as { fieldErrors?: Record<string, string[]> }).fieldErrors?.ncm).toBeDefined();
+    // NCM inválido → Zod falha antes de checar permissão
+    expect(requirePermission).not.toHaveBeenCalled();
+  });
+
+  it("rejeita barcode fora de EAN-8/EAN-13", async () => {
+    vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock() as never);
+
+    const result = await createProductAction(
+      { ok: false },
+      makeFormData({ ...validProductData, barcode: "123" }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(
+      (result as { fieldErrors?: Record<string, string[]> }).fieldErrors?.barcode,
+    ).toBeDefined();
+    expect(requirePermission).not.toHaveBeenCalled();
+  });
+
+  it("rejeita produto sem fornecedor", async () => {
+    vi.mocked(getActiveCompanyId).mockResolvedValue(COMPANY_A);
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock() as never);
+
+    const noSupplier = { ...validProductData } as Record<string, string>;
+    delete noSupplier.supplierId;
+    const result = await createProductAction({ ok: false }, makeFormData(noSupplier));
+
+    expect(result.ok).toBe(false);
     expect(requirePermission).not.toHaveBeenCalled();
   });
 });

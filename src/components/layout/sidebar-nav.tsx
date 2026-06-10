@@ -14,6 +14,7 @@ import {
   Puzzle,
   Shield,
   CalendarDays,
+  Truck,
   LayoutTemplate,
   Warehouse,
   type LucideIcon,
@@ -33,6 +34,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   puzzle: Puzzle,
   shield: Shield,
   "calendar-days": CalendarDays,
+  truck: Truck,
   "layout-template": LayoutTemplate,
   warehouse: Warehouse,
 };

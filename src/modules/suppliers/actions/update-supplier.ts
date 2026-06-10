@@ -4,15 +4,15 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveCompanyId } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
-import { productSchema } from "../schemas";
+import { supplierSchema } from "../schemas";
 import type { ActionResult } from "@/lib/errors";
 
-export async function updateProductAction(
+export async function updateSupplierAction(
   id: string,
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const parsed = productSchema.safeParse(Object.fromEntries(formData));
+  const parsed = supplierSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
   }
@@ -27,7 +27,7 @@ export async function updateProductAction(
   if (!companyId) return { ok: false, message: "Nenhuma empresa ativa" };
 
   try {
-    await requirePermission(companyId, "inventory:product:update");
+    await requirePermission(companyId, "suppliers:supplier:update");
   } catch (e) {
     if (e instanceof ForbiddenError)
       return { ok: false, message: "Acesso negado: permissão insuficiente" };
@@ -35,33 +35,24 @@ export async function updateProductAction(
   }
 
   const { error } = await supabase
-    .from("products")
+    .from("suppliers")
     .update({
-      sku: parsed.data.sku.toUpperCase(),
-      ncm: parsed.data.ncm,
-      barcode: parsed.data.barcode || null,
       name: parsed.data.name.toUpperCase(),
-      description: parsed.data.description ?? "—",
-      unit: parsed.data.unit,
-      cost_price: parsed.data.costPrice,
-      sale_price: parsed.data.salePrice,
-      min_stock: parsed.data.minStock,
-      location: parsed.data.location ? parsed.data.location.toUpperCase() : null,
-      classification_id: parsed.data.classificationId || null,
-      supplier_id: parsed.data.supplierId,
+      country: parsed.data.country || null,
+      state: parsed.data.state || null,
+      city: parsed.data.city || null,
+      cep: parsed.data.cep || null,
+      document: parsed.data.document || null,
+      phone: parsed.data.phone || null,
+      email: parsed.data.email || null,
       is_active: parsed.data.isActive,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
     .eq("company_id", companyId);
 
-  if (error) {
-    if (error.code === "23505") {
-      return { ok: false, message: "SKU já pertence a outro produto" };
-    }
-    return { ok: false, message: error.message };
-  }
+  if (error) return { ok: false, message: error.message };
 
   revalidatePath("/", "layout");
-  return { ok: true, message: "Produto atualizado com sucesso" };
+  return { ok: true, message: "Fornecedor atualizado com sucesso" };
 }
