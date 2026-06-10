@@ -1,20 +1,28 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { listWarehouses } from "@/modules/inventory";
 import {
+  listCompanyRoles,
+  listRolePermissionMatrix,
+  listRoleScopes,
   resolveCompany,
   updateRoleAction,
-  listRolePermissionMatrix,
   updateRolePermissionsAction,
-  listCompanyRoles,
 } from "@/modules/tenancy";
-import { requirePermission, ForbiddenError } from "@/modules/authz";
+import {
+  ForbiddenError,
+  listFieldCatalog,
+  listRoleFieldRules,
+  requirePermission,
+} from "@/modules/authz";
 import { AppError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleForm } from "../role-form";
 import { PermissionMatrix } from "./permission-matrix";
+import { RoleScopesForm } from "./role-scopes-form";
+import { RoleFieldRulesForm } from "./role-field-rules-form";
 
 export const metadata = { title: "Editar Role — ERP" };
 
@@ -40,27 +48,29 @@ export default async function EditRolePage({ params }: Props) {
     throw e;
   }
 
-  const supabase = await createClient();
-  const { data: role, error } = await supabase
-    .from("roles")
-    .select("id, code, name, description, is_system, parent_role_id")
-    .eq("id", roleId)
-    .eq("company_id", company.id)
-    .maybeSingle();
+  const [allRoles, matrix, roleScopes, warehouses, catalog, currentRules] =
+    await Promise.all([
+      listCompanyRoles(company.id),
+      listRolePermissionMatrix(company.id, roleId),
+      listRoleScopes(roleId),
+      listWarehouses(company.id),
+      listFieldCatalog(),
+      listRoleFieldRules(roleId),
+    ]);
 
-  if (error) throw error;
+  const role = allRoles.find((item) => item.id === roleId);
   if (!role) notFound();
 
   const backHref = `/${companySlug}/settings/roles`;
-  const matrix = await listRolePermissionMatrix(company.id, role.id);
   const permAction = updateRolePermissionsAction.bind(null, company.id, role.id);
-
-  const allRoles = await listCompanyRoles(company.id);
-  const availableParents = allRoles.map((r) => ({
-    id: r.id,
-    name: r.name,
-    hierarchyLevel: r.hierarchyLevel,
+  const availableParents = allRoles.map((item) => ({
+    id: item.id,
+    name: item.name,
+    hierarchyLevel: item.hierarchyLevel,
   }));
+  const selectedWarehouseIds = roleScopes
+    .filter((scope) => scope.dimensionCode === "warehouse")
+    .map((scope) => scope.scopeValue);
 
   return (
     <section className="max-w-2xl space-y-6">
@@ -70,7 +80,7 @@ export default async function EditRolePage({ params }: Props) {
         </Button>
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">{role.name}</h2>
-          {role.is_system ? (
+          {role.isSystem ? (
             <Badge variant="secondary">Sistema</Badge>
           ) : (
             <Badge variant="outline">Custom</Badge>
@@ -78,13 +88,15 @@ export default async function EditRolePage({ params }: Props) {
         </div>
       </div>
 
-      <Tabs defaultValue={role.is_system ? "permissions" : "info"}>
+      <Tabs defaultValue={role.isSystem ? "permissions" : "info"}>
         <TabsList>
-          {!role.is_system && <TabsTrigger value="info">Informações</TabsTrigger>}
+          {!role.isSystem && <TabsTrigger value="info">Informações</TabsTrigger>}
           <TabsTrigger value="permissions">Permissões</TabsTrigger>
+          <TabsTrigger value="scopes">Escopo</TabsTrigger>
+          <TabsTrigger value="fields">Campos</TabsTrigger>
         </TabsList>
 
-        {!role.is_system && (
+        {!role.isSystem && (
           <TabsContent value="info" className="mt-4">
             <div className="space-y-4 rounded-md border p-4">
               <div className="space-y-1">
@@ -100,7 +112,7 @@ export default async function EditRolePage({ params }: Props) {
                 defaultValues={{
                   name: role.name,
                   description: role.description ?? undefined,
-                  parentRoleId: role.parent_role_id ?? null,
+                  parentRoleId: role.parentRoleId ?? null,
                 }}
                 availableParents={availableParents}
                 currentRoleId={role.id}
@@ -110,7 +122,7 @@ export default async function EditRolePage({ params }: Props) {
         )}
 
         <TabsContent value="permissions" className="mt-4">
-          {role.is_system && (
+          {role.isSystem && (
             <p className="mb-4 rounded-md border border-dashed p-3 text-sm text-muted-foreground">
               Role de sistema — permissões são gerenciadas automaticamente ao habilitar módulos.
             </p>
@@ -119,8 +131,26 @@ export default async function EditRolePage({ params }: Props) {
             matrix={matrix}
             roleId={role.id}
             companyId={company.id}
-            isSystem={role.is_system}
+            isSystem={role.isSystem}
             action={permAction}
+          />
+        </TabsContent>
+
+        <TabsContent value="scopes" className="mt-4">
+          <RoleScopesForm
+            companyId={company.id}
+            roleId={role.id}
+            warehouses={warehouses}
+            selectedWarehouseIds={selectedWarehouseIds}
+          />
+        </TabsContent>
+
+        <TabsContent value="fields" className="mt-4">
+          <RoleFieldRulesForm
+            companyId={company.id}
+            roleId={role.id}
+            catalog={catalog}
+            currentRules={currentRules}
           />
         </TabsContent>
       </Tabs>
