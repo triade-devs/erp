@@ -45,28 +45,41 @@ begin
   grant select on test_users to authenticated;
 end $$;
 
+-- Fornecedores — products.supplier_id é NOT NULL desde a migration de enrichment
+insert into public.suppliers (id, company_id, name)
+values
+  ('aaaaaaaa-ffff-0000-0000-000000000001', tests.company_id('empresa-alfa'), 'FORNECEDOR ALFA'),
+  ('bbbbbbbb-ffff-0000-0000-000000000001', tests.company_id('empresa-beta'), 'FORNECEDOR BETA');
+
 -- Produto na empresa A com movimentação (usado nos testes 1, 2, 3, 5)
-insert into public.products (id, company_id, sku, name, unit, cost_price, sale_price)
+-- description/ncm/supplier_id obrigatórios desde a migration de enrichment
+insert into public.products
+  (id, company_id, sku, name, description, ncm, supplier_id, unit, cost_price, sale_price)
 values (
   'aaaaaaaa-0000-0000-0000-000000000001',
   tests.company_id('empresa-alfa'),
-  'PROD-ALFA-001', 'Produto Alfa', 'UN', 10.00, 20.00
+  'PROD-ALFA-001', 'Produto Alfa', 'Produto de teste alfa', '0000.00.00',
+  'aaaaaaaa-ffff-0000-0000-000000000001', 'UN', 10.00, 20.00
 );
 
 -- Produto na empresa A SEM movimentação (usado no teste 4 — será deletado)
-insert into public.products (id, company_id, sku, name, unit, cost_price, sale_price)
+insert into public.products
+  (id, company_id, sku, name, description, ncm, supplier_id, unit, cost_price, sale_price)
 values (
   'aaaaaaaa-0000-0000-0000-000000000099',
   tests.company_id('empresa-alfa'),
-  'PROD-ALFA-DEL', 'Produto para Deletar', 'UN', 1.00, 2.00
+  'PROD-ALFA-DEL', 'Produto para Deletar', 'Produto de teste para deleção', '0000.00.00',
+  'aaaaaaaa-ffff-0000-0000-000000000001', 'UN', 1.00, 2.00
 );
 
 -- Produto na empresa B com movimentação (usado nos testes 1 e 2)
-insert into public.products (id, company_id, sku, name, unit, cost_price, sale_price)
+insert into public.products
+  (id, company_id, sku, name, description, ncm, supplier_id, unit, cost_price, sale_price)
 values (
   'bbbbbbbb-0000-0000-0000-000000000001',
   tests.company_id('empresa-beta'),
-  'PROD-BETA-001', 'Produto Beta', 'UN', 5.00, 15.00
+  'PROD-BETA-001', 'Produto Beta', 'Produto de teste beta', '0000.00.00',
+  'bbbbbbbb-ffff-0000-0000-000000000001', 'UN', 5.00, 15.00
 );
 
 -- Movimentação na empresa A
