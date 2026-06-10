@@ -37,7 +37,11 @@ export async function updateRolePermissionsAction(
 
   const [{ data: currentPerms, error: curErr }, { data: enabledModules, error: modErr }] =
     await Promise.all([
-      supabase.from("role_permissions").select("permission_code").eq("role_id", roleId),
+      supabase
+        .from("role_permissions")
+        .select("permission_code")
+        .eq("role_id", roleId)
+        .eq("is_active", true),
       supabase.from("company_modules").select("module_code").eq("company_id", companyId),
     ]);
 
@@ -75,9 +79,11 @@ export async function updateRolePermissionsAction(
   }
 
   if (toAdd.length > 0) {
+    // Upsert sem ignoreDuplicates: rows existentes com is_active=false (de um disable
+    // anterior do módulo) são reativadas; rows novas são criadas com is_active=true.
     const { error: insErr } = await supabase.from("role_permissions").upsert(
-      toAdd.map((code) => ({ role_id: roleId, permission_code: code })),
-      { onConflict: "role_id,permission_code", ignoreDuplicates: true },
+      toAdd.map((code) => ({ role_id: roleId, permission_code: code, is_active: true })),
+      { onConflict: "role_id,permission_code" },
     );
 
     if (insErr) return { ok: false, message: insErr.message };

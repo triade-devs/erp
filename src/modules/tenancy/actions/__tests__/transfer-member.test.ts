@@ -22,12 +22,10 @@ function makeSupabaseMock({
   sourceMembership = {
     id: "mem-1",
     user_id: "user-1",
-    is_owner: false,
     membership_roles: [] as Array<{ role_id: string }>,
   } as {
     id: string;
     user_id: string;
-    is_owner: boolean;
     membership_roles: Array<{ role_id: string }>;
   } | null,
   existingDestMembership = null as { id: string; status: string } | null,
@@ -143,7 +141,6 @@ describe("transferMemberAction", () => {
       sourceMembership: {
         id: "mem-1",
         user_id: "user-1",
-        is_owner: false,
         membership_roles: [{ role_id: "role-editor" }],
       },
     });

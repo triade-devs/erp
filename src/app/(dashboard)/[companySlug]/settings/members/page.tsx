@@ -1,5 +1,11 @@
 import { notFound } from "next/navigation";
-import { resolveCompany, listCompanyMembers, listCompanyRoles, listPendingInvitations } from "@/modules/tenancy";
+import {
+  resolveCompany,
+  listCompanyMembers,
+  listManageableRoles,
+  listPendingInvitations,
+  type CompanyRole,
+} from "@/modules/tenancy";
 import { listResetRequestsForCompany } from "@/modules/auth";
 import { Can } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
@@ -26,12 +32,28 @@ export default async function SettingsMembersPage({ params }: Props) {
     throw e;
   }
 
-  const [members, roles, invitations, resetRequests] = await Promise.all([
+  const [members, manageableRoles, invitations, resetRequests] = await Promise.all([
     listCompanyMembers(company.id),
-    listCompanyRoles(company.id),
+    listManageableRoles(company.id),
     listPendingInvitations(company.id),
     listResetRequestsForCompany(company.id),
   ]);
+
+  // ManageableRole carrega apenas campos relevantes para atribuição.
+  // Adaptamos ao shape CompanyRole exigido pelos componentes UI (InviteMemberDialog,
+  // MemberCard, MemberRolesSheet) preenchendo campos não usados com defaults seguros.
+  const rolesForUi: CompanyRole[] = manageableRoles.map((r) => ({
+    id: r.id,
+    code: r.code,
+    name: r.name,
+    description: null,
+    isSystem: false,
+    templateCode: null,
+    syncedAt: null,
+    divergent: false,
+    parentRoleId: null,
+    hierarchyLevel: r.hierarchyLevel,
+  }));
 
   return (
     <section className="space-y-6">
@@ -43,7 +65,7 @@ export default async function SettingsMembersPage({ params }: Props) {
           </p>
         </div>
         <Can permission="core:invitation:create">
-          <InviteMemberDialog companyId={company.id} roles={roles} />
+          <InviteMemberDialog companyId={company.id} roles={rolesForUi} />
         </Can>
       </div>
 
@@ -64,7 +86,7 @@ export default async function SettingsMembersPage({ params }: Props) {
                   key={member.membershipId}
                   member={member}
                   companyId={company.id}
-                  availableRoles={roles}
+                  availableRoles={rolesForUi}
                 />
               ))}
             </div>

@@ -1,7 +1,8 @@
 import { resolveCompany } from "@/modules/tenancy";
-import { getEffectivePermissions, PermissionsProvider } from "@/modules/authz";
+import { getEffectivePermissions, PermissionsProvider, getUserFieldModes } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
 import type { ReactNode } from "react";
+import type { UserFieldModes } from "@/modules/authz";
 
 export default async function CompanyLayout({
   children,
@@ -13,9 +14,13 @@ export default async function CompanyLayout({
   const { companySlug } = await params;
 
   let perms: Set<string>;
+  let fieldModes: UserFieldModes;
   try {
     const company = await resolveCompany(companySlug);
-    perms = await getEffectivePermissions(company.id);
+    [perms, fieldModes] = await Promise.all([
+      getEffectivePermissions(company.id),
+      getUserFieldModes(company.id),
+    ]);
   } catch (e) {
     if (e instanceof AppError) {
       return <div className="p-8 text-center text-muted-foreground">{e.message}</div>;
@@ -23,5 +28,9 @@ export default async function CompanyLayout({
     throw e;
   }
 
-  return <PermissionsProvider permissions={[...perms]}>{children}</PermissionsProvider>;
+  return (
+    <PermissionsProvider permissions={[...perms]} fieldModes={fieldModes}>
+      {children}
+    </PermissionsProvider>
+  );
 }

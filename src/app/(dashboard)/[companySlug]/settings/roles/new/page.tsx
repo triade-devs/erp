@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { resolveCompany, createRoleAction } from "@/modules/tenancy";
+import { resolveCompany, createRoleAction, listCompanyRoles } from "@/modules/tenancy";
 import { requirePermission, ForbiddenError } from "@/modules/authz";
 import { AppError } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,13 @@ export default async function NewRolePage({ params }: Props) {
 
   const action = createRoleAction.bind(null, company.id);
 
+  const roles = await listCompanyRoles(company.id);
+  const availableParents = roles.map((r) => ({
+    id: r.id,
+    name: r.name,
+    hierarchyLevel: r.hierarchyLevel,
+  }));
+
   return (
     <section className="max-w-lg space-y-6">
       <div className="flex items-center gap-4">
@@ -47,6 +54,7 @@ export default async function NewRolePage({ params }: Props) {
         action={action}
         backHref={`/${companySlug}/settings/roles`}
         submitLabel="Criar role"
+        availableParents={availableParents}
       />
     </section>
   );

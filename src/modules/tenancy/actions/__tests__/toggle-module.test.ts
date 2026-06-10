@@ -18,7 +18,7 @@ type ToggleMockOptions = {
   deleteModuleError?: { message: string } | null;
   systemRoles?: Array<{ id: string; code: string }>;
   permissions?: Array<{ code: string }>;
-  permsToRemove?: Array<{ code: string }>;
+  permsToDeactivate?: Array<{ code: string }>;
   companyRoles?: Array<{ id: string }>;
 };
 
@@ -26,9 +26,12 @@ type ToggleMockOptions = {
 // Factory: mock para o caminho enable=true
 // Sequência de produção:
 //   company_modules.insert()
-//   roles.select("id, code").eq("company_id").eq("is_system", true)
-//   permissions.select("code").eq("module_code").in("action", [...])
-//   role_permissions.upsert(...)
+//   roles.select("id").eq("company_id")                       — todas as roles (reativação)
+//   permissions.select("code").eq("module_code")              — perms do módulo (reativação)
+//   role_permissions.update({ is_active: true }).in().in()    — reativa perms antigas
+//   roles.select("id, code").eq("company_id").eq("is_system") — system roles
+//   permissions.select("code").eq("module_code").in("action") — loop distribuição
+//   role_permissions.upsert(...)                              — distribui defaults
 // -------------------------------------------------------------------
 function makeEnableMock({
   isPlatformAdmin = true,
@@ -51,18 +54,37 @@ function makeEnableMock({
       insertModuleError ? { data: null, error: insertModuleError } : { data: null, error: null },
     );
 
-  // roles: .select().eq().eq() — 2 eqs
+  // roles: primeira chamada (todas) — .select("id").eq("company_id")
+  const rolesAllEq = vi.fn().mockResolvedValue({
+    data: [{ id: "role-owner" }, { id: "role-manager" }, { id: "role-operator" }],
+    error: null,
+  });
+  const rolesAllSelect = vi.fn().mockReturnValue({ eq: rolesAllEq });
+
+  // roles: segunda chamada (system) — .select("id, code").eq("company_id").eq("is_system")
   const rolesEq2System = vi.fn().mockResolvedValue({ data: systemRoles, error: null });
   const rolesEq1System = vi.fn().mockReturnValue({ eq: rolesEq2System });
   const rolesSelectSystem = vi.fn().mockReturnValue({ eq: rolesEq1System });
 
-  // permissions: .select().eq().in()
-  const permsIn = vi.fn().mockResolvedValue({ data: permissions, error: null });
-  const permsEqEnable = vi.fn().mockReturnValue({ in: permsIn });
-  const permsSelectEnable = vi.fn().mockReturnValue({ eq: permsEqEnable });
+  // permissions: primeira chamada (reativação) — .select("code").eq("module_code")
+  const permsReactEq = vi.fn().mockResolvedValue({ data: permissions, error: null });
+  const permsReactSelect = vi.fn().mockReturnValue({ eq: permsReactEq });
+
+  // permissions: chamadas seguintes (loop distribuição) — .select("code").eq("module_code").in("action", [...])
+  const permsDistIn = vi.fn().mockResolvedValue({ data: permissions, error: null });
+  const permsDistEq = vi.fn().mockReturnValue({ in: permsDistIn });
+  const permsDistSelect = vi.fn().mockReturnValue({ eq: permsDistEq });
+
+  // role_permissions: .update({ is_active: true }).in("role_id").in("permission_code")
+  const rolePermsUpdateIn2 = vi.fn().mockResolvedValue({ data: null, error: null });
+  const rolePermsUpdateIn1 = vi.fn().mockReturnValue({ in: rolePermsUpdateIn2 });
+  const rolePermsUpdateFn = vi.fn().mockReturnValue({ in: rolePermsUpdateIn1 });
 
   // role_permissions: .upsert() terminal
   const rolePermsUpsert = vi.fn().mockResolvedValue({ data: null, error: null });
+
+  let rolesCallCount = 0;
+  let permsCallCount = 0;
 
   return {
     auth: {
@@ -74,13 +96,15 @@ function makeEnableMock({
         return { insert: modulesInsert };
       }
       if (table === "roles") {
-        return { select: rolesSelectSystem };
+        rolesCallCount++;
+        return { select: rolesCallCount === 1 ? rolesAllSelect : rolesSelectSystem };
       }
       if (table === "permissions") {
-        return { select: permsSelectEnable };
+        permsCallCount++;
+        return { select: permsCallCount === 1 ? permsReactSelect : permsDistSelect };
       }
       if (table === "role_permissions") {
-        return { upsert: rolePermsUpsert };
+        return { update: rolePermsUpdateFn, upsert: rolePermsUpsert };
       }
       // fallback para tabelas não esperadas — joga erro para detectar acessos inesperados
       return vi.fn().mockReturnValue({
@@ -95,6 +119,8 @@ function makeEnableMock({
     }),
     // Helpers expostos para inspecionar nos testes
     modulesInsert,
+    rolePermsUpdateFn,
+    rolePermsUpdateIn2,
     rolePermsUpsert,
   };
 }
@@ -105,17 +131,17 @@ function makeEnableMock({
 //   company_modules.delete().eq("company_id").eq("module_code") — sem return, só checa error
 //   permissions.select("code").eq("module_code", moduleCode)    — uma eq, resolve array
 //   roles.select("id").eq("company_id", companyId)              — uma eq, resolve array
-//   role_permissions.delete().in("role_id", roleIds).in("permission_code", codes) — sem return
+//   role_permissions.update({ is_active: false }).in("role_id", roleIds).in("permission_code", codes) — sem return
 // -------------------------------------------------------------------
 function makeDisableMock({
   isPlatformAdmin = true,
   rpcError = null,
   deleteModuleError = null,
-  permsToRemove = [{ code: "inventory:product:read" }],
+  permsToDeactivate = [{ code: "inventory:product:read" }],
   companyRoles = [{ id: "role-owner" }, { id: "role-manager" }],
 }: Pick<
   ToggleMockOptions,
-  "isPlatformAdmin" | "rpcError" | "deleteModuleError" | "permsToRemove" | "companyRoles"
+  "isPlatformAdmin" | "rpcError" | "deleteModuleError" | "permsToDeactivate" | "companyRoles"
 > = {}) {
   // company_modules: .delete().eq().eq() — terminal
   const modulesDeleteEq2 = vi
@@ -127,17 +153,17 @@ function makeDisableMock({
   const modulesDeleteFn = vi.fn().mockReturnValue({ eq: modulesDeleteEq1 });
 
   // permissions: .select("code").eq("module_code", moduleCode) — uma eq, resolve array
-  const permsEqDisable = vi.fn().mockResolvedValue({ data: permsToRemove, error: null });
+  const permsEqDisable = vi.fn().mockResolvedValue({ data: permsToDeactivate, error: null });
   const permsSelectDisable = vi.fn().mockReturnValue({ eq: permsEqDisable });
 
   // roles: .select("id").eq("company_id", companyId) — uma eq, resolve array
   const rolesEqCompany = vi.fn().mockResolvedValue({ data: companyRoles, error: null });
   const rolesSelectCompany = vi.fn().mockReturnValue({ eq: rolesEqCompany });
 
-  // role_permissions: .delete().in("role_id").in("permission_code") — sem return
-  const rolePermsDeleteIn2 = vi.fn().mockResolvedValue({ data: null, error: null });
-  const rolePermsDeleteIn1 = vi.fn().mockReturnValue({ in: rolePermsDeleteIn2 });
-  const rolePermsDeleteFn = vi.fn().mockReturnValue({ in: rolePermsDeleteIn1 });
+  // role_permissions: .update({ is_active: false }).in("role_id").in("permission_code") — sem return
+  const rolePermsUpdateIn2 = vi.fn().mockResolvedValue({ data: null, error: null });
+  const rolePermsUpdateIn1 = vi.fn().mockReturnValue({ in: rolePermsUpdateIn2 });
+  const rolePermsUpdateFn = vi.fn().mockReturnValue({ in: rolePermsUpdateIn1 });
 
   return {
     auth: {
@@ -155,7 +181,7 @@ function makeDisableMock({
         return { select: rolesSelectCompany };
       }
       if (table === "role_permissions") {
-        return { delete: rolePermsDeleteFn };
+        return { update: rolePermsUpdateFn };
       }
       // fallback para tabelas não esperadas — joga erro para detectar acessos inesperados
       return vi.fn().mockReturnValue({
@@ -171,7 +197,8 @@ function makeDisableMock({
     // Helpers expostos para inspecionar nos testes
     modulesDeleteFn,
     permsEqDisable,
-    rolePermsDeleteIn2,
+    rolePermsUpdateFn,
+    rolePermsUpdateIn2,
   };
 }
 
@@ -233,11 +260,22 @@ describe("toggleModuleAction", () => {
 
     expect(mock.rolePermsUpsert).toHaveBeenCalledWith(
       expect.arrayContaining([
-        expect.objectContaining({ permission_code: "inventory:product:read" }),
-        expect.objectContaining({ permission_code: "inventory:product:create" }),
+        expect.objectContaining({ permission_code: "inventory:product:read", is_active: true }),
+        expect.objectContaining({ permission_code: "inventory:product:create", is_active: true }),
       ]),
       expect.objectContaining({ onConflict: "role_id,permission_code" }),
     );
+  });
+
+  it("ao habilitar módulo chama update com is_active=true para reativar perms antigas", async () => {
+    const mock = makeEnableMock({
+      isPlatformAdmin: true,
+      systemRoles: [{ id: "role-owner-id", code: "owner" }],
+      permissions: [{ code: "inventory:product:read" }],
+    });
+    await callToggle(mock, "company-1", "inventory", true);
+
+    expect(mock.rolePermsUpdateFn).toHaveBeenCalledWith({ is_active: true });
   });
 
   it("retorna { ok: true } ao desabilitar módulo", async () => {
@@ -254,18 +292,20 @@ describe("toggleModuleAction", () => {
     expect(mock.modulesDeleteFn).toHaveBeenCalled();
   });
 
-  it("ao desabilitar módulo chama delete em role_permissions com os ids corretos", async () => {
+  it("ao desabilitar módulo chama update com is_active=false em role_permissions", async () => {
     const mock = makeDisableMock({
       isPlatformAdmin: true,
       companyRoles: [{ id: "role-a" }, { id: "role-b" }],
-      permsToRemove: [{ code: "inventory:product:read" }],
+      permsToDeactivate: [{ code: "inventory:product:read" }],
     });
     await callToggle(mock, "company-1", "inventory", false);
 
     expect(mock.permsEqDisable).toHaveBeenCalledWith("module_code", "inventory");
 
-    // Verifica que o segundo .in() foi chamado com os permission_codes corretos
-    expect(mock.rolePermsDeleteIn2).toHaveBeenCalledWith(
+    // update foi chamado com payload de desativação
+    expect(mock.rolePermsUpdateFn).toHaveBeenCalledWith({ is_active: false });
+    // segundo .in() recebe permission_codes corretos
+    expect(mock.rolePermsUpdateIn2).toHaveBeenCalledWith(
       "permission_code",
       expect.arrayContaining(["inventory:product:read"]),
     );

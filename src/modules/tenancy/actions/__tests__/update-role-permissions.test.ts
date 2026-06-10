@@ -71,8 +71,9 @@ function makeSupabaseMock({
   const rolesEq1 = vi.fn().mockReturnValue({ eq: rolesEq2 });
   const rolesSelect = vi.fn().mockReturnValue({ eq: rolesEq1 });
 
-  // role_permissions select: .select("permission_code").eq("role_id") — Promise.all branch 1
-  const rpSelectEq = vi.fn().mockResolvedValue({ data: currentPerms, error: null });
+  // role_permissions select: .select("permission_code").eq("role_id").eq("is_active", true) — Promise.all branch 1
+  const rpSelectEqActive = vi.fn().mockResolvedValue({ data: currentPerms, error: null });
+  const rpSelectEq = vi.fn().mockReturnValue({ eq: rpSelectEqActive });
   const rpSelectFn = vi.fn().mockReturnValue({ eq: rpSelectEq });
 
   // company_modules: .select("module_code").eq("company_id") — Promise.all branch 2
@@ -197,11 +198,41 @@ describe("updateRolePermissionsAction", () => {
     expect(result.ok).toBe(true);
     expect(mock.rpUpsert).toHaveBeenCalledWith(
       expect.arrayContaining([
-        expect.objectContaining({ permission_code: "inventory:product:read" }),
-        expect.objectContaining({ permission_code: "inventory:product:create" }),
+        expect.objectContaining({ permission_code: "inventory:product:read", is_active: true }),
+        expect.objectContaining({ permission_code: "inventory:product:create", is_active: true }),
       ]),
       expect.objectContaining({ onConflict: "role_id,permission_code" }),
     );
+    // Não passa ignoreDuplicates: queremos que rows existentes com is_active=false sejam reativadas
+    const upsertOptions = mock.rpUpsert.mock.calls[0]?.[1] as Record<string, unknown> | undefined;
+    expect(upsertOptions?.ignoreDuplicates).toBeUndefined();
+  });
+
+  it("reativa perm com is_active=false ao re-adicionar via UI (footgun PR #A→#B)", async () => {
+    // Cenário: módulo foi desabilitado → re-habilitado → mas a perm ficou is_active=false
+    // numa role custom porque update-role-permissions não filtra is_active.
+    // O fix garante que: (a) currentSet não inclui rows inactive, (b) upsert sem
+    // ignoreDuplicates ressuscita a row.
+    const mock = makeSupabaseMock({
+      currentPerms: [], // is_active=true filter retorna vazio (row existe mas inactive)
+      enabledModules: [{ module_code: "inventory" }],
+      validPerms: [{ code: "inventory:product:read" }],
+    });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    const fd = makeFormData(["inventory:product:read"]);
+
+    const result = await updateRolePermissionsAction("company-1", "role-1", { ok: true }, fd);
+
+    expect(result.ok).toBe(true);
+    expect(mock.rpUpsert).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ permission_code: "inventory:product:read", is_active: true }),
+      ]),
+      expect.objectContaining({ onConflict: "role_id,permission_code" }),
+    );
+    const upsertOptions = mock.rpUpsert.mock.calls[0]?.[1] as Record<string, unknown> | undefined;
+    expect(upsertOptions?.ignoreDuplicates).toBeUndefined();
   });
 
   it("retorna { ok: true } e chama delete quando remove permissões", async () => {

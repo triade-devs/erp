@@ -1,58 +1,81 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { listRolesWithTemplateStatus } from "@/modules/tenancy";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import {
-  getSystemRolePermissions,
-  listAllRoles,
-  AdminSystemRolesTab,
-  AdminAllRolesTab,
-} from "@/modules/tenancy";
-import { createClient } from "@/lib/supabase/server";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-const SYSTEM_ROLE_CODES = ["owner", "manager", "operator"] as const;
+export const metadata = { title: "Roles por empresa — Plataforma" };
 
 export default async function PlatformRolesPage() {
-  const supabase = await createClient();
-
-  const { data: sysRoles } = await supabase
-    .from("roles")
-    .select("code")
-    .eq("is_system", true)
-    .in("code", [...SYSTEM_ROLE_CODES]);
-
-  const existingCodes = [...new Set((sysRoles ?? []).map((r) => r.code))];
-
-  const [matrices, allRoles] = await Promise.all([
-    Promise.all(existingCodes.map((code) => getSystemRolePermissions(code))),
-    listAllRoles(),
-  ]);
-
-  const initialMatrices: Record<string, Awaited<ReturnType<typeof getSystemRolePermissions>>> = {};
-  for (let i = 0; i < existingCodes.length; i++) {
-    initialMatrices[existingCodes[i]!] = matrices[i]!;
-  }
+  const roles = await listRolesWithTemplateStatus();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Roles</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie roles-sistema (com propagação global) e visualize roles de todas as empresas
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Roles por empresa</h1>
+          <p className="text-sm text-muted-foreground">
+            Visualização read-only. Para editar templates →{" "}
+            <Link href="/admin/platform/role-templates" className="underline">
+              Templates de Role
+            </Link>
+            .
+          </p>
+        </div>
       </div>
 
-      <Tabs defaultValue="system">
-        <TabsList>
-          <TabsTrigger value="system">Roles Sistema</TabsTrigger>
-          <TabsTrigger value="all">Por Empresa ({allRoles.length})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="system" className="pt-4">
-          <AdminSystemRolesTab roleCodes={existingCodes} initialMatrices={initialMatrices} />
-        </TabsContent>
-
-        <TabsContent value="all" className="pt-4">
-          <AdminAllRolesTab roles={allRoles} />
-        </TabsContent>
-      </Tabs>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Empresa</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Template</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Last sync</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {roles.map((r) => (
+            <TableRow key={r.id}>
+              <TableCell>
+                <Link href={`/admin/companies/${r.companyId}`} className="underline">
+                  {r.companyName}
+                </Link>
+              </TableCell>
+              <TableCell className="font-medium">{r.name}</TableCell>
+              <TableCell>
+                {r.isSystem ? (
+                  <Badge variant="secondary">sistema</Badge>
+                ) : (
+                  <Badge variant="outline">custom</Badge>
+                )}
+              </TableCell>
+              <TableCell className="font-mono text-xs text-muted-foreground">
+                {r.templateCode ?? "—"}
+              </TableCell>
+              <TableCell>
+                {r.templateCode === null ? (
+                  <Badge variant="outline">sem template</Badge>
+                ) : r.divergent ? (
+                  <Badge variant="destructive">divergente</Badge>
+                ) : (
+                  <Badge variant="default">sincronizado</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {r.syncedAt ? new Date(r.syncedAt).toLocaleString("pt-BR") : "—"}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
