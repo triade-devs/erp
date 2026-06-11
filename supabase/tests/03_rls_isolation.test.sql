@@ -106,11 +106,33 @@ values (
   (select user_id from test_users where role = 'op_beta')
 );
 
+-- DEBUG TEMPORÁRIO (remover): diagnóstico de ACL/sessão antes do teste 1
+do $$
+begin
+  raise notice 'DEBUG pre-auth: session_user=%, current_user=%', session_user, current_user;
+  raise notice 'DEBUG products owner=%', (select tableowner from pg_tables where schemaname = 'public' and tablename = 'products');
+  raise notice 'DEBUG grants products: %', coalesce((
+    select string_agg(grantee || '->' || privilege_type, ', ' order by grantee, privilege_type)
+    from information_schema.role_table_grants
+    where table_schema = 'public' and table_name = 'products'
+  ), 'NENHUM');
+  raise notice 'DEBUG roles empresa-alfa: %', (
+    select string_agg(r.code, ',' order by r.code)
+    from public.roles r where r.company_id = tests.company_id('empresa-alfa')
+  );
+end $$;
+
 -- ============================================================
 -- TESTE 1: isolamento SELECT em products
 --          op_alfa não deve ver produtos de empresa-beta
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'op_alfa')); end $$;
+
+-- DEBUG TEMPORÁRIO (remover): quem somos após authenticate_as
+do $$
+begin
+  raise notice 'DEBUG pos-auth: session_user=%, current_user=%', session_user, current_user;
+end $$;
 
 select is(
   (select count(*)::int from public.products
