@@ -99,12 +99,12 @@ export async function createCompanyAction(
   // 7. Convida owner via sistema de convites SMTP-free (opcional)
   let ownerInvite: { link: string; shortCode: string } | undefined;
   if (ownerEmail) {
-    // Busca role owner da empresa recém-criada
+    // Busca role admin da empresa recém-criada
     const { data: ownerRole } = await supabase
       .from("roles")
       .select("id")
       .eq("company_id", companyId)
-      .eq("code", "owner")
+      .eq("code", "admin")
       .maybeSingle();
 
     const result = await createInvitationAction(
