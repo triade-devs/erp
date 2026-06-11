@@ -39,9 +39,12 @@ type Props = {
   member: CompanyMember;
   companyId: string;
   availableRoles: CompanyRole[];
+  /** Platform admins podem gerenciar roles inclusive de membros admin
+   *  (set_member_roles/can_manage_role permitem no banco). */
+  canManageAdminMembers?: boolean;
 };
 
-export function MemberCard({ member, companyId, availableRoles }: Props) {
+export function MemberCard({ member, companyId, availableRoles, canManageAdminMembers }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [currentStatus, setCurrentStatus] = useState(member.status);
@@ -121,7 +124,7 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
         )}
       </CardContent>
 
-      {!member.isAdmin && (
+      {(!member.isAdmin || canManageAdminMembers) && (
         <CardFooter className="flex flex-wrap gap-1 border-t pt-0">
           <MemberRolesSheet
             companyId={companyId}
@@ -131,51 +134,57 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
             currentRoleIds={member.roles.map((r) => r.id)}
           />
 
-          {currentStatus === "active" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-destructive hover:text-destructive"
-              disabled={isPending}
-              onClick={() => handleStatusChange("suspended")}
-            >
-              Suspender
-            </Button>
-          )}
-          {currentStatus === "suspended" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs"
-              disabled={isPending}
-              onClick={() => handleStatusChange("active")}
-            >
-              Reativar
-            </Button>
-          )}
-          {(currentStatus === "invited" ||
-            currentStatus === "suspended" ||
-            currentStatus === "active") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-destructive hover:text-destructive"
-              disabled={isPending}
-              onClick={() => handleStatusChange("removed")}
-            >
-              Remover
-            </Button>
-          )}
-          {currentStatus === "active" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs"
-              disabled={isPending}
-              onClick={handleInitiateReset}
-            >
-              Iniciar reset
-            </Button>
+          {/* Suspender/remover/reset não se aplicam a membros admin —
+              update-member-status bloqueia no servidor. */}
+          {!member.isAdmin && (
+            <>
+              {currentStatus === "active" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-destructive hover:text-destructive"
+                  disabled={isPending}
+                  onClick={() => handleStatusChange("suspended")}
+                >
+                  Suspender
+                </Button>
+              )}
+              {currentStatus === "suspended" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  disabled={isPending}
+                  onClick={() => handleStatusChange("active")}
+                >
+                  Reativar
+                </Button>
+              )}
+              {(currentStatus === "invited" ||
+                currentStatus === "suspended" ||
+                currentStatus === "active") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-destructive hover:text-destructive"
+                  disabled={isPending}
+                  onClick={() => handleStatusChange("removed")}
+                >
+                  Remover
+                </Button>
+              )}
+              {currentStatus === "active" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  disabled={isPending}
+                  onClick={handleInitiateReset}
+                >
+                  Iniciar reset
+                </Button>
+              )}
+            </>
           )}
         </CardFooter>
       )}

@@ -102,21 +102,23 @@ export default async function CompanyMembersPage({ params }: Props) {
                   {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("pt-BR") : "—"}
                 </TableCell>
                 <TableCell>
-                  {!member.isAdmin && (
-                    <div className="flex items-center gap-1">
-                      <TransferMemberDialog
-                        membershipId={member.membershipId}
-                        memberName={member.fullName}
-                        sourceCompanyId={id}
-                        allCompanies={allCompanies.map((c) => ({ id: c.id, name: c.name }))}
-                      />
+                  <div className="flex items-center gap-1">
+                    <TransferMemberDialog
+                      membershipId={member.membershipId}
+                      memberName={member.fullName}
+                      sourceCompanyId={id}
+                      allCompanies={allCompanies.map((c) => ({ id: c.id, name: c.name }))}
+                    />
+                    {/* Remover usa update-member-status, que bloqueia membros
+                        admin no servidor — manter oculto para eles. */}
+                    {!member.isAdmin && (
                       <AdminRemoveMemberButton
                         membershipId={member.membershipId}
                         companyId={id}
                         memberName={member.fullName}
                       />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

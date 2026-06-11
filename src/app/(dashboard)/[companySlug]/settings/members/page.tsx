@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import {
   resolveCompany,
   listCompanyMembers,
@@ -32,12 +33,15 @@ export default async function SettingsMembersPage({ params }: Props) {
     throw e;
   }
 
-  const [members, manageableRoles, invitations, resetRequests] = await Promise.all([
-    listCompanyMembers(company.id),
-    listManageableRoles(company.id),
-    listPendingInvitations(company.id),
-    listResetRequestsForCompany(company.id),
-  ]);
+  const supabase = await createClient();
+  const [members, manageableRoles, invitations, resetRequests, { data: isPlatformAdmin }] =
+    await Promise.all([
+      listCompanyMembers(company.id),
+      listManageableRoles(company.id),
+      listPendingInvitations(company.id),
+      listResetRequestsForCompany(company.id),
+      supabase.rpc("is_platform_admin"),
+    ]);
 
   // ManageableRole carrega apenas campos relevantes para atribuição.
   // Adaptamos ao shape CompanyRole exigido pelos componentes UI (InviteMemberDialog,
@@ -87,6 +91,7 @@ export default async function SettingsMembersPage({ params }: Props) {
                   member={member}
                   companyId={company.id}
                   availableRoles={rolesForUi}
+                  canManageAdminMembers={!!isPlatformAdmin}
                 />
               ))}
             </div>
