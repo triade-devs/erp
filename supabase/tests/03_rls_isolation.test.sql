@@ -32,9 +32,9 @@ declare
 begin
   create temp table test_users (role text primary key, user_id uuid);
 
-  v_op_alfa  := tests.create_user_in('op-alfa@test.local',  'empresa-alfa', 'operator');
-  v_op_beta  := tests.create_user_in('op-beta@test.local',  'empresa-beta', 'operator');
-  v_mgr_alfa := tests.create_user_in('mgr-alfa@test.local', 'empresa-alfa', 'manager');
+  v_op_alfa  := tests.create_user_in('op-alfa@test.local',  'empresa-alfa', 'estoque-operacao');
+  v_op_beta  := tests.create_user_in('op-beta@test.local',  'empresa-beta', 'estoque-operacao');
+  v_mgr_alfa := tests.create_user_in('mgr-alfa@test.local', 'empresa-alfa', 'estoque-gestao');
 
   insert into test_users values
     ('op_alfa',  v_op_alfa),
@@ -138,7 +138,7 @@ do $$ begin perform tests.reset_role(); end $$;
 
 -- ============================================================
 -- TESTE 3: operador de empresa A NÃO pode DELETE produtos
---          (operator não possui inventory:product:delete)
+--          (estoque-operacao não possui inventory:product:delete)
 --          RLS USING bloqueia silenciosamente — produto persiste
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'op_alfa')); end $$;
@@ -155,7 +155,7 @@ do $$ begin perform tests.reset_role(); end $$;
 
 -- ============================================================
 -- TESTE 4: gerente de empresa A PODE DELETE produtos
---          (manager possui inventory:product:delete)
+--          (estoque-gestao possui inventory:product:delete)
 --          Produto sem FK em stock_movements para evitar restrict
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'mgr_alfa')); end $$;
@@ -172,7 +172,7 @@ do $$ begin perform tests.reset_role(); end $$;
 
 -- ============================================================
 -- TESTE 5: operador de empresa A NÃO pode UPDATE produtos
---          (operator não possui inventory:product:update)
+--          (estoque-operacao não possui inventory:product:update)
 --          RLS USING bloqueia silenciosamente — nome inalterado
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'op_alfa')); end $$;
