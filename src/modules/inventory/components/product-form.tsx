@@ -16,7 +16,15 @@ import {
 } from "@/components/ui/select";
 import { createProductAction } from "../actions/create-product";
 import { usePriceInput } from "@/lib/price-formatter";
-import { searchNcm, lookupBarcode, type NcmItem } from "@/lib/enrichment-client";
+import {
+  searchNcm,
+  lookupBarcode,
+  lookupNcm,
+  type NcmItem,
+  type BarcodeData,
+} from "@/lib/enrichment-client";
+import { Badge } from "@/components/ui/badge";
+import { unitFromQuantity, type ProductUnit } from "../services/quantity-parser";
 import type { Product } from "../types";
 import type { ActionResult } from "@/lib/errors";
 import type { Classification } from "../queries/list-classifications";
@@ -62,6 +70,7 @@ export function ProductForm({
   // Nome e descrição controlados (autocomplete NCM/EAN pode sugerir)
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
+  const [unit, setUnit] = useState<ProductUnit>((product?.unit as ProductUnit) ?? "UN");
 
   // Suppliers (pode crescer com quick-modal)
   const [supplierList, setSupplierList] = useState(suppliers);
@@ -123,6 +132,7 @@ export function ProductForm({
         formRef.current?.reset();
         setName("");
         setDescription("");
+        setUnit("UN");
       }
       toast.success(state.message ?? "Salvo com sucesso.");
       return;
@@ -141,17 +151,29 @@ export function ProductForm({
     setDescription((cur) => cur || text.slice(0, 100));
   }
 
-  function handleBarcodeResult(data: { name: string; brand: string }) {
-    const suggested = [data.name, data.brand].filter(Boolean).join(" ").trim();
-    if (suggested) {
-      setName((cur) => cur || suggested.toUpperCase().slice(0, 60));
-      suggestDescription(suggested);
+  function handleBarcodeResult(data: BarcodeData) {
+    const nameParts = [data.name, data.brand, data.quantity].filter(Boolean).join(" ").trim();
+    if (nameParts) setName((cur) => cur || nameParts.toUpperCase().slice(0, 60));
+
+    const descParts = [data.category, data.quantity].filter(Boolean).join(" · ").trim();
+    suggestDescription(descParts);
+
+    // Sugere unidade pela quantidade, sem sobrescrever escolha manual (default "UN")
+    if (data.quantity) {
+      setUnit((cur) => (cur === "UN" ? unitFromQuantity(data.quantity) : cur));
     }
   }
 
   return (
     <>
       <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Código de barras — primeiro campo (autocomplete EAN) */}
+        <BarcodeField
+          defaultValue={product?.barcode ?? ""}
+          error={fieldErrors?.barcode?.[0]}
+          onResult={handleBarcodeResult}
+        />
+
         {/* SKU */}
         <Field
           label="SKU"
@@ -168,7 +190,7 @@ export function ProductForm({
           }}
         />
 
-        {/* NCM com autocomplete */}
+        {/* NCM com autocomplete + validação */}
         <NcmAutocompleteField
           defaultValue={product?.ncm}
           error={fieldErrors?.ncm?.[0]}
@@ -184,13 +206,6 @@ export function ProductForm({
           error={fieldErrors?.name?.[0]}
           placeholder="NOME DO PRODUTO"
           onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 60))}
-        />
-
-        {/* Barcode com autocomplete */}
-        <BarcodeField
-          defaultValue={product?.barcode ?? ""}
-          error={fieldErrors?.barcode?.[0]}
-          onResult={handleBarcodeResult}
         />
 
         {/* Descrição (controlada) */}
@@ -213,10 +228,10 @@ export function ProductForm({
           )}
         </div>
 
-        {/* Unidade */}
+        {/* Unidade (autopreenchida pela quantidade do EAN) */}
         <div className="space-y-2">
           <Label htmlFor="unit">Unidade</Label>
-          <Select name="unit" defaultValue={product?.unit ?? "UN"}>
+          <Select name="unit" value={unit} onValueChange={(v) => setUnit(v as ProductUnit)}>
             <SelectTrigger id="unit">
               <SelectValue />
             </SelectTrigger>
@@ -472,37 +487,66 @@ function NcmAutocompleteField({
   const [value, setValue] = useState(() => formatNcm(defaultValue ?? ""));
   const [results, setResults] = useState<NcmItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [validity, setValidity] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guarda contra respostas obsoletas quando o usuário redigita o NCM
+  const validationIdRef = useRef(0);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const masked = formatNcm(e.target.value);
     setValue(masked);
     const digits = masked.replace(/\D/g, "");
+    const reqId = ++validationIdRef.current;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (digits.length < 2) {
       setResults([]);
       setOpen(false);
+      setValidity("idle");
       return;
     }
+    setValidity(digits.length === 8 ? "loading" : "idle");
     debounceRef.current = setTimeout(async () => {
       const items = await searchNcm(digits);
+      if (reqId !== validationIdRef.current) return; // resposta obsoleta
       setResults(items);
       setOpen(items.length > 0);
+      if (digits.length === 8) {
+        const found = await lookupNcm(masked);
+        if (reqId !== validationIdRef.current) return; // resposta obsoleta
+        setValidity(found ? "valid" : "invalid");
+      }
     }, 300);
   }
 
   function pick(item: NcmItem) {
+    validationIdRef.current++;
     setValue(formatNcm(item.code));
     onPickDescription(item.description);
     setOpen(false);
     setResults([]);
+    setValidity("valid");
   }
 
   return (
     <div className="relative space-y-2">
-      <Label htmlFor="ncm">
-        NCM <span className="text-red-500">*</span>
-      </Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="ncm">
+          NCM <span className="text-red-500">*</span>
+        </Label>
+        {validity === "loading" && (
+          <span className="text-xs text-muted-foreground">Validando...</span>
+        )}
+        {validity === "valid" && (
+          <Badge variant="secondary" className="text-xs">
+            NCM válido
+          </Badge>
+        )}
+        {validity === "invalid" && (
+          <Badge variant="destructive" className="text-xs">
+            NCM não encontrado
+          </Badge>
+        )}
+      </div>
       <Input
         id="ncm"
         name="ncm"
@@ -545,20 +589,25 @@ function BarcodeField({
 }: {
   defaultValue: string;
   error?: string;
-  onResult: (data: { name: string; brand: string }) => void;
+  onResult: (data: BarcodeData) => void;
 }) {
   const [value, setValue] = useState(defaultValue);
   const [loading, setLoading] = useState(false);
+  const lookupIdRef = useRef(0);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 13);
     setValue(digits);
-    if (digits.length === 8 || digits.length === 13) {
-      setLoading(true);
-      const data = await lookupBarcode(digits);
-      setLoading(false);
-      if (data) onResult({ name: data.name, brand: data.brand });
+    const reqId = ++lookupIdRef.current;
+    if (digits.length !== 8 && digits.length !== 13) {
+      setLoading(false); // invalida lookup pendente e some com o indicador
+      return;
     }
+    setLoading(true);
+    const data = await lookupBarcode(digits);
+    if (reqId !== lookupIdRef.current) return; // resposta obsoleta (usuário continuou digitando)
+    setLoading(false);
+    if (data) onResult(data);
   }
 
   return (

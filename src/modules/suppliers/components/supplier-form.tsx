@@ -78,10 +78,16 @@ export function SupplierForm({ supplier, updateAction }: Props) {
   const [name, setName] = useState(supplier?.name ?? "");
   const [stateUf, setStateUf] = useState(supplier?.state ?? "");
   const [city, setCity] = useState(supplier?.city ?? "");
+  const [cep, setCep] = useState(supplier?.cep ?? "");
+  const [email, setEmail] = useState(supplier?.email ?? "");
+  const [ddi, setDdi] = useState(() => splitPhone(supplier?.phone ?? "").ddi);
+  const [phoneNumber, setPhoneNumber] = useState(() => splitPhone(supplier?.phone ?? "").number);
 
   // Status da consulta de CNPJ (situação cadastral)
   const [cnpjActive, setCnpjActive] = useState<boolean | null>(null);
   const [cnpjLoading, setCnpjLoading] = useState(false);
+  // Guarda contra respostas obsoletas quando o usuário redigita o CNPJ
+  const cnpjLookupIdRef = useRef(0);
 
   const isBrazil = country === "Brasil";
 
@@ -96,6 +102,10 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         setName("");
         setStateUf("");
         setCity("");
+        setCep("");
+        setEmail("");
+        setDdi("+55");
+        setPhoneNumber("");
         setCnpjActive(null);
       }
       toast.success(state.message ?? "Salvo com sucesso.");
@@ -105,16 +115,41 @@ export function SupplierForm({ supplier, updateAction }: Props) {
   }, [state]);
 
   async function handleCnpjComplete(digits: string) {
+    const reqId = ++cnpjLookupIdRef.current;
     setCnpjLoading(true);
     setCnpjActive(null);
     const data = await lookupEmpresa(digits);
-    setCnpjLoading(false);
-    if (data) {
-      if (data.name) setName(data.name.toUpperCase().slice(0, 60));
+    if (reqId !== cnpjLookupIdRef.current) return; // resposta obsoleta
+    if (!data) {
+      setCnpjLoading(false);
+      return;
+    }
+
+    if (data.name) setName(data.name.toUpperCase().slice(0, 60));
+    if (data.email) setEmail(data.email);
+    if (data.phone) {
+      setDdi("+55");
+      setPhoneNumber(formatBrPhone(data.phone));
+    }
+    setCnpjActive(data.isActive);
+
+    // CEP do CNPJ dispara ViaCEP para derivar cidade/estado (fonte única de endereço)
+    if (data.cep) {
+      setCep(data.cep);
+      const viacep = await lookupCep(data.cep);
+      if (reqId !== cnpjLookupIdRef.current) return; // resposta obsoleta
+      if (viacep) {
+        if (viacep.city) setCity(viacep.city);
+        if (viacep.state) setStateUf(viacep.state);
+      } else {
+        if (data.city) setCity(data.city);
+        if (data.state) setStateUf(data.state);
+      }
+    } else {
       if (data.city) setCity(data.city);
       if (data.state) setStateUf(data.state);
-      setCnpjActive(data.isActive);
     }
+    setCnpjLoading(false);
   }
 
   async function handleCepComplete(digits: string) {
@@ -128,7 +163,25 @@ export function SupplierForm({ supplier, updateAction }: Props) {
 
   return (
     <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {/* Nome */}
+      {/* País (define se há documento brasileiro) */}
+      <CountryField
+        value={country}
+        defaultValue={supplier?.country ?? "Brasil"}
+        onChange={setCountry}
+      />
+
+      {/* Documento — CNPJ é o primeiro campo a preencher (autocomplete) */}
+      {isBrazil && (
+        <DocumentField
+          defaultValue={supplier?.document ?? ""}
+          error={fieldErrors?.document?.[0]}
+          onCnpjComplete={handleCnpjComplete}
+          cnpjActive={cnpjActive}
+          cnpjLoading={cnpjLoading}
+        />
+      )}
+
+      {/* Nome (autopreenchido pelo CNPJ) */}
       <Field
         label="Nome"
         name="name"
@@ -140,26 +193,8 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 60))}
       />
 
-      {/* País */}
-      <CountryField
-        value={country}
-        defaultValue={supplier?.country ?? "Brasil"}
-        onChange={setCountry}
-      />
-
-      {/* Documento — só para Brasil (com autocomplete via CNPJ) */}
-      {isBrazil && (
-        <DocumentField
-          defaultValue={supplier?.document ?? ""}
-          error={fieldErrors?.document?.[0]}
-          onCnpjComplete={handleCnpjComplete}
-          cnpjActive={cnpjActive}
-          cnpjLoading={cnpjLoading}
-        />
-      )}
-
-      {/* CEP — só para Brasil (autopreenche cidade/estado) */}
-      {isBrazil && <CepField defaultValue={supplier?.cep ?? ""} onComplete={handleCepComplete} />}
+      {/* CEP — só para Brasil (dispara ViaCEP → cidade/estado) */}
+      {isBrazil && <CepField value={cep} onChange={setCep} onComplete={handleCepComplete} />}
 
       {/* Estado e Cidade */}
       <Field
@@ -179,22 +214,26 @@ export function SupplierForm({ supplier, updateAction }: Props) {
         onChange={(e) => setCity(e.target.value)}
       />
 
-      {/* Telefone */}
+      {/* Telefone (autopreenchido pelo CNPJ) */}
       <PhoneField
-        defaultPhone={supplier?.phone ?? ""}
+        ddi={ddi}
+        number={phoneNumber}
+        onDdiChange={setDdi}
+        onNumberChange={setPhoneNumber}
         isBrazil={isBrazil}
         error={fieldErrors?.phone?.[0]}
       />
 
-      {/* E-mail */}
+      {/* E-mail (autopreenchido pelo CNPJ) */}
       <Field
         label="E-mail"
         name="email"
         type="email"
-        defaultValue={supplier?.email ?? ""}
+        value={email}
         error={fieldErrors?.email?.[0]}
         placeholder="contato@fornecedor.com"
         maxLength={50}
+        onChange={(e) => setEmail(e.target.value)}
       />
 
       <div className="flex justify-end gap-2 md:col-span-2">
@@ -270,17 +309,17 @@ function formatCep(raw: string): string {
 }
 
 function CepField({
-  defaultValue,
+  value,
+  onChange,
   onComplete,
 }: {
-  defaultValue: string;
+  value: string;
+  onChange: (digits: string) => void;
   onComplete: (digits: string) => void;
 }) {
-  const [value, setValue] = useState(() => formatCep(defaultValue));
-
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
-    setValue(formatCep(digits));
+    onChange(digits);
     if (digits.length === 8) onComplete(digits);
   }
 
@@ -291,7 +330,7 @@ function CepField({
         id="cep"
         name="cep"
         inputMode="numeric"
-        value={value}
+        value={formatCep(value)}
         onChange={handleChange}
         placeholder="00000-000"
         maxLength={9}
@@ -415,22 +454,24 @@ function splitPhone(full: string): { ddi: string; number: string } {
 }
 
 function PhoneField({
-  defaultPhone,
+  ddi,
+  number,
+  onDdiChange,
+  onNumberChange,
   isBrazil,
   error,
 }: {
-  defaultPhone: string;
+  ddi: string;
+  number: string;
+  onDdiChange: (v: string) => void;
+  onNumberChange: (v: string) => void;
   isBrazil: boolean;
   error?: string;
 }) {
-  const { ddi: initDdi, number: initNumber } = splitPhone(defaultPhone);
-  const [ddi, setDdi] = useState(initDdi);
-  const [number, setNumber] = useState(initNumber);
-
   const fullPhone = isBrazil ? number : `${ddi} ${number}`.trim();
 
   function handleBrChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setNumber(formatBrPhone(e.target.value));
+    onNumberChange(formatBrPhone(e.target.value));
   }
 
   return (
@@ -438,7 +479,7 @@ function PhoneField({
       <Label>Telefone</Label>
       <div className="flex gap-2">
         {!isBrazil && (
-          <Select value={ddi} onValueChange={setDdi}>
+          <Select value={ddi} onValueChange={onDdiChange}>
             <SelectTrigger className="w-28 shrink-0">
               <SelectValue />
             </SelectTrigger>
@@ -454,7 +495,7 @@ function PhoneField({
         <Input
           inputMode="tel"
           value={number}
-          onChange={isBrazil ? handleBrChange : (e) => setNumber(e.target.value)}
+          onChange={isBrazil ? handleBrChange : (e) => onNumberChange(e.target.value)}
           placeholder={isBrazil ? "(00) 00000-0000" : "555 234-5678"}
           maxLength={isBrazil ? 15 : 20}
           aria-invalid={!!error}

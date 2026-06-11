@@ -17,9 +17,18 @@ export type EmpresaData = {
   state: string;
   country: string;
   isActive: boolean;
+  cep: string;
+  phone: string;
+  email: string;
 };
 export type NcmItem = { code: string; description: string };
-export type BarcodeData = { ean: string; name: string; brand: string; category: string };
+export type BarcodeData = {
+  ean: string;
+  name: string;
+  brand: string;
+  category: string;
+  quantity: string;
+};
 
 async function getJson<T>(url: string): Promise<T | null> {
   try {
@@ -42,6 +51,10 @@ export function lookupEmpresa(cnpj: string): Promise<EmpresaData | null> {
 export async function searchNcm(q: string): Promise<NcmItem[]> {
   const data = await getJson<{ results: NcmItem[] }>(`/api/enrich/ncm?q=${encodeURIComponent(q)}`);
   return data?.results ?? [];
+}
+
+export function lookupNcm(codigo: string): Promise<NcmItem | null> {
+  return getJson<NcmItem>(`/api/enrich/ncm?codigo=${encodeURIComponent(codigo)}`);
 }
 
 export function lookupBarcode(ean: string): Promise<BarcodeData | null> {
