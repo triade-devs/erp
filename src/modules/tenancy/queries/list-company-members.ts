@@ -53,7 +53,7 @@ export async function listCompanyMembers(companyId: string): Promise<CompanyMemb
       userId: row.user_id,
       fullName: profileMap.get(row.user_id) ?? "—",
       status: row.status,
-      isOwner: roles.some((r) => r.code === "owner"),
+      isOwner: roles.some((r) => r.code === "admin"),
       joinedAt: row.joined_at,
       roles,
     };
