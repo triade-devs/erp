@@ -62,26 +62,24 @@ export async function toggleModuleAction(
       .eq("company_id", companyId)
       .eq("is_system", true);
 
+    // Ações concedidas por código de role ao habilitar um módulo.
+    // Roles fora do mapa (ex.: estoque-leitura, kb-editor) NÃO recebem
+    // perms automáticas — são gerenciadas manualmente pela UI de roles.
+    const roleActionFilters: Record<string, string[]> = {
+      admin: ["read", "create", "update", "delete", "export", "approve", "cancel"],
+      "estoque-gestao": ["read", "create", "update", "delete", "export", "approve"],
+      "estoque-operacao": ["read", "create"],
+    };
+
     for (const role of systemRoles ?? []) {
-      let actionsFilter: string[] = [];
-      if (role.code === "owner") {
-        // owner ganha tudo
-      } else if (role.code === "manager") {
-        actionsFilter = ["read", "create", "update", "delete", "export", "approve"];
-      } else if (role.code === "operator") {
-        actionsFilter = ["read", "create"];
-      }
+      const actionsFilter = roleActionFilters[role.code];
+      if (!actionsFilter) continue;
 
       const { data: perms } = await supabase
         .from("permissions")
         .select("code")
         .eq("module_code", moduleCode)
-        .in(
-          "action",
-          actionsFilter.length
-            ? actionsFilter
-            : ["read", "create", "update", "delete", "export", "approve", "cancel"],
-        );
+        .in("action", actionsFilter);
 
       if (perms?.length) {
         await supabase.from("role_permissions").upsert(
