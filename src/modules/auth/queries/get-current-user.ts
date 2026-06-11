@@ -8,7 +8,7 @@ export type CompanyMembership = {
   companySlug: string;
   companyName: string;
   status: Tables<"memberships">["status"];
-  isOwner: boolean;
+  isAdmin: boolean;
   roles: string[]; // códigos dos roles, ex: ['admin', 'estoque-gestao']
 };
 
@@ -62,7 +62,7 @@ export async function getCurrentUser() {
       companySlug: company?.slug ?? "",
       companyName: company?.name ?? "",
       status: m.status,
-      isOwner: roleCodes.includes("admin"),
+      isAdmin: roleCodes.includes("admin"),
       roles: roleCodes,
     };
   });

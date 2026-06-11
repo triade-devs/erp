@@ -76,9 +76,9 @@ export default async function CompanyMembersPage({ params }: Props) {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{member.fullName}</span>
-                    {member.isOwner && (
+                    {member.isAdmin && (
                       <Badge variant="outline" className="text-xs">
-                        owner
+                        admin
                       </Badge>
                     )}
                   </div>
@@ -102,7 +102,7 @@ export default async function CompanyMembersPage({ params }: Props) {
                   {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("pt-BR") : "—"}
                 </TableCell>
                 <TableCell>
-                  {!member.isOwner && (
+                  {!member.isAdmin && (
                     <div className="flex items-center gap-1">
                       <TransferMemberDialog
                         membershipId={member.membershipId}

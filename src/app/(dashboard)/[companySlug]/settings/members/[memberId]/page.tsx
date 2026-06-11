@@ -75,7 +75,7 @@ export default async function MemberEditPage({ params }: Props) {
             >
               {statusLabel(member.status)}
             </Badge>
-            {member.isOwner && <Badge variant="outline">owner</Badge>}
+            {member.isAdmin && <Badge variant="outline">admin</Badge>}
           </div>
         </div>
       </div>

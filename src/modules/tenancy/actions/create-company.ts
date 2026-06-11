@@ -16,7 +16,7 @@ import { createInvitationAction } from "./create-invitation";
  * 3. Insere na tabela companies
  * 4. Insere módulos em company_modules
  * 5. Chama bootstrap_company_rbac
- * 6. Convida owner por e-mail (se fornecido e service role disponível)
+ * 6. Convida admin por e-mail (se fornecido e service role disponível)
  * 7. Insere audit_log
  * 8. Revalida cache
  */
@@ -96,7 +96,7 @@ export async function createCompanyAction(
   });
   if (rbacError) return { ok: false, message: rbacError.message };
 
-  // 7. Convida owner via sistema de convites SMTP-free (opcional)
+  // 7. Convida admin via sistema de convites SMTP-free (opcional)
   let ownerInvite: { link: string; shortCode: string } | undefined;
   if (ownerEmail) {
     // Busca role admin da empresa recém-criada

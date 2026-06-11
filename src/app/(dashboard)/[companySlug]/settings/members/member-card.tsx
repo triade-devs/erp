@@ -89,9 +89,9 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="truncate text-sm font-semibold">{member.fullName}</p>
-            {member.isOwner && (
+            {member.isAdmin && (
               <Badge variant="outline" className="shrink-0 text-xs">
-                owner
+                admin
               </Badge>
             )}
           </div>
@@ -121,7 +121,7 @@ export function MemberCard({ member, companyId, availableRoles }: Props) {
         )}
       </CardContent>
 
-      {!member.isOwner && (
+      {!member.isAdmin && (
         <CardFooter className="flex flex-wrap gap-1 border-t pt-0">
           <MemberRolesSheet
             companyId={companyId}
