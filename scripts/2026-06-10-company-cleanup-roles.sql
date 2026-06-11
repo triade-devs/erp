@@ -49,6 +49,12 @@ update public.company_invitations
 set status = 'revoked', revoked_at = now()
 where status = 'pending';
 
+-- ─── 4b. Habilita knowledge-base na Default ─────────────────────────────────
+-- (a role kb-editor pressupõe o módulo ativo; prod não o tem em company_modules)
+insert into public.company_modules (company_id, module_code)
+select id, 'knowledge-base' from public.companies where slug = 'default-company'
+on conflict do nothing;
+
 -- ─── 5. Apaga roles das empresas mantidas ───────────────────────────────────
 -- (cascade limpa role_permissions, membership_roles, role_scopes, role_field_rules)
 delete from public.roles;
