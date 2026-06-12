@@ -23,6 +23,7 @@ export { RentalForm } from "./components/rental-form";
 export { RentalTable } from "./components/rental-table";
 export { SpaceCalendar } from "./components/space-calendar";
 export { RequestRentalDialog } from "./components/request-rental-dialog";
+export { PendingRequestCard } from "./components/pending-request-card";
 
 // Services
 export {

@@ -55,6 +55,11 @@ export default async function SpacesPage({ params, searchParams }: Props) {
           <Button asChild variant="outline">
             <Link href={`${basePath}/calendar`}>Calendário geral</Link>
           </Button>
+          <Can permission="spaces:rental:approve">
+            <Button asChild variant="outline">
+              <Link href={`${basePath}/requests`}>Solicitações</Link>
+            </Button>
+          </Can>
           <Can permission="spaces:space:manage">
             <Button asChild>
               <Link href={createHref}>+ Novo espaço</Link>
