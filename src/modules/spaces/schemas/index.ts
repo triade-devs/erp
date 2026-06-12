@@ -50,7 +50,50 @@ export const listSpacesSchema = z.object({
   sortDir: z.enum(["asc", "desc"]).default("asc"),
 });
 
+const requestSlotSchema = z.object({
+  startsAt: z.coerce.date({ invalid_type_error: "Data de início inválida" }),
+  endsAt: z.coerce.date({ invalid_type_error: "Data de término inválida" }),
+});
+
+export const requestRentalSchema = z.object({
+  spaceId: z.string().uuid("Espaço inválido"),
+  bookingKind: z.enum(["daily", "hourly"], { required_error: "Selecione o tipo de reserva" }),
+  // FormData manda os slots como JSON string
+  slots: z
+    .string()
+    .transform((raw, ctx) => {
+      try {
+        return JSON.parse(raw) as unknown;
+      } catch {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Slots inválidos" });
+        return z.NEVER;
+      }
+    })
+    .pipe(
+      z
+        .array(requestSlotSchema)
+        .min(1, "Informe ao menos uma data/horário")
+        .max(20, "Máximo de 20 slots por solicitação"),
+    ),
+  notes: z.string().max(500, "Máximo 500 caracteres").optional().nullable(),
+});
+
+export const decideRentalSchema = z.object({
+  rentalId: z.string().uuid("Reserva inválida"),
+  decision: z.enum(["approve", "reject"], { required_error: "Decisão inválida" }),
+});
+
+export const updateRequestSchema = z.object({
+  rentalId: z.string().uuid("Solicitação inválida"),
+  startsAt: z.coerce.date({ invalid_type_error: "Data de início inválida" }),
+  endsAt: z.coerce.date({ invalid_type_error: "Data de término inválida" }),
+  notes: z.string().max(500, "Máximo 500 caracteres").optional().nullable(),
+});
+
 export type SpaceInput = z.infer<typeof spaceSchema>;
 export type RentalInput = z.infer<typeof rentalSchema>;
 export type CancelRentalInput = z.infer<typeof cancelRentalSchema>;
 export type ListSpacesInput = z.infer<typeof listSpacesSchema>;
+export type RequestRentalInput = z.infer<typeof requestRentalSchema>;
+export type DecideRentalInput = z.infer<typeof decideRentalSchema>;
+export type UpdateRequestInput = z.infer<typeof updateRequestSchema>;

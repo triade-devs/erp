@@ -24,3 +24,13 @@ export interface PaginatedResult<T> {
   pageSize: number;
   totalPages: number;
 }
+
+/** Pacote de solicitação pendente agrupado por request_batch_id. */
+export type PendingRequestBatch = {
+  batchId: string;
+  requester: { id: string; full_name: string } | null;
+  space: { id: string; name: string } | null;
+  notes: string | null;
+  createdAt: string;
+  items: RentalWithRelations[];
+};
