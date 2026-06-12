@@ -4,7 +4,7 @@ import type { RentalWithRelations } from "../types";
 import { attachRenters, type RentalRow } from "./list-rentals";
 
 /**
- * Aluguéis confirmados que tocam o intervalo [from, to) — usado para pintar os
+ * Aluguéis confirmados e solicitações pendentes que tocam o intervalo [from, to) — usado para pintar os
  * calendários (por espaço quando `spaceId` é informado, ou agregado da empresa).
  */
 export async function getOccupancy(
@@ -17,7 +17,7 @@ export async function getOccupancy(
     .from("space_rentals")
     .select("*, spaces(id, name)")
     .eq("company_id", companyId)
-    .eq("status", "confirmed")
+    .in("status", ["confirmed", "pending"])
     // Sobreposição com a janela consultada: começa antes do fim E termina depois do início
     .lt("starts_at", range.to.toISOString())
     .gt("ends_at", range.from.toISOString())

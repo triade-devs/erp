@@ -106,8 +106,13 @@ export function SpaceCalendar({ month, rentals, basePath, showSpace }: Props) {
                 {dayRentals.slice(0, 3).map((r) => (
                   <li
                     key={r.id}
-                    title={`${showSpace && r.spaces ? r.spaces.name + " · " : ""}${r.renter?.full_name ?? ""} · ${formatRentalPeriod(r.booking_kind, r.starts_at, r.ends_at)}`}
-                    className="truncate rounded bg-primary/10 px-1 py-0.5 text-[11px] text-primary"
+                    title={`${showSpace && r.spaces ? r.spaces.name + " · " : ""}${r.renter?.full_name ?? ""} · ${formatRentalPeriod(r.booking_kind, r.starts_at, r.ends_at)}${r.status === "pending" ? " · pendente" : ""}`}
+                    className={cn(
+                      "truncate rounded px-1 py-0.5 text-[11px]",
+                      r.status === "pending"
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                        : "bg-primary/10 text-primary",
+                    )}
                   >
                     {showSpace && r.spaces ? `${r.spaces.name}: ` : ""}
                     {r.booking_kind === "hourly"
