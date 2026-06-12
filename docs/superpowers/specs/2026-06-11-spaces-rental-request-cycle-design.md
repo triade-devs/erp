@@ -32,31 +32,34 @@ Hoje o aluguel de espaço é registrado direto como `confirmed` por quem tem `sp
 ### D3. RLS (`space_rentals`)
 
 - **INSERT** — caminho novo além do atual: `has_permission(company_id, 'spaces:rental:request') and renter_user_id = auth.uid() and status = 'pending'` (solicitante só cria pendência para si). O caminho existente (`spaces:rental:create`) continua criando direto `confirmed`.
-- **UPDATE** — adiciona `or has_permission(company_id, 'spaces:rental:approve')` ao using/with check existentes (gestor decide; locatário continua podendo cancelar/retirar a própria solicitação pelo caminho `renter_user_id = auth.uid()`).
+- **UPDATE** — adiciona `or has_permission(company_id, 'spaces:rental:approve')` ao using/with check existentes. O caminho do locatário (`renter_user_id = auth.uid()`) ganha `with check` restrito a `status in ('pending', 'cancelled')`: ele pode **editar a própria solicitação pendente** (datas/horário/observação, continua `pending`) e **cancelar/retirar** o que é dele — mas **não** pode se auto-aprovar (`pending → confirmed` é bloqueado). Nota: a RLS sozinha não impede o locatário de rebaixar uma reserva confirmada própria para `pending`; isso só prejudica a ele mesmo (perde a vaga até reaprovação) e a UI/action não oferece esse caminho.
 
 ### D4. Actions e queries (módulo `spaces`)
 
 - **`request-rental`** (nova action): recebe `spaceId`, `bookingKind` e N slots (`starts_at`/`ends_at`); valida com o service (UX pré-check de conflito contra `confirmed` + `pending`); insere N linhas `pending` com o mesmo `request_batch_id` (`renter_user_id = usuário logado`, `price` herdado de `spaces.default_price`). Conflito no insert (23P01) → mensagem clara indicando o slot conflitado.
 - **`decide-rental`** (nova action): aprova ou recusa UM item pendente (`pending → confirmed` | `pending → rejected`), exige `spaces:rental:approve`; aprovação que conflitar (corrida) retorna o erro de sobreposição traduzido.
 - **`cancel-rental`** existente: intocada (gestor com `spaces:rental:cancel` OU locatário; cancela `confirmed` e também serve para o solicitante retirar a própria `pending`).
+- **`update-request`** (nova action): o solicitante edita UM item **pendente** próprio (novas datas/horário e/ou observação; continua `pending`); valida período e conflito como nas demais; item decidido (confirmado/recusado) não é editável.
 - **`list-pending-requests`** (nova query): pendências da empresa agrupadas por `request_batch_id` (com solicitante, espaço e slots), para a tela do gestor.
+- **`list-my-rentals`** (nova query): reservas/solicitações do usuário logado na empresa ativa, todas as situações (pendente/confirmada/recusada/cancelada/expirada-derivada), para a tela "Minhas reservas".
 - `get-occupancy`/calendário passam a distinguir `pending` de `confirmed` no retorno.
 
 ### D5. UI
 
 - **Calendário (`/spaces/calendar`)**: para quem tem `spaces:rental:request`, seleção de um ou mais slots livres → painel "Solicitar reserva" (espaço, datas/horários, observação) → envia. Slots `pending` aparecem com visual distinto (ex.: tom âmbar/hachurado); `confirmed` como hoje.
 - **Solicitações do gestor**: nova rota `/{companySlug}/spaces/requests` (link na página de espaços, visível para quem tem `spaces:rental:approve`) listando os pacotes pendentes; aprovar/recusar **por item**, com contexto do batch (quem pediu, quais outros slots do mesmo pedido).
+- **Minhas reservas (`/{companySlug}/spaces/my-rentals`)**: o solicitante vê as próprias solicitações/reservas com status; em itens **pendentes**, pode **editar** (data/horário/observação) e **retirar** (cancelar). Link no calendário para quem tem `spaces:rental:request`.
 - **Cancelamento**: garantir que o botão Cancelar (já existente em `rental-table`/`cancel-rental-button`) aparece para quem tem `spaces:rental:cancel` nas reservas confirmadas.
 - Sem notificações nesta fase (YAGNI) — o gestor acompanha pela aba de solicitações.
 
 ### D6. Testes
 
 - **vitest (service)**: validação de slots do request (períodos válidos, sem sobreposição interna entre os próprios slots pedidos, conflito contra existentes pending/confirmed).
-- **pgTAP (RLS/constraint)**: solicitante cria `pending` para si ✓; não cria para outro usuário ✗; não cria direto `confirmed` ✗; segunda solicitação no mesmo slot falha (trava) ✓; gestor com `approve` confirma ✓; `espacos-leitura` não consegue solicitar ✗.
+- **pgTAP (RLS/constraint)**: solicitante cria `pending` para si ✓; não cria para outro usuário ✗; não cria direto `confirmed` ✗; segunda solicitação no mesmo slot falha (trava) ✓; solicitante **edita a própria pendência** (novo horário, continua pending) ✓; solicitante NÃO se auto-aprova (`with check` lança 42501) ✗; gestor com `approve` confirma ✓; `espacos-leitura` não consegue solicitar ✗.
 
 ## Fora de escopo
 
 - Notificações (e-mail/in-app) de aprovação/recusa.
 - Recorrência automática ("toda terça") — a pessoa seleciona as datas manualmente no calendário.
 - Pagamento/cobrança das reservas.
-- Edição de reserva confirmada (remarcar = cancelar + nova solicitação).
+- Edição de reserva **confirmada** (remarcar = cancelar + nova solicitação). A edição de solicitação **pendente** pelo próprio solicitante está EM escopo (ver D4/D5).
