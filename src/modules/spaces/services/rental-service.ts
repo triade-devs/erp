@@ -83,3 +83,49 @@ export function validateNoOverlap(
   if (hasOverlap(period, existing)) throw new RentalOverlapError();
   return period;
 }
+
+export class RentalSlotError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RentalSlotError";
+  }
+}
+
+/**
+ * Valida os slots de uma solicitação: período válido por tipo, sem
+ * sobreposição interna entre os slots e sem conflito com reservas
+ * existentes (pending + confirmed). Retorna os períodos normalizados.
+ * Pré-checagem de UX — a verdade final é o exclusion constraint.
+ */
+export function validateRequestSlots(
+  kind: RentalKind,
+  slots: { startsAt: Date; endsAt: Date }[],
+  existing: Pick<SpaceRental, "starts_at" | "ends_at">[],
+): { startsAt: Date; endsAt: Date }[] {
+  const normalized = slots.map((slot, i) => {
+    const invalid = kind === "daily" ? slot.endsAt < slot.startsAt : slot.endsAt <= slot.startsAt;
+    if (invalid) {
+      throw new RentalSlotError(
+        `Slot ${i + 1}: o término deve ser ${kind === "daily" ? "igual ou " : ""}depois do início`,
+      );
+    }
+    return normalizeRentalPeriod(kind, slot.startsAt, slot.endsAt);
+  });
+
+  for (const [i, a] of normalized.entries()) {
+    for (const [j, b] of normalized.entries()) {
+      if (j <= i) continue;
+      if (a.startsAt.getTime() < b.endsAt.getTime() && b.startsAt.getTime() < a.endsAt.getTime()) {
+        throw new RentalSlotError(`Os slots ${i + 1} e ${j + 1} se sobrepõem`);
+      }
+    }
+  }
+
+  for (const [i, period] of normalized.entries()) {
+    if (hasOverlap(period, existing)) {
+      throw new RentalSlotError(`Slot ${i + 1}: já existe reserva ou solicitação neste período`);
+    }
+  }
+
+  return normalized;
+}
