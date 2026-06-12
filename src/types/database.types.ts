@@ -1863,6 +1863,7 @@ export type Database = {
           period: unknown;
           price: number;
           renter_user_id: string;
+          request_batch_id: string | null;
           space_id: string;
           starts_at: string;
           status: Database["public"]["Enums"]["rental_status"];
@@ -1879,6 +1880,7 @@ export type Database = {
           period?: unknown;
           price?: number;
           renter_user_id: string;
+          request_batch_id?: string | null;
           space_id: string;
           starts_at: string;
           status?: Database["public"]["Enums"]["rental_status"];
@@ -1895,6 +1897,7 @@ export type Database = {
           period?: unknown;
           price?: number;
           renter_user_id?: string;
+          request_batch_id?: string | null;
           space_id?: string;
           starts_at?: string;
           status?: Database["public"]["Enums"]["rental_status"];
@@ -2263,7 +2266,7 @@ export type Database = {
       membership_status: "invited" | "active" | "suspended";
       movement_type: "in" | "out" | "adjustment";
       rental_kind: "daily" | "hourly";
-      rental_status: "confirmed" | "cancelled";
+      rental_status: "pending" | "confirmed" | "cancelled" | "rejected";
       space_booking_mode: "daily" | "hourly" | "both";
     };
     CompositeTypes: {
@@ -2401,7 +2404,7 @@ export const Constants = {
       membership_status: ["invited", "active", "suspended"],
       movement_type: ["in", "out", "adjustment"],
       rental_kind: ["daily", "hourly"],
-      rental_status: ["confirmed", "cancelled"],
+      rental_status: ["pending", "confirmed", "cancelled", "rejected"],
       space_booking_mode: ["daily", "hourly", "both"],
     },
   },

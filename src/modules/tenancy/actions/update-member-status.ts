@@ -43,10 +43,10 @@ export async function updateMemberStatusAction(
         membership_roles: Array<{ roles: { code: string } | null }>;
       }
     ).membership_roles ?? [];
-  const isOwner = membershipRoles.some((mr) => mr.roles?.code === "owner");
+  const isAdmin = membershipRoles.some((mr) => mr.roles?.code === "admin");
 
-  if (isOwner && (status === "suspended" || status === "removed")) {
-    return { ok: false, message: "Não é possível suspender ou remover o proprietário da empresa" };
+  if (isAdmin && (status === "suspended" || status === "removed")) {
+    return { ok: false, message: "Não é possível suspender ou remover o administrador da empresa" };
   }
 
   if (status === "removed") {

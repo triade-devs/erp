@@ -38,9 +38,9 @@ function makeEnableMock({
   rpcError = null,
   insertModuleError = null,
   systemRoles = [
-    { id: "role-owner", code: "owner" },
-    { id: "role-manager", code: "manager" },
-    { id: "role-operator", code: "operator" },
+    { id: "role-admin", code: "admin" },
+    { id: "role-gestao", code: "estoque-gestao" },
+    { id: "role-operacao", code: "estoque-operacao" },
   ],
   permissions = [{ code: "inventory:product:read" }, { code: "inventory:product:create" }],
 }: Pick<
@@ -56,7 +56,7 @@ function makeEnableMock({
 
   // roles: primeira chamada (todas) — .select("id").eq("company_id")
   const rolesAllEq = vi.fn().mockResolvedValue({
-    data: [{ id: "role-owner" }, { id: "role-manager" }, { id: "role-operator" }],
+    data: [{ id: "role-admin" }, { id: "role-gestao" }, { id: "role-operacao" }],
     error: null,
   });
   const rolesAllSelect = vi.fn().mockReturnValue({ eq: rolesAllEq });
@@ -138,7 +138,7 @@ function makeDisableMock({
   rpcError = null,
   deleteModuleError = null,
   permsToDeactivate = [{ code: "inventory:product:read" }],
-  companyRoles = [{ id: "role-owner" }, { id: "role-manager" }],
+  companyRoles = [{ id: "role-admin" }, { id: "role-gestao" }],
 }: Pick<
   ToggleMockOptions,
   "isPlatformAdmin" | "rpcError" | "deleteModuleError" | "permsToDeactivate" | "companyRoles"
@@ -253,7 +253,7 @@ describe("toggleModuleAction", () => {
   it("ao habilitar módulo passa os campos corretos para upsert de role_permissions", async () => {
     const mock = makeEnableMock({
       isPlatformAdmin: true,
-      systemRoles: [{ id: "role-owner-id", code: "owner" }],
+      systemRoles: [{ id: "role-admin-id", code: "admin" }],
       permissions: [{ code: "inventory:product:read" }, { code: "inventory:product:create" }],
     });
     await callToggle(mock, "company-1", "inventory", true);
@@ -270,7 +270,7 @@ describe("toggleModuleAction", () => {
   it("ao habilitar módulo chama update com is_active=true para reativar perms antigas", async () => {
     const mock = makeEnableMock({
       isPlatformAdmin: true,
-      systemRoles: [{ id: "role-owner-id", code: "owner" }],
+      systemRoles: [{ id: "role-admin-id", code: "admin" }],
       permissions: [{ code: "inventory:product:read" }],
     });
     await callToggle(mock, "company-1", "inventory", true);
@@ -355,5 +355,19 @@ describe("toggleModuleAction", () => {
     if (result.ok) {
       expect(result.message).toContain("desabilitado");
     }
+  });
+
+  it("não faz upsert de perms para role fora do mapa (ex.: estoque-leitura)", async () => {
+    // Garante que roles sem entrada no roleActionFilters são puladas (fix do bug
+    // onde o fallback default concedia perms completas a roles desconhecidas).
+    const mock = makeEnableMock({
+      isPlatformAdmin: true,
+      systemRoles: [{ id: "role-leitura", code: "estoque-leitura" }],
+      permissions: [{ code: "inventory:product:read" }],
+    });
+    const result = await callToggle(mock, "company-1", "inventory", true);
+
+    expect(result.ok).toBe(true);
+    expect(mock.rolePermsUpsert).not.toHaveBeenCalled();
   });
 });

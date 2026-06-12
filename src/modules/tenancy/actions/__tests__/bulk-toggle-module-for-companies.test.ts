@@ -153,7 +153,7 @@ describe("bulkToggleModuleForCompaniesAction", () => {
 
   it("enable: upsert das perms-padrão inclui is_active=true", async () => {
     const mock = makeEnableMock({
-      systemRoles: [{ id: "role-owner", code: "owner" }],
+      systemRoles: [{ id: "role-admin", code: "admin" }],
       modulePerms: [{ code: "inventory:product:read", action: "read" }],
     });
     vi.mocked(createClient).mockResolvedValue(mock as never);
@@ -166,5 +166,21 @@ describe("bulkToggleModuleForCompaniesAction", () => {
       ]),
       expect.objectContaining({ onConflict: "role_id,permission_code" }),
     );
+  });
+
+  it("enable: role com código fora do mapa não contribui nenhuma linha ao upsert", async () => {
+    const mock = makeEnableMock({
+      systemRoles: [{ id: "role-leitura", code: "estoque-leitura" }],
+      modulePerms: [
+        { code: "inventory:product:read", action: "read" },
+        { code: "inventory:product:create", action: "create" },
+      ],
+    });
+    vi.mocked(createClient).mockResolvedValue(mock as never);
+
+    await bulkToggleModuleForCompaniesAction("inventory", true);
+
+    // rolePermsUpsert não deve ser chamado pois nenhuma linha foi gerada
+    expect(mock.rolePermsUpsert).not.toHaveBeenCalled();
   });
 });

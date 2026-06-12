@@ -46,6 +46,14 @@ export const MODULES_MENU: MenuItem[] = [
     requiresPermission: "core:inventory:manage",
   },
   {
+    label: "Espaços",
+    href: "/spaces",
+    icon: "calendar-days",
+    group: "Espaços",
+    requiresSlug: true,
+    requiresPermission: "spaces:space:read",
+  },
+  {
     label: "Auditoria",
     href: "/audit",
     icon: "shield-check",

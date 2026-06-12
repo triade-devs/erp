@@ -32,9 +32,9 @@ declare
 begin
   create temp table test_users (role text primary key, user_id uuid);
 
-  v_op_alfa  := tests.create_user_in('op-alfa@test.local',  'empresa-alfa', 'operator');
-  v_op_beta  := tests.create_user_in('op-beta@test.local',  'empresa-beta', 'operator');
-  v_mgr_alfa := tests.create_user_in('mgr-alfa@test.local', 'empresa-alfa', 'manager');
+  v_op_alfa  := tests.create_user_in('op-alfa@test.local',  'empresa-alfa', 'estoque-operacao');
+  v_op_beta  := tests.create_user_in('op-beta@test.local',  'empresa-beta', 'estoque-operacao');
+  v_mgr_alfa := tests.create_user_in('mgr-alfa@test.local', 'empresa-alfa', 'estoque-gestao');
 
   insert into test_users values
     ('op_alfa',  v_op_alfa),
@@ -45,28 +45,41 @@ begin
   grant select on test_users to authenticated;
 end $$;
 
+-- Fornecedores — products.supplier_id é NOT NULL desde a migration de enrichment
+insert into public.suppliers (id, company_id, name)
+values
+  ('aaaaaaaa-ffff-0000-0000-000000000001', tests.company_id('empresa-alfa'), 'FORNECEDOR ALFA'),
+  ('bbbbbbbb-ffff-0000-0000-000000000001', tests.company_id('empresa-beta'), 'FORNECEDOR BETA');
+
 -- Produto na empresa A com movimentação (usado nos testes 1, 2, 3, 5)
-insert into public.products (id, company_id, sku, name, unit, cost_price, sale_price)
+-- description/ncm/supplier_id obrigatórios desde a migration de enrichment
+insert into public.products
+  (id, company_id, sku, name, description, ncm, supplier_id, unit, cost_price, sale_price)
 values (
   'aaaaaaaa-0000-0000-0000-000000000001',
   tests.company_id('empresa-alfa'),
-  'PROD-ALFA-001', 'Produto Alfa', 'UN', 10.00, 20.00
+  'PROD-ALFA-001', 'Produto Alfa', 'Produto de teste alfa', '0000.00.00',
+  'aaaaaaaa-ffff-0000-0000-000000000001', 'UN', 10.00, 20.00
 );
 
 -- Produto na empresa A SEM movimentação (usado no teste 4 — será deletado)
-insert into public.products (id, company_id, sku, name, unit, cost_price, sale_price)
+insert into public.products
+  (id, company_id, sku, name, description, ncm, supplier_id, unit, cost_price, sale_price)
 values (
   'aaaaaaaa-0000-0000-0000-000000000099',
   tests.company_id('empresa-alfa'),
-  'PROD-ALFA-DEL', 'Produto para Deletar', 'UN', 1.00, 2.00
+  'PROD-ALFA-DEL', 'Produto para Deletar', 'Produto de teste para deleção', '0000.00.00',
+  'aaaaaaaa-ffff-0000-0000-000000000001', 'UN', 1.00, 2.00
 );
 
 -- Produto na empresa B com movimentação (usado nos testes 1 e 2)
-insert into public.products (id, company_id, sku, name, unit, cost_price, sale_price)
+insert into public.products
+  (id, company_id, sku, name, description, ncm, supplier_id, unit, cost_price, sale_price)
 values (
   'bbbbbbbb-0000-0000-0000-000000000001',
   tests.company_id('empresa-beta'),
-  'PROD-BETA-001', 'Produto Beta', 'UN', 5.00, 15.00
+  'PROD-BETA-001', 'Produto Beta', 'Produto de teste beta', '0000.00.00',
+  'bbbbbbbb-ffff-0000-0000-000000000001', 'UN', 5.00, 15.00
 );
 
 -- Movimentação na empresa A
@@ -125,7 +138,7 @@ do $$ begin perform tests.reset_role(); end $$;
 
 -- ============================================================
 -- TESTE 3: operador de empresa A NÃO pode DELETE produtos
---          (operator não possui inventory:product:delete)
+--          (estoque-operacao não possui inventory:product:delete)
 --          RLS USING bloqueia silenciosamente — produto persiste
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'op_alfa')); end $$;
@@ -142,7 +155,7 @@ do $$ begin perform tests.reset_role(); end $$;
 
 -- ============================================================
 -- TESTE 4: gerente de empresa A PODE DELETE produtos
---          (manager possui inventory:product:delete)
+--          (estoque-gestao possui inventory:product:delete)
 --          Produto sem FK em stock_movements para evitar restrict
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'mgr_alfa')); end $$;
@@ -159,7 +172,7 @@ do $$ begin perform tests.reset_role(); end $$;
 
 -- ============================================================
 -- TESTE 5: operador de empresa A NÃO pode UPDATE produtos
---          (operator não possui inventory:product:update)
+--          (estoque-operacao não possui inventory:product:update)
 --          RLS USING bloqueia silenciosamente — nome inalterado
 -- ============================================================
 do $$ begin perform tests.authenticate_as((select user_id from test_users where role = 'op_alfa')); end $$;

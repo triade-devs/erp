@@ -9,23 +9,17 @@ description: Use when creating RLS policies, writing migrations with permissions
 
 RLS failures are **completely silent** — a blocked query returns 0 rows, not an error. Writing policies is not enough; you must verify them for every user type.
 
-## ⚠️ The Platform Admin Trap
+## Platform Admins: `has_permission()` Already Covers Them
 
-`has_permission()` in Postgres checks `memberships → role_permissions` only. It has **no knowledge of `platform_admins`**. If you write:
+Since migration `20260523000047_has_permission_absorbs_platform_admin.sql`, `has_permission()` starts with `select public.is_platform_admin() or ...` — platform admins pass every `has_permission()` check automatically. It also requires `role_permissions.is_active = true` (migration 046).
 
 ```sql
--- ❌ Platform admins are silently blocked
+-- ✅ Correct — has_permission() alone covers regular users AND platform admins
 create policy "my_select"
   on public.my_table for select
   using (public.has_permission(company_id, 'module:resource:read'));
-```
 
-Platform admins get 0 rows. No error. No warning.
-
-**Always include both:**
-
-```sql
--- ✅ Correct
+-- ❌ Redundant — do NOT add the OR; migration 048 removed it from all policies
 create policy "my_select"
   on public.my_table for select
   using (
@@ -33,6 +27,8 @@ create policy "my_select"
     or public.has_permission(company_id, 'module:resource:read')
   );
 ```
+
+Use `is_platform_admin()` **alone** only for platform-gated tables (no company permission involved), e.g. `role_templates`, `platform_roles`. Since migration 059 it reads `platform_role_assignments → platform_roles` (the old `platform_admins` table is deprecated).
 
 ## Policy Skeleton
 
@@ -40,47 +36,32 @@ create policy "my_select"
 -- SELECT
 create policy "table_select"
   on public.my_table for select
-  using (
-    public.is_platform_admin()
-    or public.has_permission(company_id, 'module:resource:read')
-  );
+  using (public.has_permission(company_id, 'module:resource:read'));
 
 -- INSERT
 create policy "table_insert"
   on public.my_table for insert
   with check (
-    (
-      public.is_platform_admin()
-      or public.has_permission(company_id, 'module:resource:write')
-    )
+    public.has_permission(company_id, 'module:resource:write')
     and created_by = auth.uid()  -- enforce authorship when applicable
   );
 
 -- UPDATE
 create policy "table_update"
   on public.my_table for update
-  using (
-    public.is_platform_admin()
-    or public.has_permission(company_id, 'module:resource:write')
-  )
-  with check (
-    public.is_platform_admin()
-    or public.has_permission(company_id, 'module:resource:write')
-  );
+  using (public.has_permission(company_id, 'module:resource:write'))
+  with check (public.has_permission(company_id, 'module:resource:write'));
 
 -- DELETE
 create policy "table_delete"
   on public.my_table for delete
-  using (
-    public.is_platform_admin()
-    or public.has_permission(company_id, 'module:resource:write')
-  );
+  using (public.has_permission(company_id, 'module:resource:write'));
 ```
 
 ## Migration Checklist
 
 - [ ] `alter table ... enable row level security`
-- [ ] SELECT policy with `is_platform_admin() OR has_permission(...)`
+- [ ] Policies use `has_permission(...)` alone (no redundant `is_platform_admin() OR`)
 - [ ] INSERT `with check` includes `created_by = auth.uid()` when applicable
 - [ ] UPDATE has both `using` AND `with check` clauses
 - [ ] Permission codes inserted into `public.permissions`
@@ -118,9 +99,10 @@ After `npm run db:push`, verify manually or in tests:
 
 ## Red Flags
 
-| You're thinking...                                           | Reality                                                                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| "I wrote the policies, RLS is done"                          | Unverified policies may be silently broken. Run the verification checklist.                                   |
-| "Platform admins have `*` permissions in TS so they're fine" | `has_permission()` in Postgres doesn't know about platform_admins. Add `is_platform_admin()` to every policy. |
-| "UPDATE only needs `using`, not `with check`"                | Without `with check`, a user can update values to bypass the `using` predicate. Always include both.          |
-| "The user gets an error if blocked"                          | RLS returns 0 rows on SELECT/UPDATE/DELETE. Only INSERT raises an error (policy violation).                   |
+| You're thinking...                                   | Reality                                                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| "I wrote the policies, RLS is done"                  | Unverified policies may be silently broken. Run the verification checklist.                                   |
+| "I should add `is_platform_admin() OR` to be safe"   | Redundant since migration 047 — `has_permission()` already absorbs it. Migration 048 removed the old ORs.     |
+| "Permission is in role_permissions, so it's granted" | `has_permission()` requires `role_permissions.is_active = true` (migration 046). Inactive = silently blocked. |
+| "UPDATE only needs `using`, not `with check`"        | Without `with check`, a user can update values to bypass the `using` predicate. Always include both.          |
+| "The user gets an error if blocked"                  | RLS returns 0 rows on SELECT/UPDATE/DELETE. Only INSERT raises an error (policy violation).                   |

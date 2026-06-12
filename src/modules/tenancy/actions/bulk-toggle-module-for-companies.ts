@@ -5,9 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { AppError, type ActionResult } from "@/lib/errors";
 import { audit } from "@/modules/audit";
 
-const OWNER_ACTIONS = ["read", "create", "update", "delete", "export", "approve", "cancel"];
-const MANAGER_ACTIONS = ["read", "create", "update", "delete", "export", "approve"];
-const OPERATOR_ACTIONS = ["read", "create"];
+const ADMIN_ACTIONS = ["read", "create", "update", "delete", "export", "approve", "cancel"];
+const GESTAO_ACTIONS = ["read", "create", "update", "delete", "export", "approve"];
+const OPERACAO_ACTIONS = ["read", "create"];
 
 export async function bulkToggleModuleForCompaniesAction(
   moduleCode: string,
@@ -66,16 +66,16 @@ export async function bulkToggleModuleForCompaniesAction(
     const permsByAction = (actions: string[]) =>
       (modulePerms ?? []).filter((p) => actions.includes(p.action)).map((p) => p.code);
 
-    const ownerPerms = permsByAction(OWNER_ACTIONS);
-    const managerPerms = permsByAction(MANAGER_ACTIONS);
-    const operatorPerms = permsByAction(OPERATOR_ACTIONS);
+    const adminPerms = permsByAction(ADMIN_ACTIONS);
+    const gestaoPerms = permsByAction(GESTAO_ACTIONS);
+    const operacaoPerms = permsByAction(OPERACAO_ACTIONS);
 
     const rpRows: { role_id: string; permission_code: string; is_active: boolean }[] = [];
     for (const role of systemRoles ?? []) {
       let perms: string[] = [];
-      if (role.code === "owner") perms = ownerPerms;
-      else if (role.code === "manager") perms = managerPerms;
-      else if (role.code === "operator") perms = operatorPerms;
+      if (role.code === "admin") perms = adminPerms;
+      else if (role.code === "estoque-gestao") perms = gestaoPerms;
+      else if (role.code === "estoque-operacao") perms = operacaoPerms;
       for (const perm of perms)
         rpRows.push({ role_id: role.id, permission_code: perm, is_active: true });
     }

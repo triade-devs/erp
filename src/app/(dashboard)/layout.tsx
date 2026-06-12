@@ -33,7 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     const hasNoRole =
       !!activeCompany &&
       !!activeMembership &&
-      !activeMembership.isOwner &&
+      !activeMembership.isAdmin &&
       activeMembership.roles.length === 0;
     if (hasNoCompany || hasNoRole) redirect("/sem-acesso");
   }
