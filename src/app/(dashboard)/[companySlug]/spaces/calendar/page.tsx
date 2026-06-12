@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { resolveCompany } from "@/modules/tenancy";
-import { requirePermission, ForbiddenError } from "@/modules/authz";
-import { getOccupancy, SpaceCalendar } from "@/modules/spaces";
+import { requirePermission, ForbiddenError, Can } from "@/modules/authz";
+import { getOccupancy, listSpaces, SpaceCalendar, RequestRentalDialog } from "@/modules/spaces";
 import { AppError } from "@/lib/errors";
 
 export const metadata = { title: "Calendário de Espaços — ERP" };
@@ -52,6 +52,7 @@ export default async function SpacesCalendarPage({ params, searchParams }: Props
   const rangeTo = endOfWeek(endOfMonth(month), { weekStartsOn: 0 });
 
   const occupancy = await getOccupancy(company.id, { from: rangeFrom, to: rangeTo });
+  const spacesPage = await listSpaces(company.id, { onlyActive: true, page: 1, pageSize: 100 });
 
   const basePath = `/${companySlug}/spaces`;
 
@@ -62,9 +63,20 @@ export default async function SpacesCalendarPage({ params, searchParams }: Props
           <h1 className="text-2xl font-semibold">Calendário geral — {company.name}</h1>
           <p className="text-sm text-muted-foreground">Ocupação de todos os espaços</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={basePath}>Voltar aos espaços</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Can permission="spaces:rental:request">
+            <RequestRentalDialog
+              spaces={spacesPage.data.map((s) => ({
+                id: s.id,
+                name: s.name,
+                bookingMode: s.booking_mode,
+              }))}
+            />
+          </Can>
+          <Button asChild variant="outline">
+            <Link href={basePath}>Voltar aos espaços</Link>
+          </Button>
+        </div>
       </header>
 
       <div className="rounded-lg border bg-card p-6">
