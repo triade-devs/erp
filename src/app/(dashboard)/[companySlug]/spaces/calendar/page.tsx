@@ -65,6 +65,9 @@ export default async function SpacesCalendarPage({ params, searchParams }: Props
         </div>
         <div className="flex gap-2">
           <Can permission="spaces:rental:request">
+            <Button asChild variant="outline">
+              <Link href={`${basePath}/my-rentals`}>Minhas reservas</Link>
+            </Button>
             <RequestRentalDialog
               spaces={spacesPage.data.map((s) => ({
                 id: s.id,
