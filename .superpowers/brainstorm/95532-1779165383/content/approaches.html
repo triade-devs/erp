@@ -1,0 +1,82 @@
+<h2>3 abordagens de layout para o Resumo (1 página A4)</h2>
+<p class="subtitle">Todas omitem a grade de sinais vitais. Dados das doenças: apenas as positivas.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-size:11px;font-family:monospace;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:8px;line-height:1.6;">
+        <div style="background:#1e3a5f;color:white;padding:4px 8px;border-radius:2px;margin-bottom:6px;font-size:10px;font-weight:bold;">PACIENTE · CIRURGIA · DATA · ANESTESIOLOGISTA</div>
+        <div style="display:flex;gap:4px;margin-bottom:6px;">
+          <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:2px;padding:3px 6px;font-size:9px;color:#dc2626;font-weight:bold;flex:1;">⚠ VAD</div>
+          <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:2px;padding:3px 6px;font-size:9px;color:#b45309;font-weight:bold;flex:1;">ASA III</div>
+          <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:2px;padding:3px 6px;font-size:9px;color:#dc2626;font-weight:bold;flex:2;">🚨 EMERGÊNCIA</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#f1f5f9;border-radius:2px;padding:6px;font-size:9px;">
+            <div style="font-weight:bold;color:#475569;margin-bottom:4px;text-transform:uppercase;font-size:8px;">PRÉ-AVALIAÇÃO</div>
+            <div>Doenças: HAS, DM, Obesidade</div>
+            <div>Medicamentos: Metformina...</div>
+            <div>Peso/Altura/PA/IMC</div>
+            <div>Exames: Hb 12, K 4.2...</div>
+            <div>Mallampati II · Jejum: Sim</div>
+          </div>
+          <div style="background:#f1f5f9;border-radius:2px;padding:6px;font-size:9px;">
+            <div style="font-weight:bold;color:#475569;margin-bottom:4px;text-transform:uppercase;font-size:8px;">INTRAOPERATÓRIO</div>
+            <div>Técnica: Geral</div>
+            <div>Via Aérea: IOT (cuff inflado)</div>
+            <div>Ventilação: Cont. Mecânica</div>
+            <div>Acessos: Periférico 20G MSD</div>
+            <div>Medicações: Propofol, Fentanil...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Alertas em destaque + 2 colunas <span style="color:#16a34a;font-size:11px;">(Recomendado)</span></h3>
+      <p>Header com identificação → faixa de alertas críticos coloridos (VAD, ASA, emergência) → duas colunas: pré-avaliação | intraoperatório. Leitura rápida, hierarquia clara.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-size:11px;font-family:monospace;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:8px;line-height:1.6;">
+        <div style="background:#1e3a5f;color:white;padding:4px 8px;border-radius:2px;margin-bottom:6px;font-size:10px;font-weight:bold;">PACIENTE · CIRURGIA · DATA</div>
+        <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-transform:uppercase;color:#475569;">① Identificação &amp; Alertas</div>
+        <div style="border:1px solid #e2e8f0;padding:4px;border-radius:2px;font-size:9px;margin-bottom:4px;">Nome · Idade · ASA · VAD · Alergias · Emergência</div>
+        <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-transform:uppercase;color:#475569;">② Pré-Avaliação</div>
+        <div style="border:1px solid #e2e8f0;padding:4px;border-radius:2px;font-size:9px;margin-bottom:4px;">Doenças + Medicamentos + Sinais Vitais + Exames + Exame Físico</div>
+        <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-transform:uppercase;color:#475569;">③ Intraoperatório</div>
+        <div style="border:1px solid #e2e8f0;padding:4px;border-radius:2px;font-size:9px;">Técnica + Via Aérea + Ventilação + Acessos + Medicações</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Fluxo cronológico (linear)</h3>
+      <p>3 seções empilhadas na ordem temporal: alertas → pré → intra. Mais legível mas com risco de ultrapassar 1 página se houver muitas medicações ou doenças positivas.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-size:11px;font-family:monospace;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:8px;line-height:1.6;">
+        <div style="background:#1e3a5f;color:white;padding:4px 8px;border-radius:2px;margin-bottom:6px;font-size:10px;font-weight:bold;">PACIENTE · CIRURGIA · DATA</div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:6px;">
+          <div>
+            <div style="background:#fee2e2;border-radius:2px;padding:5px;font-size:8px;margin-bottom:4px;"><b>⚠ ALERTAS CRÍTICOS</b><br/>VAD · ASA III<br/>Alergias: Dipirona<br/>Emergência: Sim</div>
+            <div style="background:#f1f5f9;border-radius:2px;padding:5px;font-size:8px;"><b>VITAIS</b><br/>Peso/Alt/IMC<br/>PA / Temp</div>
+          </div>
+          <div style="background:#f1f5f9;border-radius:2px;padding:5px;font-size:9px;">
+            <div style="margin-bottom:4px;font-weight:bold;font-size:8px;text-transform:uppercase;color:#475569;">Doenças + Medicamentos + Exames</div>
+            <div style="margin-bottom:4px;font-weight:bold;font-size:8px;text-transform:uppercase;color:#475569;">Técnica + Via Aérea + Ventilação</div>
+            <div style="font-weight:bold;font-size:8px;text-transform:uppercase;color:#475569;">Acessos + Medicações intraop.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Painel de alertas lateral</h3>
+      <p>Coluna estreita esquerda dedicada a alertas críticos + sinais vitais. Coluna larga direita para o restante das informações. Alertas sempre visíveis, porém layout mais complexo.</p>
+    </div>
+  </div>
+
+</div>

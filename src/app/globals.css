@@ -161,3 +161,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.vitals-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(12, minmax(0, 1fr));
+}
